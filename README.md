@@ -1,4 +1,4 @@
-# Biotech Investment Agent
+# AI-Assisted Biotech Investment Platform
 
 This is a small full-stack web app I built to browse and filter public biotech
 companies by their pipeline stage and financials. Everything comes from real
