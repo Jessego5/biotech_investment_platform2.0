@@ -1,0 +1,374 @@
+/*
+   This is the styling for the Biotech Agent, clean and data-forward. The look
+   comes from the subject, which is clinical and lab data, so it uses cool slate
+   ink, clean paper, one teal accent, and a phase ramp that goes light to dark for
+   early to advanced in the pipeline view. The figures are the only thing allowed
+   to be loud.
+*/
+
+:root {
+  /* PMC / PubMed Central academic look: light, clean sans, visible borders,
+     a solid header banner. teal/green used instead of blue. */
+  --plane: #eef1f2;          
+  --surface: #ffffff;       
+  --ink: #1a1c1e;            
+  --ink-2: #45525a;          
+  --muted: #6c767c;          
+  --line: #ccd4d8;           
+  --accent: #0e7c78;        
+  --accent-ink: #0a5c59;     
+  --band: #0c5f5b;           /* solid header banner (PMCstyle colored bar) */
+  --band-line: #0a4643;
+
+  --p1: #63bdba;
+  --p2: #2f9d98;
+  --p3: #14807b;
+  --p4: #0a5f5b;
+  --p-na: #b9c2c5;
+
+  --good: #0a6b2e;
+  --warn: #9a4a10;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: "Public Sans", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: var(--plane);
+  line-height: 1.5;
+}
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+
+a { color: var(--accent-ink); text-decoration: underline; }
+a:hover { color: var(--accent); }
+
+/* visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.hidden { display: none; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* - government-style header (mirrors the NIH bar + wordmark + nav) */
+/* top colored banner: logo box + two-line org text, outlined button on the right */
+.gov-banner { background: var(--band); color: #fff; }
+.gov-banner .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 10px 20px; flex-wrap: wrap;
+}
+.gov-org { display: flex; align-items: center; gap: 12px; }
+.gov-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 4px; flex: none;
+  background: #fff; color: var(--band); font-weight: 800; font-size: 14px;
+  letter-spacing: 0.02em;
+}
+.gov-org-text { display: flex; flex-direction: column; line-height: 1.25; }
+.gov-org-text strong { font-size: 15px; font-weight: 700; }
+.gov-org-text em { font-size: 12px; font-style: italic; color: rgba(255, 255, 255, 0.85); }
+.gov-login {
+  display: inline-block; padding: 9px 18px; border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 4px; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600;
+}
+.gov-login:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+
+/* white wordmark row (two-tone, like "ClinicalTrials" + ".gov") */
+.site-header { background: var(--surface); }
+.wordmark-row { padding: 18px 20px 12px; }
+.wordmark {
+  margin: 0; font-size: 30px; font-weight: 800; line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+.wordmark .wm-1 { color: var(--accent-ink); }
+.wordmark .wm-2 { color: var(--p2); }
+
+/* navigation bar with a rule above and below */
+.gov-nav { background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.gov-nav .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 0 20px; flex-wrap: wrap;
+}
+.nav-links { list-style: none; display: flex; gap: 28px; margin: 0; padding: 0; }
+.nav-links a {
+  display: inline-block; padding: 13px 0; color: var(--ink);
+  font-weight: 700; font-size: 15px; text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+.nav-links a:hover { color: var(--accent-ink); border-bottom-color: var(--accent); }
+.nav-right { font-size: 13px; color: var(--muted); }
+.nav-right a { color: var(--accent-ink); }
+.nav-right .dot { color: var(--line); margin: 0 4px; }
+
+/* disclaimer callout (mirrors the yellow CT.gov disclaimer box) */
+.disclaimer-callout {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: #fffaf0; border: 1px solid #f0d98c; border-left: 5px solid #f2c14e;
+  border-radius: 4px; padding: 14px 16px; margin-bottom: 16px;
+}
+.dc-icon {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%; background: #f2c14e;
+  color: #5a4300; font-weight: 800; font-size: 18px;
+}
+.dc-text { font-size: 14px; color: var(--ink); line-height: 1.45; }
+.dc-text strong { display: block; margin-bottom: 2px; }
+
+main.wrap { padding-top: 24px; padding-bottom: 80px; }
+
+/* stat banner (the "594,972 studies" line) */
+.stat-banner {
+  background: #e3f2f1; border: 1px solid #bfe0dd;
+  color: var(--ink); font-weight: 700; font-size: 17px; line-height: 1.4;
+  padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;
+}
+.stat-banner strong { color: var(--accent-ink); }
+
+/* - filter bar (styled like "Focus Your Search") */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 16px 18px;
+}
+.filters-title {
+  flex-basis: 100%; font-weight: 700; font-size: 15px; color: var(--ink);
+  margin-bottom: 2px;
+}
+.filters-title span { font-weight: 400; color: var(--muted); font-size: 13px; }
+.filter { display: flex; flex-direction: column; gap: 5px; }
+.filter label {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.filter .unit { text-transform: none; letter-spacing: 0; opacity: 0.8; }
+.filter input[type="number"], .filter select {
+  font: inherit; font-size: 15px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  width: 128px;
+}
+.filter input[type="number"] { font-variant-numeric: tabular-nums; }
+.filter.switch { justify-content: flex-end; }
+.filter.switch label {
+  display: flex; align-items: center; gap: 7px;
+  text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--ink);
+  cursor: pointer; padding-bottom: 7px;
+}
+.filter.switch input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+button {
+  font: inherit; font-size: 14px; font-weight: 550;
+  padding: 9px 16px; border-radius: 7px; border: 1px solid transparent;
+  background: var(--accent); color: #fff; cursor: pointer;
+}
+button:hover { background: var(--accent-ink); }
+button.ghost { background: transparent; color: var(--accent-ink); border-color: var(--line); }
+button.ghost:hover { background: rgba(14, 124, 120, 0.07); }
+
+/* - chat panel (secondary) */
+.chat-card {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 14px 16px;
+}
+.chat-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.chat-title { font-weight: 650; font-size: 14px; }
+.chat-sub { font-size: 12px; color: var(--muted); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form input {
+  flex: 1; font: inherit; font-size: 15px;
+  padding: 9px 12px; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--surface); color: var(--ink);
+}
+.chat-answer {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
+  font-size: 15px; line-height: 1.55;
+}
+.chat-answer.thinking { color: var(--muted); font-style: italic; }
+.chat-answer .answer-text { white-space: pre-wrap; margin: 0; }
+.chat-sources { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chat-sources .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.source-chip {
+  font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line);
+  background: rgba(14, 124, 120, 0.08); color: var(--accent-ink); cursor: pointer;
+}
+.source-chip:hover { background: rgba(14, 124, 120, 0.16); }
+
+.browse-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin: 22px 2px 8px;
+}
+.browse-head-left { display: flex; align-items: baseline; gap: 12px; }
+button.ghost.small { padding: 4px 10px; font-size: 13px; }
+.count { margin: 0; font-size: 15px; font-weight: 600; }
+.count strong { color: var(--accent-ink); }
+.table-source { margin: 0; font-size: 12px; color: var(--muted); }
+
+/* - tables */
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+thead th {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink-2); font-weight: 700; white-space: nowrap;
+  position: sticky; top: 0; background: #e6eded;      /* academic header fill */
+  border-bottom: 2px solid var(--accent);             /* teal rule under header */
+}
+th.num, td.num { text-align: right; }
+tbody tr { background: var(--surface); }
+#browse-results tbody tr { cursor: pointer; }
+#browse-results tbody tr:hover { background: #e9f3f2; }
+#browse-results tbody tr:focus-within { background: #ddeeec; }
+td.tk { font-weight: 650; letter-spacing: 0.01em; }
+td.name { color: var(--ink); }
+.muted-cell { color: var(--muted); }
+
+/* the "late-stage" pill in the browse table */
+.pill {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 3px;
+  background: rgba(14, 124, 120, 0.12); color: var(--p4);
+}
+.pill.none { background: transparent; color: var(--muted); font-weight: 500; }
+
+.lookup { margin-top: 26px; font-size: 14px; color: var(--ink-2); }
+.lookup input {
+  font: inherit; padding: 7px 10px; border: 1px solid var(--line);
+  border-radius: 7px; text-transform: uppercase; width: 120px; margin: 0 4px;
+}
+
+.status { margin: 18px 2px; color: var(--muted); }
+.status.error { color: #a5321f; }
+
+/* - detail view */
+.back { margin-bottom: 14px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 20px 22px;
+  margin-top: 16px;
+}
+.detail-header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.detail-header h2 { margin: 0; font-weight: 700; font-size: 24px; letter-spacing: -0.01em; }
+.detail-header .ticker { color: var(--muted); font-weight: 500; font-size: 18px; }
+.meta { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.meta .sector { color: var(--ink-2); }
+
+.card-title {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--accent-ink); font-weight: 700;
+  margin: 0 0 12px; padding-bottom: 7px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 8px;
+}
+.provenance {
+  font-size: 12px; color: var(--muted); margin: 12px 0 0;
+  padding-top: 10px; border-top: 1px dashed var(--line);
+}
+.provenance a { font-weight: 550; }
+
+/* AI narrative, clearly framed as a summary of the data and not an oracle */
+.narrative-card { border-left: 3px solid var(--accent); }
+.narrative-text { margin: 0; font-size: 16px; line-height: 1.55; }
+.narrative-frame {
+  margin: 12px 0 0; font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(14, 124, 120, 0.1); color: var(--accent-ink);
+}
+
+/* - pipeline stage visualization (the signature) */
+.stage-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  align-items: end;
+  margin-top: 6px;
+}
+.stage {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-height: 150px; justify-content: flex-end;
+}
+/* progression chevrons between stages, early to advanced */
+.stage:not(:last-child)::after {
+  content: "›";
+  position: absolute; right: -8px; bottom: 40px;
+  color: var(--muted); font-size: 20px; line-height: 1;
+}
+.stage .count {
+  font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stage .bar {
+  width: 100%; max-width: 64px;
+  border-radius: 4px 4px 2px 2px;   /* rounded top, near-square baseline */
+  min-height: 3px;
+  transition: height 0.35s ease;
+}
+.stage .bar.s1 { background: var(--p1); }
+.stage .bar.s2 { background: var(--p2); }
+.stage .bar.s3 { background: var(--p3); }
+.stage .bar.s4 { background: var(--p4); }
+.stage .bar.empty { background: var(--line); }
+.stage .stage-label {
+  font-size: 12px; color: var(--ink-2); font-weight: 550; text-align: center;
+}
+.stage-baseline { height: 1px; background: var(--line); margin: 0 0 8px; }
+.stage-note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+.stage-legend { font-size: 12px; color: var(--muted); margin: 2px 0 14px; }
+
+/* - financial figures */
+.figures { display: flex; flex-wrap: wrap; gap: 28px; }
+.figure { min-width: 130px; }
+.figure .flabel { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.figure .fval { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.figure .fsub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.signal { margin: 14px 0 0; font-size: 14px; }
+.signal-label { font-weight: 650; }
+.signal-label.good { color: var(--good); }
+.signal-label.warn { color: var(--warn); }
+.signal ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); }
+.signal li { margin: 2px 0; }
+
+/* trials table links */
+td.nct a { text-decoration: none; font-variant-numeric: tabular-nums; }
+td.nct a:hover { text-decoration: underline; }
+.phase-tag { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.disclaimer { font-size: 12px; color: var(--muted); margin-top: 20px; }
+
+/* - responsive */
+@media (max-width: 640px) {
+  .site-header .wrap { flex-direction: column; align-items: flex-start; }
+  .filter input[type="number"], .filter select { width: 100%; }
+  .filter { flex: 1 1 140px; }
+  .stage { min-height: 120px; }
+  .detail-header h2 { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

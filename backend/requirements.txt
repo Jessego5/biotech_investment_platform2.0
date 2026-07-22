@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+requests
+sqlalchemy
+numpy
+faiss-cpu
+python-dotenv
+openai

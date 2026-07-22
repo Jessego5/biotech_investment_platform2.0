@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# virtual environments
+venv/
+.venv/
+env/
+.env
+
+# secrets / local config
+*.local
+secrets.*
+
+# OS / editor junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# local database (regenerate with: python ingest.py)
+*.db
+*.sqlite
+*.sqlite3
+
+# personal design notes (not part of the repo)
+DESIGN_NOTES.md
+
+# old spike/test scripts (kept locally, not part of the repo)
+multi_company_spike.py
+RXRX_test.py
+
+# logs
+*.log
