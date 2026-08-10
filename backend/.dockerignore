@@ -1,0 +1,42 @@
+# keep the build context small and keep local-only things out of the image.
+
+# the local SQLite database is tens of megabytes and is not what the container
+# uses. the container reads DATABASE_URL instead.
+*.db
+*.sqlite
+*.sqlite3
+
+# local raw snapshots. the container writes to S3 instead, and this folder only
+# grows, so it must never end up in the build context.
+raw/
+
+# secrets never belong in an image layer. the container gets its configuration
+# from real environment variables.
+.env
+*.local
+secrets.*
+
+# local virtual environment: the wrong platform's binaries, and reinstalled by
+# the build anyway
+venv/
+.venv/
+env/
+
+# python and test junk
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# tests run in CI, not inside the runtime image
+tests/
+pytest.ini
+requirements-dev.txt
+
+# OS / editor junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+*.log

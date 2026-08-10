@@ -1,0 +1,431 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+# The disposable half of the pipeline: everything that runs ingestion, and nothing
+# that stores anything. Redeploy or delete this freely; the snapshots and the queue
+# live in storage.yaml and are untouched by it.
+#
+#   schedule -> dispatch Lambda -> SQS -> runner Lambda -> ECS Fargate task
+#
+# The Lambdas exist to stay under a time limit, not to do the work. Ingesting the
+# universe takes minutes, well past what a Lambda may run, so each function does
+# only the millisecond part (decide the slices; start the tasks) and the fetching
+# happens in a container with no such limit.
+#
+# Requires storage.yaml to be deployed first for the same Environment.
+
+Description: Biotech agent - scheduled ingestion pipeline (disposable)
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+    Description: Which environment this stack is. Sizing and schedule come from it.
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC the ingestion tasks run in.
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >-
+      Subnets for the tasks. These need a route to the internet, since ingestion
+      calls ClinicalTrials.gov and SEC. Public subnets work with AssignPublicIp
+      ENABLED; private subnets need a NAT gateway and DISABLED.
+
+  AssignPublicIp:
+    Type: String
+    Default: ENABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: >-
+      ENABLED for public subnets. A Fargate task in a public subnet with no public
+      IP cannot reach the internet at all, and the failure looks like every API
+      call timing out.
+
+  CpuArchitecture:
+    Type: String
+    Default: X86_64
+    AllowedValues: [X86_64, ARM64]
+    Description: >-
+      Must match what the image was actually built for. Building on an Apple
+      Silicon machine produces an ARM64 image by default, and running it on the
+      X86_64 default fails at start with "exec format error", not at build time.
+
+  ImageTag:
+    Type: String
+    Default: latest
+    Description: Which image tag in the ECR repository the tasks run.
+
+  LambdaCodeS3Bucket:
+    Type: String
+    Description: Bucket holding the zipped Lambda code (see the deploy steps in the README).
+
+  LambdaCodeS3Key:
+    Type: String
+    Default: lambdas.zip
+    Description: Key of the zip containing dispatch.py and runner.py.
+
+  SecUserAgent:
+    Type: String
+    Description: >-
+      Contact string sent to SEC EDGAR. They require automated requests to
+      identify themselves with a real email and reject requests that don't.
+
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: >-
+      SQLAlchemy URL for the database ingestion writes to, e.g.
+      postgresql+psycopg://user:password@host:5432/biotech. Stored in Secrets
+      Manager rather than as a task environment variable, so the password isn't
+      readable in the task definition.
+
+# Per-environment sizing, in one place. This is what the same templates being
+# reusable across environments actually rests on: nothing below branches on the
+# environment, it just reads this table.
+Mappings:
+  EnvironmentConfig:
+    dev:
+      ShardCount: 2               # small runs, cheap, easy to read the logs
+      Schedule: "rate(7 days)"
+      ScheduleState: DISABLED     # a dev stack must not quietly hammer SEC on a schedule
+      TaskCpu: "512"
+      TaskMemory: "1024"
+      LogRetentionDays: 7
+    prod:
+      ShardCount: 8               # 480 companies in slices of 60
+      Schedule: "cron(0 6 * * ? *)"
+      ScheduleState: ENABLED
+      TaskCpu: "1024"
+      TaskMemory: "2048"
+      LogRetentionDays: 30
+
+Resources:
+  # - image and logs
+
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "biotech-agent-${Environment}"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        # untagged layers pile up on every push and are never run again
+        LifecyclePolicyText: |
+          {
+            "rules": [{
+              "rulePriority": 1,
+              "description": "expire untagged images",
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "sinceImagePushed",
+                "countUnit": "days",
+                "countNumber": 7
+              },
+              "action": {"type": "expire"}
+            }]
+          }
+
+  IngestLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/biotech-agent-ingest-${Environment}"
+      RetentionInDays: !FindInMap [EnvironmentConfig, !Ref Environment, LogRetentionDays]
+
+  DispatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/biotech-agent-dispatch-${Environment}"
+      RetentionInDays: !FindInMap [EnvironmentConfig, !Ref Environment, LogRetentionDays]
+
+  RunnerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/biotech-agent-runner-${Environment}"
+      RetentionInDays: !FindInMap [EnvironmentConfig, !Ref Environment, LogRetentionDays]
+
+  # - the database credential
+
+  DatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "biotech-agent-database-url-${Environment}"
+      Description: SQLAlchemy URL the ingestion task writes to.
+      SecretString: !Ref DatabaseUrl
+
+  # - the ingestion task
+
+  # Egress only. Ingestion calls out to two APIs and nothing ever calls in.
+  IngestSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "Outbound-only access for biotech-agent ingestion (${Environment})"
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: ClinicalTrials.gov, SEC EDGAR, ECR, S3, and the database
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "biotech-agent-${Environment}"
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  # Pulls the image and reads the secret. This is what ECS itself uses to start
+  # the task, and it is deliberately separate from what the code can do once running.
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ReadDatabaseSecret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DatabaseSecret
+
+  # What the ingestion code itself may do: write snapshots, and nothing else.
+  # It cannot read them back or delete them, because it never needs to.
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WriteSnapshots
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub
+                  - "${BucketArn}/raw/*"
+                  - BucketArn: !ImportValue
+                      Fn::Sub: "biotech-agent-${Environment}-RawBucketArn"
+
+  IngestTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "biotech-agent-ingest-${Environment}"
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: !FindInMap [EnvironmentConfig, !Ref Environment, TaskCpu]
+      Memory: !FindInMap [EnvironmentConfig, !Ref Environment, TaskMemory]
+      RuntimePlatform:
+        OperatingSystemFamily: LINUX
+        CpuArchitecture: !Ref CpuArchitecture
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        # the name matters: the runner Lambda overrides this container by name
+        - Name: ingest
+          Image: !Sub "${EcrRepository.RepositoryUri}:${ImageTag}"
+          Essential: true
+          # the image's default command serves the API, so a task started with no
+          # overrides at all still needs to run ingestion
+          Command: [python, ingest.py]
+          Environment:
+            - Name: RAW_BUCKET
+              Value: !ImportValue
+                Fn::Sub: "biotech-agent-${Environment}-RawBucketName"
+            - Name: SEC_USER_AGENT
+              Value: !Ref SecUserAgent
+            - Name: ENVIRONMENT
+              Value: !Ref Environment
+          Secrets:
+            - Name: DATABASE_URL
+              ValueFrom: !Ref DatabaseSecret
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref IngestLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ingest
+
+  # - dispatch: schedule to queue
+
+  DispatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WriteLogsAndQueueSlices
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt DispatchLogGroup.Arn
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !ImportValue
+                  Fn::Sub: "biotech-agent-${Environment}-IngestQueueArn"
+
+  DispatchFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "biotech-agent-dispatch-${Environment}"
+      Description: Puts one message on the queue per slice of the universe.
+      Runtime: python3.12
+      Handler: dispatch.handler
+      Role: !GetAtt DispatchRole.Arn
+      # it only sends a handful of messages, so it is over in well under a second
+      Timeout: 30
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref LambdaCodeS3Bucket
+        S3Key: !Ref LambdaCodeS3Key
+      Environment:
+        Variables:
+          QUEUE_URL: !ImportValue
+            Fn::Sub: "biotech-agent-${Environment}-IngestQueueUrl"
+          SHARD_COUNT: !FindInMap [EnvironmentConfig, !Ref Environment, ShardCount]
+
+  IngestSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "biotech-agent-ingest-schedule-${Environment}"
+      Description: Starts a full ingestion run.
+      ScheduleExpression: !FindInMap [EnvironmentConfig, !Ref Environment, Schedule]
+      State: !FindInMap [EnvironmentConfig, !Ref Environment, ScheduleState]
+      Targets:
+        - Id: DispatchFunction
+          Arn: !GetAtt DispatchFunction.Arn
+
+  ScheduleInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt DispatchFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt IngestSchedule.Arn
+
+  # - runner: queue to container task
+
+  RunnerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WriteLogsReadQueueAndStartTasks
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt RunnerLogGroup.Arn
+              # the event source mapping reads on this function's behalf
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !ImportValue
+                  Fn::Sub: "biotech-agent-${Environment}-IngestQueueArn"
+              # any revision of this one task family, so deploying a new task
+              # definition doesn't require touching the policy
+              - Effect: Allow
+                Action: ecs:RunTask
+                Resource: !Sub "arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:task-definition/biotech-agent-ingest-${Environment}:*"
+                Condition:
+                  ArnEquals:
+                    ecs:cluster: !GetAtt EcsCluster.Arn
+              # starting a task means handing ECS the two task roles, which counts
+              # as passing a role and has to be granted explicitly
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  - !GetAtt TaskExecutionRole.Arn
+                  - !GetAtt TaskRole.Arn
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: ecs-tasks.amazonaws.com
+
+  RunnerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "biotech-agent-runner-${Environment}"
+      Description: Starts one ingestion container task per queued slice.
+      Runtime: python3.12
+      Handler: runner.handler
+      Role: !GetAtt RunnerRole.Arn
+      # it starts tasks and returns, it never waits for them, so this is generous
+      Timeout: 60
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref LambdaCodeS3Bucket
+        S3Key: !Ref LambdaCodeS3Key
+      Environment:
+        Variables:
+          CLUSTER: !Ref EcsCluster
+          TASK_DEFINITION: !Ref IngestTaskDefinition
+          CONTAINER_NAME: ingest
+          SUBNETS: !Join [",", !Ref SubnetIds]
+          SECURITY_GROUPS: !GetAtt IngestSecurityGroup.GroupId
+          ASSIGN_PUBLIC_IP: !Ref AssignPublicIp
+
+  QueueToRunner:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !ImportValue
+        Fn::Sub: "biotech-agent-${Environment}-IngestQueueArn"
+      FunctionName: !GetAtt RunnerFunction.Arn
+      # one slice per invocation. batching would mean several RunTask calls in one
+      # invocation, and one failure taking the others down with it.
+      BatchSize: 1
+      # this is what makes the runner's per-message failure reporting mean
+      # anything: without it, one bad slice redelivers the whole batch
+      FunctionResponseTypes: [ReportBatchItemFailures]
+
+Outputs:
+  ClusterName:
+    Description: ECS cluster the ingestion tasks run in.
+    Value: !Ref EcsCluster
+
+  RepositoryUri:
+    Description: Push the image here, then deploy with a matching ImageTag.
+    Value: !GetAtt EcrRepository.RepositoryUri
+
+  TaskDefinitionArn:
+    Description: The ingestion task definition the runner starts.
+    Value: !Ref IngestTaskDefinition
+
+  DispatchFunctionName:
+    Description: Invoke this by hand to start a run without waiting for the schedule.
+    Value: !Ref DispatchFunction
+
+  ScheduleState:
+    Description: Whether the schedule is live in this environment.
+    Value: !FindInMap [EnvironmentConfig, !Ref Environment, ScheduleState]

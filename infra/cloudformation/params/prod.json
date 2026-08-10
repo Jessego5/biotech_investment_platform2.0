@@ -1,0 +1,11 @@
+[
+  {"ParameterKey": "Environment",        "ParameterValue": "prod"},
+  {"ParameterKey": "VpcId",              "ParameterValue": "vpc-REPLACE_ME"},
+  {"ParameterKey": "SubnetIds",          "ParameterValue": "subnet-REPLACE_ME,subnet-REPLACE_ME"},
+  {"ParameterKey": "AssignPublicIp",     "ParameterValue": "ENABLED"},
+  {"ParameterKey": "CpuArchitecture",    "ParameterValue": "X86_64"},
+  {"ParameterKey": "ImageTag",           "ParameterValue": "latest"},
+  {"ParameterKey": "LambdaCodeS3Bucket", "ParameterValue": "REPLACE_ME-deploy-artifacts"},
+  {"ParameterKey": "LambdaCodeS3Key",    "ParameterValue": "lambdas.zip"},
+  {"ParameterKey": "SecUserAgent",       "ParameterValue": "biotech-agent REPLACE_ME@example.com"}
+]

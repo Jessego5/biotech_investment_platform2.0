@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+# The durable half of the pipeline: the snapshot archive and the work queue.
+#
+# This is a separate stack from pipeline.yaml on purpose. The archive is the one
+# thing here that cannot be rebuilt: re-running ingestion gets you today's data,
+# never last month's. Compute is disposable and gets redeployed constantly, so
+# keeping the two apart means tearing down or replacing the pipeline can never
+# take the history with it.
+#
+# Deploy this once per environment. Deploy pipeline.yaml as often as you like.
+
+Description: Biotech agent - snapshot archive and ingestion queue (durable)
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+    Description: Which environment this stack is. Everything is named and sized from it.
+
+  ArchiveToGlacierDays:
+    Type: Number
+    Default: 90
+    MinValue: 1
+    Description: >-
+      Days before a snapshot moves to Glacier Instant Retrieval. Snapshots are
+      read constantly for a while (diffing recent runs), then almost never except
+      for backtesting, which is exactly the access pattern Glacier IR is priced for.
+
+  MaxReceiveCount:
+    Type: Number
+    Default: 3
+    MinValue: 1
+    Description: >-
+      How many times a slice is retried before it goes to the dead-letter queue.
+      A slice failing is usually a transient API error, so retry, but a slice that
+      fails three times is a real bug and should stop and be visible.
+
+  QueueVisibilityTimeout:
+    Type: Number
+    Default: 360
+    Description: >-
+      How long a message is hidden while being handled. Must be at least the
+      runner Lambda's timeout, and AWS recommends six times it, or a slow
+      invocation gets its message redelivered while it is still working on it.
+
+Resources:
+  # The snapshot archive. Everything ingestion has ever seen from the two APIs.
+  RawBucket:
+    Type: AWS::S3::Bucket
+    # never delete the history because someone deleted the stack
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "biotech-agent-raw-${Environment}-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        # the key layout already prevents overwrites, so versioning is here to
+        # survive a bug that writes to the wrong key, not for normal operation
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ArchiveOldSnapshots
+            Status: Enabled
+            Transitions:
+              - StorageClass: GLACIER_IR
+                TransitionInDays: !Ref ArchiveToGlacierDays
+          - Id: ExpireOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+          - Id: CleanUpFailedUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Slices that failed every retry. Nothing reads this automatically: it exists so
+  # a broken slice stops and waits to be looked at rather than retrying forever.
+  IngestDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "biotech-agent-ingest-dlq-${Environment}"
+      MessageRetentionPeriod: 1209600   # 14 days, the maximum
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # One message per slice of the universe. This is what decouples the scheduler
+  # from the work, and what makes a failed slice retry instead of vanish.
+  IngestQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub "biotech-agent-ingest-${Environment}"
+      VisibilityTimeout: !Ref QueueVisibilityTimeout
+      MessageRetentionPeriod: 3600      # a slice not started within the hour is stale
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt IngestDeadLetterQueue.Arn
+        maxReceiveCount: !Ref MaxReceiveCount
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Fires when slices are landing in the dead-letter queue, which means ingestion
+  # is quietly incomplete: the run "succeeded" but part of the universe is missing.
+  DeadLetterAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "biotech-agent-ingest-dlq-not-empty-${Environment}"
+      AlarmDescription: A slice of ingestion failed every retry and is sitting in the DLQ.
+      Namespace: AWS/SQS
+      MetricName: ApproximateNumberOfMessagesVisible
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt IngestDeadLetterQueue.QueueName
+      Statistic: Maximum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 0
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+# Exported so pipeline.yaml can find these without being told, and so replacing
+# the pipeline stack never touches the archive.
+Outputs:
+  RawBucketName:
+    Value: !Ref RawBucket
+    Export:
+      Name: !Sub "biotech-agent-${Environment}-RawBucketName"
+
+  RawBucketArn:
+    Value: !GetAtt RawBucket.Arn
+    Export:
+      Name: !Sub "biotech-agent-${Environment}-RawBucketArn"
+
+  IngestQueueUrl:
+    Value: !Ref IngestQueue
+    Export:
+      Name: !Sub "biotech-agent-${Environment}-IngestQueueUrl"
+
+  IngestQueueArn:
+    Value: !GetAtt IngestQueue.Arn
+    Export:
+      Name: !Sub "biotech-agent-${Environment}-IngestQueueArn"
+
+  DeadLetterQueueUrl:
+    Value: !Ref IngestDeadLetterQueue
+    Export:
+      Name: !Sub "biotech-agent-${Environment}-DeadLetterQueueUrl"
