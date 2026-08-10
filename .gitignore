@@ -25,6 +25,11 @@ secrets.*
 *.sqlite
 *.sqlite3
 
+# local raw snapshots. these are data, not source, and they grow every run.
+# in a real deployment they live in S3 (set RAW_BUCKET) rather than here.
+backend/raw/
+
+
 
 
 # logs
