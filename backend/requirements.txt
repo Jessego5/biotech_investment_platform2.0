@@ -6,3 +6,7 @@ numpy
 faiss-cpu
 python-dotenv
 openai
+
+psycopg[binary]
+
+pgvector

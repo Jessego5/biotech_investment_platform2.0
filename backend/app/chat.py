@@ -33,7 +33,9 @@ PLAN_SYSTEM = (
     '     "min_active_trials": integer|null,\n'
     '     "has_phase3": boolean|null,  // true = has a Phase 3+ program\n'
     '     "sector": string|null,       // one of: Biologics, Pharma preparations, Bio research\n'
-    '     "min_runway": number|null    // minimum cash / annual R&D ratio\n'
+    '     "min_runway": number|null    // minimum years of runway: liquidity\n'
+    '                                  // (cash + marketable securities) divided\n'
+    '                                  // by a year of cash burn\n'
     '  },\n'
     '  "sort_by": "rd"|"cash"|"active_trials"|"total_trials"|"runway"|null,\n'
     '  "limit": integer|null           // for "top N" / "most" questions\n'
@@ -54,8 +56,11 @@ PLAN_SYSTEM = (
     "advice, or asks anything neither the structured data nor the trial text can "
     "answer, use intent=refuse. "
     "Data available per company: name, sector (those three labels only), trial "
-    "counts by phase and status, active and terminated counts, R&D expense, cash, "
-    "and a cash/R&D runway proxy."
+    "counts by phase and status, active and terminated counts, and these SEC "
+    "figures: R&D expense, cash, marketable securities, debt, operating cash "
+    "flow, net income, revenue, and shares outstanding. Runway is years of "
+    "liquidity (cash plus marketable securities) divided by a year of cash burn, "
+    "not a cash-to-R&D ratio."
 )
 
 # Step 2 prompt: answer strictly from the retrieved rows.

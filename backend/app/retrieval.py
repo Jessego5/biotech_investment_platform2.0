@@ -5,9 +5,9 @@ filtering, the right way to look things up is a real database query and not a
 vector search, so the results come back exact and complete.
 """
 
-from .models import Company
+from .models import Company, FINANCIAL_METRICS
 from .data_sources import summarize_pipeline
-from .analysis import build_assessment
+from .analysis import build_assessment, annual_burn, available_liquidity
 
 
 def trials_from_db(company):
@@ -18,15 +18,56 @@ def trials_from_db(company):
     } for t in company.trials]
 
 
+def metrics_from_db(company):
+    """
+    {metric: figure} for one company, keyed by "rd_expense" and "cash". Each figure
+    carries the period it covers, because the two are not the same kind of number:
+    R&D is a total over a full year, cash is a balance on a date.
+    """
+    return {f.metric: {"value": int(f.value), "fiscal_year": f.fiscal_year,
+                       "fiscal_period": f.fiscal_period, "period_end": f.period_end}
+            for f in company.financials}
+
+
 def financials_from_db(company):
     # rebuild the {available, rd_expense, cash} dict that analysis.assess_financials wants
-    fins = {f.metric: {"value": int(f.value), "fiscal_year": f.fiscal_year}
-            for f in company.financials}
+    fins = metrics_from_db(company)
     # no financials stored means we honestly say they're unavailable
     if not fins:
         return {"available": False, "reason": "no financials stored for this company"}
-    return {"available": True, "rd_expense": fins.get("rd_expense"),
-            "cash": fins.get("cash")}
+    # every metric is present whether or not it was reported, so callers can read
+    # a figure without checking the key exists first. driven off the model's list
+    # rather than a fixed pair, so adding a figure to ingestion surfaces it here.
+    return {"available": True,
+            **{metric: fins.get(metric) for metric in FINANCIAL_METRICS}}
+
+
+def derived_figures(fin):
+    """
+    The numbers computed from the stored ones: what a company has to spend, how
+    fast it spends it, and how long that lasts. Returned as data so anything
+    displaying them shows this calculation rather than repeating it.
+    """
+    if not fin.get("available"):
+        return {"liquidity": None, "burn": None, "burn_source": None,
+                "runway": None, "cash_generative": False}
+
+    liquidity, liquidity_note = available_liquidity(fin)
+    burn, burn_source = annual_burn(fin)
+    ocf = fin.get("operating_cash_flow")
+    return {
+        "liquidity": liquidity,
+        # says whether marketable securities were folded in, since that is the
+        # difference between a runway of one year and one of seven
+        "liquidity_note": liquidity_note,
+        "burn": burn,
+        "burn_source": burn_source,
+        "runway": round(liquidity["value"] / burn, 2)
+        if burn and liquidity else None,
+        # a company funding itself has no runway to report, which is different
+        # from one whose runway we simply couldn't work out
+        "cash_generative": bool(burn is None and ocf and ocf["value"] >= 0),
+    }
 
 
 def late_stage_count(by_phase):
@@ -50,17 +91,22 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
         trials = trials_from_db(c)
         pipeline = summarize_pipeline(trials)
         # pull its financials and grab the R&D and cash figures
-        fins = {f.metric: {"value": int(f.value), "fiscal_year": f.fiscal_year}
-                for f in c.financials}
+        fins = metrics_from_db(c)
         rd, cash = fins.get("rd_expense"), fins.get("cash")
         late = late_stage_count(pipeline["by_phase"])
-        # crude runway proxy (cash divided by annual R&D burn), when both are known.
+        # runway: cash divided by a year of burn, when both are known. burn comes
+        # from operating cash flow where it was reported and falls back to R&D
+        # expense otherwise, which is why the source travels with it.
         # keep an exact value for filtering and a rounded one for display, so a
         # min_runway filter doesn't wrongly include a company at say 0.998 that
         # only rounds up to 1.0.
+        burn, burn_source = annual_burn(fins)
+        # cash alone understates what a company has to spend, so runway divides
+        # liquidity (cash plus marketable securities, when their dates agree)
+        liquidity, _ = available_liquidity(fins)
         runway = runway_exact = None
-        if rd and cash and rd["value"] > 0:
-            runway_exact = cash["value"] / rd["value"]
+        if burn and liquidity:
+            runway_exact = liquidity["value"] / burn
             runway = round(runway_exact, 2)
 
         # apply each optional filter, skipping this company if it fails one:
@@ -92,11 +138,19 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
             "name": c.name,
             "sector": c.sector,
             "total_trials": pipeline["total_trials"],
+            # what the sponsor really has, when we only fetched part of it, so a
+            # partial pipeline can be labelled partial instead of passing for whole
+            "total_trials_reported": c.trial_count_total,
+            "trials_truncated": bool(c.trials_truncated),
             "active_trials": pipeline["active_trials"],
             "has_phase3": late > 0,
             "rd_expense": rd,
             "cash": cash,
+            "revenue": fins.get("revenue"),
             "runway": runway,
+            # which figure the runway was divided by, since R&D expense is the
+            # weaker fallback and a reader should be able to tell them apart
+            "burn_source": burn_source,
         })
 
     # sort by a requested metric (descending) if asked, otherwise by ticker
@@ -127,9 +181,19 @@ def company_facts(db, ticker):
     # gather its trials, pipeline summary, financials, and the derived assessment
     trials = trials_from_db(c)
     pipeline = summarize_pipeline(trials)
+    # say so when the stored trials are only part of what the sponsor registered
+    pipeline["total_trials_reported"] = c.trial_count_total
+    pipeline["truncated"] = bool(c.trials_truncated)
     financials = financials_from_db(c)
     assessment = build_assessment(c.name, pipeline, financials)
     return {
         "ticker": c.ticker, "name": c.name, "sector": c.sector,
-        "pipeline": pipeline, "financials": financials, "assessment": assessment,
+        "pipeline": pipeline, "financials": financials,
+        # the figures worked out from the raw ones, computed here rather than
+        # left for whatever is displaying them. runway in particular has real
+        # rules behind it (which balance counts, which burn figure, whether it
+        # applies at all), and a second implementation in the UI would quietly
+        # disagree with this one the moment either changed.
+        "derived": derived_figures(financials),
+        "assessment": assessment,
     }

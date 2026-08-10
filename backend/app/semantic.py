@@ -1,13 +1,31 @@
 """
 This file searches the trial text by meaning, for the questions the structured
 fields can't answer like mechanisms, mutations, or therapies such as CAR-T. Each
-trial's text gets embedded once by embed_trials.py, and here we load those vectors
-into a FAISS index, embed the query, and rank by cosine similarity.
+trial's text gets embedded once by embed_trials.py, and here the query is embedded
+the same way and ranked against them by cosine similarity.
+
+How that ranking happens depends on the database. Postgres does it itself, since
+the embeddings are a real vector column there. SQLite has no such thing, so every
+stored vector is loaded into a FAISS index in memory instead, rebuilt on the first
+query after each process start: about 4.7 seconds at 12,943 trials against 1
+second once warm, which is fine now and is the reason the Postgres path exists.
 """
+
+import os
 
 import numpy as np
 
-from .database import SessionLocal
+# load backend/.env so OPENAI_API_KEY is picked up when this module is used on its
+# own, not just through the API. every other module that needs a key does this;
+# without it, importing this directly works until the first query and then fails
+# on missing credentials.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+except ImportError:
+    pass
+
+from .database import SessionLocal, engine
 from .models import Trial
 
 EMBED_MODEL = "text-embedding-3-small"
@@ -35,8 +53,9 @@ def _load():
         rows = db.query(Trial).filter(Trial.embedding.isnot(None)).all()
         vecs, meta = [], []
         for t in rows:
-            # decode the raw bytes back into a float32 vector
-            vecs.append(np.frombuffer(t.embedding, dtype=np.float32))
+            # the column type hands back a float32 array whichever database it
+            # came out of, so there is nothing to decode here
+            vecs.append(t.embedding)
             # keep the trial's fields alongside it, row for row with the vectors
             meta.append({
                 "nct_id": t.nct_id, "title": t.title, "phase": t.phase,
@@ -70,8 +89,51 @@ def _embed_query(text):
     return q
 
 
+def _search_in_database(query_vector, k):
+    """
+    Ask Postgres for the nearest trials, so nothing is loaded into memory here.
+
+    pgvector's <=> gives cosine DISTANCE, where 0 is identical, and the rest of
+    this file works in similarity, so it is converted on the way out and the same
+    MIN_SCORE floor applies to both paths.
+    """
+    db = SessionLocal()
+    try:
+        distance = Trial.embedding.cosine_distance(list(query_vector))
+        rows = (db.query(Trial, distance.label("distance"))
+                  .filter(Trial.embedding.isnot(None))
+                  .order_by(distance)
+                  .limit(k)
+                  .all())
+        results = []
+        for trial, dist in rows:
+            score = 1.0 - float(dist)
+            # drop weak matches, so an off-topic question gets an honest "no
+            # data" rather than the closest wrong trials
+            if score < MIN_SCORE:
+                continue
+            results.append({
+                "nct_id": trial.nct_id, "title": trial.title,
+                "phase": trial.phase, "status": trial.status,
+                "ticker": trial.company_ticker, "summary": trial.summary or "",
+                "score": score,
+            })
+        return results
+    finally:
+        db.close()
+
+
+def _uses_pgvector():
+    """Whether the database we're on can do the search itself."""
+    return engine.dialect.name == "postgresql"
+
+
 def semantic_search(query, k=8):
     """Return up to k trial dicts most similar in meaning to the query text."""
+    # on Postgres the search is a query, so there is no index to build first
+    if _uses_pgvector():
+        return _search_in_database(_embed_query(query)[0], k)
+
     # make sure the index and metadata are loaded
     _load()
     # nothing to search against, so return an empty list

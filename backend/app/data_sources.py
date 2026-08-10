@@ -8,6 +8,7 @@ import os
 import re
 import threading
 import time
+from datetime import date
 
 import requests
 
@@ -33,8 +34,38 @@ _sec_last = [0.0]
 _SEC_MIN_INTERVAL = 0.15
 
 
+# how many times to retry a request that failed at the network level, and the
+# first backoff in seconds; the wait doubles each attempt.
+RETRY_ATTEMPTS = 4
+RETRY_BACKOFF = 1.0
+
+
+def _get_with_retry(url, params=None, headers=None, timeout=30):
+    """
+    GET a URL, retrying when the connection itself fails. A bad HTTP response is
+    a real answer and is returned as-is, since repeating it returns the same thing.
+
+    Without this a single timeout silently costs a whole company: a full ingest of
+    480 lost four that way, Pfizer among them, and every one succeeded on retry.
+    """
+    for attempt in range(1, RETRY_ATTEMPTS + 1):
+        try:
+            return requests.get(url, params=params, headers=headers,
+                                timeout=timeout)
+        except requests.exceptions.RequestException:
+            # out of attempts, so let the caller see the real error
+            if attempt == RETRY_ATTEMPTS:
+                raise
+            time.sleep(RETRY_BACKOFF * 2 ** (attempt - 1))
+
+
 def _sec_get(url, params=None):
-    """GET an SEC URL, rate-limited across threads, retrying a few times on 429."""
+    """
+    GET an SEC URL, rate-limited across threads, retrying on 429 and on the
+    connection failing. The two are different problems: a 429 means we asked too
+    fast and should pace ourselves, a dropped connection means the request never
+    landed and should simply be repeated.
+    """
     # try up to four times so a throttle doesn't kill the request outright
     for attempt in range(4):
         # only one thread at a time checks the clock and updates the last-call time
@@ -45,8 +76,8 @@ def _sec_get(url, params=None):
                 time.sleep(wait)
             # record the time of this call so the next one paces off it
             _sec_last[0] = time.monotonic()
-        r = requests.get(url, params=params,
-                         headers={"User-Agent": SEC_USER_AGENT}, timeout=30)
+        r = _get_with_retry(url, params=params,
+                            headers={"User-Agent": SEC_USER_AGENT}, timeout=30)
         # a 429 means we got throttled, so back off a bit and try again
         if r.status_code == 429:
             # wait longer on each successive attempt
@@ -94,10 +125,15 @@ def _search_term(name):
 
 CT_BASE = "https://clinicaltrials.gov/api/v2/studies"
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
-SEC_CONCEPT = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{tag}.json"
+# everything SEC holds for one company, in one response. asking per tag instead
+# cannot tell "this company doesn't report that" from "I guessed the wrong name",
+# because both are a 404.
+SEC_FACTS = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 
 # multiple candidate tags, since companies report under different XBRL tags.
 # 10x Genomics, for example, only reports the "excluding acquired IPR&D" variant.
+# a tag may name its taxonomy as "dei:Thing"; anything unqualified is us-gaap,
+# which is where nearly all financial reporting lives.
 RD_TAGS = [
     "ResearchAndDevelopmentExpense",
     "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost",
@@ -105,6 +141,44 @@ RD_TAGS = [
 CASH_TAGS = [
     "CashAndCashEquivalentsAtCarryingValue",
     "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+]
+# cash actually consumed by running the business. this is the real burn, and the
+# reason it beats R&D expense is that R&D isn't a cash figure at all: it excludes
+# G&A and includes non-cash charges like stock compensation.
+OPERATING_CASH_FLOW_TAGS = [
+    "NetCashProvidedByUsedInOperatingActivities",
+    "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+]
+NET_INCOME_TAGS = ["NetIncomeLoss"]
+# whether a company sells anything yet, which splits the universe into two kinds
+# of business that aren't comparable on any other measure.
+REVENUE_TAGS = [
+    "Revenues",
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "RevenueFromContractWithCustomerIncludingAssessedTax",
+]
+# the cover page of every filing carries this, which makes it the most reliably
+# present share count. the us-gaap one is a fallback for filers that omit it.
+SHARES_TAGS = [
+    "dei:EntityCommonStockSharesOutstanding",
+    "CommonStockSharesOutstanding",
+]
+# money held in securities rather than as cash. biotechs park most of their
+# funding here, so cash alone badly understates what they have to spend:
+# CRISPR Therapeutics reports $291m of cash against $2.06b of securities.
+SECURITIES_TAGS = [
+    "AvailableForSaleSecuritiesDebtSecurities",
+    "AvailableForSaleSecuritiesDebtSecuritiesCurrent",
+    "AvailableForSaleSecurities",
+    "MarketableSecuritiesCurrent",
+    "ShortTermInvestments",
+]
+# what has to be paid back. runway says nothing about this, so it is reported
+# beside the runway rather than folded into it.
+DEBT_TAGS = [
+    "LongTermDebt",
+    "ConvertibleLongTermNotesPayable",
+    "ConvertibleNotesPayable",
 ]
 
 
@@ -138,20 +212,78 @@ def _trial_text(ps):
     return "\n".join(parts)[:2000]
 
 
-def fetch_trials(sponsor_name, page_size=100):
+# the API returns results a page at a time. this is how many trials we are
+# willing to pull for one sponsor before stopping: high enough that every company
+# in the universe comes back whole, low enough that a handful of giants (Pfizer
+# registers over six thousand studies) can't make one company dominate a run.
+MAX_STUDIES_PER_SPONSOR = 1000
+
+
+def fetch_trials_raw(sponsor_name, page_size=100,
+                     max_studies=MAX_STUDIES_PER_SPONSOR):
     """
-    Fetch trials for a sponsor. Returns a list of flattened trial dicts,
-    filtered to those whose lead sponsor actually matches (avoids the
-    Illumina-style over-matching where the search pulls in unrelated orgs).
+    The network half: follow the pages and return what ClinicalTrials.gov said,
+    keeping the API's own shape plus totalCount (what the sponsor really has) and
+    truncated (whether we stopped early). Kept separate from parsing so the
+    payload can be archived exactly as fetched.
+
+    The search returns one page at a time. Asking once and keeping the first page
+    silently truncated every large sponsor: Pfizer registers 6,061 studies and
+    only 100 were stored, and a wrong trial count feeds a wrong pipeline label.
     """
-    # search ClinicalTrials.gov by sponsor, cleaning the name so ", Inc." doesn't blank it
-    resp = requests.get(CT_BASE, params={
-        "query.spons": _search_term(sponsor_name),
-        "pageSize": page_size,
-        "countTotal": "true",
-    }, timeout=30)
-    resp.raise_for_status()
-    studies = resp.json().get("studies", [])
+    search_term = _search_term(sponsor_name)
+    studies = []
+    total = None
+    page_token = None
+
+    while True:
+        # search ClinicalTrials.gov by sponsor, cleaning the name so ", Inc." doesn't blank it
+        params = {
+            "query.spons": search_term,
+            "pageSize": page_size,
+            "countTotal": "true",
+        }
+        # every page after the first is requested with the previous page's token
+        if page_token:
+            params["pageToken"] = page_token
+        # retry the page, not the company. a large sponsor takes ten requests, so
+        # it has ten chances to hit a timeout, and losing the whole company to one
+        # of them is how the biggest sponsors became the most likely to go missing.
+        resp = _get_with_retry(CT_BASE, params=params, timeout=30)
+        resp.raise_for_status()
+        payload = resp.json()
+
+        studies.extend(payload.get("studies", []))
+        # the total is only reported on the first page, so keep the first one seen
+        if total is None:
+            total = payload.get("totalCount")
+
+        page_token = payload.get("nextPageToken")
+        # stop at the last page, or once this sponsor has had its share of the run
+        if not page_token or len(studies) >= max_studies:
+            break
+
+    # a page is fetched whole, so the last one usually overshoots the ceiling.
+    # trim, so max_studies is an actual limit rather than a rough one.
+    studies = studies[:max_studies]
+
+    return {
+        "studies": studies,
+        "totalCount": total if total is not None else len(studies),
+        # true only when the sponsor really has more than we fetched, so a company
+        # that happens to land exactly on the limit isn't wrongly flagged
+        "truncated": bool(total is not None and len(studies) < total),
+    }
+
+
+def parse_trials(payload, sponsor_name):
+    """
+    The parsing half: flatten a ClinicalTrials.gov response into trial dicts,
+    keeping only the trials whose lead sponsor actually matches (this is what
+    avoids the Illumina-style over-matching where the search pulls in unrelated
+    orgs). No network here, so it can be re-run over an archived snapshot.
+    """
+    studies = payload.get("studies", [])
 
     trials = []
     # loop through each study the search returned
@@ -182,6 +314,11 @@ def fetch_trials(sponsor_name, page_size=100):
             "summary": _trial_text(ps),
         })
     return trials
+
+
+def fetch_trials(sponsor_name, page_size=100):
+    """Fetch and parse in one call, which is what most callers want."""
+    return parse_trials(fetch_trials_raw(sponsor_name, page_size), sponsor_name)
 
 
 def summarize_pipeline(trials):
@@ -240,56 +377,188 @@ def company_name(ticker):
 # (like BioNTech) file a 20-F. accept both so foreign biotechs aren't blanked out.
 ANNUAL_FORMS = ("10-K", "10-K/A", "20-F", "20-F/A")
 
+# every form we'll take a balance-sheet figure from. quarterly reports included,
+# because a balance is only useful if it is the most recent one.
+REPORTED_FORMS = ANNUAL_FORMS + ("10-Q", "10-Q/A", "6-K", "6-K/A")
 
-def _latest_annual(cik, tags):
+
+def _covers_a_year(start, end):
+    """
+    Whether a reported period is a full financial year.
+
+    Annual filings restate shorter periods too, and a fiscal year isn't exactly
+    365 days (companies with a 52/53-week year, or one that shifted its year end,
+    run a few weeks over or under), so this allows a window rather than an exact
+    length. A quarter can't reach it and two years can't stay under it.
+    """
+    if not start or not end:
+        return False
+    try:
+        days = (date.fromisoformat(end) - date.fromisoformat(start)).days
+    # a malformed date is a reason to skip the entry, not to fail the whole fetch
+    except ValueError:
+        return False
+    return 300 <= days <= 400
+
+
+def fetch_company_facts(cik):
+    """
+    Everything SEC holds for one company, in one request, which is roughly 300
+    tags for a typical biotech and makes each new metric free.
+
+    This replaces asking per tag, and the reason is not speed. Companies report
+    the same figure under different tag names, so a request for a name a company
+    doesn't use returns 404 whether or not it has the thing. Reading that as "no
+    debt" is how you report a company has none when it has $586m of it.
+    """
+    r = _sec_get(SEC_FACTS.format(cik=cik))
+    # a company with no XBRL data at all, which is rare but not an error
+    if r.status_code == 404:
+        return {}
+    r.raise_for_status()
+    return r.json()
+
+
+def _entries_for(facts, tag):
+    """
+    Every reported entry for one tag, across all its units. Tags are us-gaap
+    unless they say otherwise, since share counts live in the dei taxonomy.
+    """
+    taxonomy, _, name = tag.rpartition(":")
+    concept = facts.get("facts", {}).get(taxonomy or "us-gaap", {}).get(name)
+    if not concept:
+        return []
+    return [e for entries in concept.get("units", {}).values() for e in entries]
+
+
+def _latest_annual(facts, tags):
     """
     Return the most recent annual value across ALL candidate tags.
 
-    Important: we scan every tag and keep the newest fiscal year, instead of
+    Important: we scan every tag and keep the newest period, instead of
     returning the first tag that happens to have data. A company that switched
     which XBRL tag it reports cash under (Illumina did) would otherwise get
     stuck on a stale year from the abandoned tag.
-    
     """
     best = None
     # check every candidate tag, not just the first that has data
     for tag in tags:
-        r = _sec_get(SEC_CONCEPT.format(cik=cik, tag=tag))
-        # a 404 just means this company doesn't report under this tag, so skip it
-        if r.status_code == 404:
-            continue
-        r.raise_for_status()
         # walk every reported entry under this tag
-        for _, entries in r.json().get("units", {}).items():
-            for e in entries:
-                # only keep full-year figures that came from an annual report form
-                if e.get("fp") == "FY" and e.get("form") in ANNUAL_FORMS:
-                    # hold onto this one if it is the newest fiscal year seen so far
-                    if best is None or e.get("fy", 0) > best["fiscal_year"]:
-                        best = {"value": e["val"], "fiscal_year": e["fy"], "tag": tag}
+        for e in _entries_for(facts, tag):
+            # only keep figures that came from an annual report form
+            if e.get("fp") != "FY" or e.get("form") not in ANNUAL_FORMS:
+                continue
+            start, end = e.get("start"), e.get("end")
+            # an expense is a total over a period, so it must have both dates,
+            # and the period must actually be a year: a 10-K also restates
+            # shorter periods, and a partial year compared against cash on hand
+            # would overstate runway
+            if not _covers_a_year(start, end):
+                continue
+            # newest period wins, and where the same period was reported more
+            # than once the most recently filed version is the current one
+            key = (end, e.get("filed") or "")
+            if best is None or key > best["_key"]:
+                best = {"value": e["val"],
+                        # taken from the period itself, not from the entry's
+                        # "fy" field: that is the fiscal year of the FILING,
+                        # and one 10-K reports several years of comparatives
+                        # all carrying the filing's year
+                        "fiscal_year": int(end[:4]),
+                        "fiscal_period": "FY", "period_end": end,
+                        "tag": tag, "_key": key}
+    if best is not None:
+        del best["_key"]
     return best
 
 
-def fetch_financials(ticker):
+def _latest_balance(facts, tags):
+    """
+    Return the most recent balance-sheet value across ALL candidate tags. These
+    are the entries with an end date and no start; anything covering a period
+    carries both and is skipped.
+
+    Cash is a point in time, so the right figure is the newest reported, whatever
+    filing it came from. Taking the newest ANNUAL one shows what a company had at
+    its last year end: Recursion's 10-K says $743m against $546m in its latest
+    10-Q, and runway is computed from it.
+    """
+    best = None
+    for tag in tags:
+        for e in _entries_for(facts, tag):
+            # a period total, not a balance: not comparable, so skip it
+            if e.get("start") is not None:
+                continue
+            if e.get("form") not in REPORTED_FORMS:
+                continue
+            end = e.get("end")
+            if not end:
+                continue
+            # newest balance date wins; where the same date was reported more
+            # than once (a restatement, or the prior year shown for comparison
+            # in a later filing) the most recently filed one is the current view
+            key = (end, e.get("filed") or "")
+            if best is None or key > best["_key"]:
+                best = {"value": e["val"], "fiscal_year": e.get("fy"),
+                        "fiscal_period": e.get("fp"), "period_end": end,
+                        "tag": tag, "_key": key}
+    if best is not None:
+        # sorting detail, not something callers should see
+        del best["_key"]
+    return best
+
+
+def fetch_financials(ticker, cik=None):
     """
     Return real financials for a public company, or a reason it's unavailable.
-    Keyed by CIK (resolved from ticker).
+    Everything is keyed by CIK, EDGAR's stable identifier.
+
+    Pass the CIK when known. Resolving it from the ticker goes through SEC's
+    ticker file, which lists only currently-listed companies and changes over
+    time, so a company sourced into the universe earlier can drop out and start
+    reading as "not found in EDGAR" despite having perfectly good filings.
     """
-    # resolve the ticker to a CIK, which is how EDGAR keys everything
-    cik = _load_ticker_map().get(ticker.upper())
+    # only fall back to the ticker file when we weren't told the CIK
+    cik = cik or _load_ticker_map().get(ticker.upper())
     if not cik:
         # a company that got acquired or delisted (Verve, bought by Lilly) drops
         # out of EDGAR's ticker file even though its old trials still exist.
         return {"available": False, "reason": f"ticker {ticker} not found in EDGAR"}
 
-    # pull the most recent annual R&D expense and cash figures
-    rd = _latest_annual(cik, RD_TAGS)
-    cash = _latest_annual(cik, CASH_TAGS)
+    # one request for everything this company has ever reported. every figure
+    # below is then selected from what is actually there, rather than guessed at
+    # by name, and adding another metric costs no further requests.
+    facts = fetch_company_facts(cik)
 
-    # if both come back empty, the company almost certainly files under IFRS
+    # totals over a period only mean something over a full year: quarterly
+    # filings report both the quarter and the year to date under the same tag and
+    # period, so "the newest one" is ambiguous, and a three-month total compared
+    # against cash on hand would overstate runway roughly fourfold.
+    figures = {metric: _latest_annual(facts, tags) for metric, tags in (
+        ("rd_expense", RD_TAGS),
+        # the real burn. R&D leaves out G&A and everything else, so using it as
+        # the denominator of runway makes every company look longer-lived.
+        ("operating_cash_flow", OPERATING_CASH_FLOW_TAGS),
+        ("net_income", NET_INCOME_TAGS),
+        # whether the company sells anything yet
+        ("revenue", REVENUE_TAGS),
+    )}
+    # balances are a value on a date, so the newest one reported is the right
+    # one, quarterly filings included
+    figures.update({metric: _latest_balance(facts, tags) for metric, tags in (
+        ("cash", CASH_TAGS),
+        # kept separate from cash rather than summed here: whether the two can be
+        # added depends on their dates matching, which is a judgement the analysis
+        # layer makes and explains, not something to bake silently into a total
+        ("marketable_securities", SECURITIES_TAGS),
+        ("debt", DEBT_TAGS),
+        ("shares_outstanding", SHARES_TAGS),
+    )})
+
+    # if nothing at all came back, the company almost certainly files under IFRS
     # (foreign private issuers like BioNTech file a 20-F with ifrs-full tags,
     # not us-gaap), so say that plainly instead of showing a blank.
-    if rd is None and cash is None:
+    if not any(figures.values()):
         return {
             "available": False,
             "cik": cik,
@@ -297,4 +566,4 @@ def fetch_financials(ticker):
                       "reporting under IFRS (not parsed by this tool)",
         }
 
-    return {"available": True, "cik": cik, "rd_expense": rd, "cash": cash}
+    return {"available": True, "cik": cik, **figures}

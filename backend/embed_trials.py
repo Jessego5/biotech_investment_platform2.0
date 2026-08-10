@@ -65,7 +65,9 @@ def main():
         resp = embed([t.summary for t in chunk])
         # store each returned vector back on its trial as raw float32 bytes
         for t, item in zip(chunk, resp.data):
-            t.embedding = np.asarray(item.embedding, dtype=np.float32).tobytes()
+            # hand over the numbers; the column type stores them as a pgvector
+            # column on Postgres and as raw float32 bytes on SQLite
+            t.embedding = np.asarray(item.embedding, dtype=np.float32)
         # commit after each batch so progress isn't lost on an interruption
         db.commit()
         done += len(chunk)

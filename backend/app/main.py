@@ -27,11 +27,12 @@ from pydantic import BaseModel
 
 from .database import SessionLocal, init_db
 from .models import Company
-from .data_sources import (fetch_trials, summarize_pipeline, fetch_financials,
-                           company_name)
+from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
+                           fetch_financials, company_name)
 from .analysis import build_assessment
 from .narrative import generate_narrative
-from .retrieval import trials_from_db, financials_from_db, query_companies
+from .retrieval import (trials_from_db, financials_from_db, query_companies,
+                        derived_figures)
 from .chat import answer_question
 
 app = FastAPI(title="Biotech Agent API", version="0.3.0")
@@ -99,13 +100,18 @@ def root():
 @app.get("/companies")
 def list_companies(min_rd: float = None, min_cash: float = None,
                    has_phase3: bool = None, min_active_trials: int = None,
-                   sector: str = None):
+                   sector: str = None, min_runway: float = None,
+                   sort_by: str = None, limit: int = None):
     """
     Browse/filter the universe. All filters are optional and combine (AND).
       min_rd, min_cash     - minimum R&D expense / cash (raw dollars)
       has_phase3           - only companies with a Phase 3+ program
       min_active_trials    - minimum number of active trials
       sector               - exact sector label (e.g. "Biologics")
+      min_runway           - minimum years of runway (liquidity / annual burn)
+      sort_by              - rd | cash | active_trials | total_trials | runway,
+                             each descending
+      limit                - cap the number of companies returned
     The actual filtering lives in retrieval.query_companies, shared with the chat.
     """
     db = SessionLocal()
@@ -113,7 +119,9 @@ def list_companies(min_rd: float = None, min_cash: float = None,
         # hand the filters off to the shared query and return the matches
         results = query_companies(db, min_rd=min_rd, min_cash=min_cash,
                                   has_phase3=has_phase3,
-                                  min_active_trials=min_active_trials, sector=sector)
+                                  min_active_trials=min_active_trials,
+                                  sector=sector, min_runway=min_runway,
+                                  sort_by=sort_by, limit=limit)
         return {"count": len(results), "companies": results}
     finally:
         db.close()
@@ -156,6 +164,10 @@ def analyze_company(ticker: str):
             cik = company.cik
             trials = trials_from_db(company)
             financials = financials_from_db(company)
+            # how many the sponsor really has, so a pipeline we only fetched part
+            # of isn't shown as the whole of it
+            reported_total = company.trial_count_total
+            truncated = bool(company.trials_truncated)
             source = "database"
         else:
             # live fallback: resolve a name, then hit the APIs directly
@@ -167,7 +179,12 @@ def analyze_company(ticker: str):
             # use the override search name if there is one for this ticker
             search_name = SPONSOR_OVERRIDES.get(ticker, name)
             try:
-                trials = fetch_trials(search_name)
+                # fetch raw so the sponsor's real trial count survives parsing,
+                # the same way ingestion does it
+                raw_trials = fetch_trials_raw(search_name)
+                trials = parse_trials(raw_trials, search_name)
+                reported_total = raw_trials.get("totalCount")
+                truncated = bool(raw_trials.get("truncated"))
                 financials = fetch_financials(ticker)
             # surface an upstream failure as a 502 instead of a raw crash
             except Exception as e:
@@ -180,6 +197,8 @@ def analyze_company(ticker: str):
 
     # roll the trials up into a pipeline summary and derive the grounded assessment
     pipeline = summarize_pipeline(trials)
+    pipeline["total_trials_reported"] = reported_total
+    pipeline["truncated"] = truncated
     assessment = build_assessment(name, pipeline, financials)
     # the LLM (or template) narrates ONLY the facts above, it can't add numbers
     narrative = generate_narrative(name, assessment)
@@ -192,6 +211,9 @@ def analyze_company(ticker: str):
         "narrative": narrative,
         "pipeline": pipeline,
         "financials": financials,
+        # liquidity, burn and runway worked out here rather than in the browser,
+        # so there is one implementation of those rules and not two
+        "derived": derived_figures(financials),
         "assessment": assessment,
         "trials": trials[:20],
     }

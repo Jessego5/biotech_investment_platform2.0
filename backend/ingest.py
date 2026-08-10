@@ -1,20 +1,30 @@
 """
 This script fills the database with the whole biotech universe. It reads
 companies.json, which build_company_universe.py produces, and for each company it
-fetches the trials and financials from the live APIs and writes them into the
-database. You run it once in a while so the web app can serve fast from the
-database instead of hitting the APIs on every request. It is a polite batch job
-with small delays between companies, meant to run every so often and not per user
-request. Run it with python ingest.py.
+fetches the trials and financials from the live APIs, archives what came back, and
+writes the parsed rows into the database. You run it once in a while so the web app
+can serve fast from the database instead of hitting the APIs on every request. It
+is a polite batch job with small delays between companies, meant to run every so
+often and not per user request.
+
+It can also run as one slice of a bigger run. --shard 2 --of 8 processes only the
+companies in slice 2 of 8, which is how it runs as several container tasks at once
+against a rate-limited API, with each task doing a fair share and no company done
+twice. With no shard arguments it does the whole universe, exactly as before.
+
+    python ingest.py                    # the whole universe
+    python ingest.py --shard 2 --of 8   # just this slice
 """
 
+import argparse
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 
 from app.database import SessionLocal, init_db
-from app.models import Company, Trial, Financial
-from app.data_sources import fetch_trials, fetch_financials
+from app.models import Company, Trial, Financial, FINANCIAL_METRICS
+from app.data_sources import fetch_trials_raw, parse_trials, fetch_financials
+from app.raw_store import get_store, raw_key, snapshot_date
 
 COMPANIES_PATH = os.path.join(os.path.dirname(__file__), "companies.json")
 
@@ -50,26 +60,77 @@ def load_universe():
     return list(universe.values())
 
 
+def select_shard(universe, index, count):
+    """
+    Pick this task's slice of the universe. Every company lands in exactly one
+    shard, so the slices never overlap and together they are the whole universe.
+
+    Sorted by ticker first so the split doesn't depend on the order of
+    companies.json, then dealt round-robin rather than in blocks: the list is
+    alphabetical, and a contiguous block can land on a run of large-caps and
+    leave one task doing most of the work.
+    """
+    if count is None or count <= 1:
+        return universe
+    if not 0 <= index < count:
+        raise ValueError(f"shard {index} is not in range for {count} shards")
+    ordered = sorted(universe, key=lambda r: r["ticker"])
+    return [row for i, row in enumerate(ordered) if i % count == index]
+
+
+def shard_from_env():
+    """
+    Read the shard settings a container task is given. Environment variables
+    rather than arguments, because that is what a task definition overrides.
+    Returns (index, count), or (0, None) when this is a whole-universe run.
+    """
+    count = os.environ.get("SHARD_COUNT")
+    if not count:
+        return 0, None
+    return int(os.environ.get("SHARD_INDEX", 0)), int(count)
+
+
 def fetch_company(row):
     """
-    Just the network part: pull trials + financials for one company. No DB here,
-    so this is safe to run in a thread pool. Returns (row, trials, financials);
-    on a network error, returns an error string in place of trials so one bad
-    company doesn't kill the whole run.
+    Just the network part: pull trials + financials for one company. No DB and no
+    archiving here, so this is safe to run in a thread pool. Returns
+    (row, raw_trials, financials); on a network error, returns None in place of
+    the payload so one bad company doesn't kill the whole run.
     """
     try:
         # search ClinicalTrials.gov by the override name if there is one, else the real name
         search_name = row.get("search_name", row["name"])
-        trials = fetch_trials(search_name)
-        financials = fetch_financials(row["ticker"])
-        return row, trials, financials
+        raw_trials = fetch_trials_raw(search_name)
+        # hand over the CIK the universe already recorded, so a company that has
+        # since dropped out of SEC's ticker file still resolves
+        financials = fetch_financials(row["ticker"], row.get("cik"))
+        return row, raw_trials, financials
     # on any network error, hand back the error string so one bad company doesn't crash the run
     except Exception as e:
         return row, None, str(e)
 
 
-def write_company(db, row, trials, financials):
-    """Write one company's fetched data into the DB (main thread only)."""
+def archive(store, date, row, raw_trials, financials):
+    """
+    Keep what the APIs returned, under today's date. Trials are stored exactly as
+    ClinicalTrials.gov sent them, so a snapshot can be re-parsed later for a field
+    this version of the code drops. Financials are stored as the resolved figures
+    rather than the raw XBRL, since they are assembled from several concept
+    endpoints and the resolved form is what a later comparison actually wants.
+    """
+    ticker = row["ticker"]
+    store.put(raw_key("clinicaltrials", ticker, date), raw_trials)
+    store.put(raw_key("sec", ticker, date), financials)
+
+
+def write_company(db, row, trials, financials, trial_totals=None):
+    """
+    Write one company's fetched data into the DB (main thread only).
+
+    trial_totals is the fetched trials payload, which carries how many trials the
+    sponsor really has and whether the fetch stopped short of all of them.
+    """
+    trial_totals = trial_totals or {}
     ticker = row["ticker"]
 
     # upsert the company row, creating it if it isn't already there
@@ -81,6 +142,10 @@ def write_company(db, row, trials, financials):
     company.name = row["name"]
     company.sector = row.get("sector")
     company.cik = financials.get("cik") or row.get("cik")
+    # what the search said the sponsor really has, so a pipeline we only fetched
+    # part of can be shown as partial rather than as the whole thing
+    company.trial_count_total = trial_totals.get("totalCount")
+    company.trials_truncated = bool(trial_totals.get("truncated"))
 
     # wipe the old trials and financials so we write a clean snapshot
     company.trials.clear()
@@ -97,35 +162,68 @@ def write_company(db, row, trials, financials):
 
     # add the financial rows, but only the metrics that actually came back
     if financials.get("available"):
-        for metric in ("rd_expense", "cash"):
+        for metric in FINANCIAL_METRICS:
             entry = financials.get(metric)
             if entry:
                 company.financials.append(Financial(
                     metric=metric, value=entry["value"],
                     fiscal_year=entry["fiscal_year"],
+                    fiscal_period=entry.get("fiscal_period"),
+                    period_end=entry.get("period_end"),
                 ))
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Ingest the biotech universe.")
+    parser.add_argument("--shard", type=int, default=None,
+                        help="which slice of the universe this run handles")
+    parser.add_argument("--of", type=int, default=None, dest="shard_count",
+                        help="how many slices the universe is split into")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    # arguments win when given, otherwise fall back to the container's environment
+    if args.shard_count:
+        shard_index, shard_count = args.shard or 0, args.shard_count
+    else:
+        shard_index, shard_count = shard_from_env()
+
     init_db()
     db = SessionLocal()
-    universe = load_universe()
-    print(f"Ingesting {len(universe)} companies ({WORKERS} fetches at a time)...\n")
+    store = get_store()
+    date = snapshot_date()
+
+    universe = select_shard(load_universe(), shard_index, shard_count)
+    where = f"shard {shard_index} of {shard_count}" if shard_count else "full universe"
+    print(f"Ingesting {len(universe)} companies ({where}, "
+          f"{WORKERS} fetches at a time, snapshot {date})...\n")
 
     done = 0
-    # fetch everything in parallel, but write to SQLite one at a time as results
+    # fetch everything in parallel, but archive and write one at a time as results
     # come back (SQLite only allows a single writer).
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        for row, trials, financials in pool.map(fetch_company, universe):
+        for row, raw_trials, financials in pool.map(fetch_company, universe):
             done += 1
-            # trials being None means the fetch itself failed, so skip it, don't crash
-            if trials is None:
+            # a None payload means the fetch itself failed, so skip it, don't crash
+            if raw_trials is None:
                 print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} "
                       f"FETCH FAILED: {financials}")
                 continue
+
+            # archive before parsing. the snapshot is the durable artifact, and it
+            # should survive even if today's parsing or schema turns out to be wrong.
+            try:
+                archive(store, date, row, raw_trials, financials)
+            except Exception as e:
+                print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} "
+                      f"ARCHIVE FAILED: {e}")
+
             # write this company and commit it, rolling back if the write fails
             try:
-                write_company(db, row, trials, financials)
+                trials = parse_trials(raw_trials, row.get("search_name", row["name"]))
+                write_company(db, row, trials, financials, raw_trials)
                 db.commit()
                 fin_ok = financials.get("available", False)
                 print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} "

@@ -1,0 +1,4 @@
+# dev-only dependencies. the app itself doesn't need these.
+-r requirements.txt
+
+pytest
