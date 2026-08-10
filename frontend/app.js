@@ -197,6 +197,7 @@ function renderBrowse(companies) {
       <td class="num">${c.active_trials}</td>
       <td class="num">${money(c.rd_expense)}</td>
       <td class="num">${money(c.cash)}</td>
+      <td class="num">${runwayCell(c)}</td>
     </tr>`).join("");
   browseResults.innerHTML = `
     <table>
@@ -204,6 +205,7 @@ function renderBrowse(companies) {
         <th>Ticker</th><th>Name</th><th>Sector</th><th>Stage</th>
         <th class="num">Trials</th><th class="num">Active</th>
         <th class="num">R&amp;D</th><th class="num">Cash</th>
+        <th class="num">Runway</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -274,10 +276,12 @@ function renderDetail(data) {
   detailResults.appendChild(pipelineCard(p, a.pipeline_signal));
 
   // financials, with the sources linked back to EDGAR
-  detailResults.appendChild(financialsCard(data.financials, a.financial_signal, data.cik));
+  detailResults.appendChild(financialsCard(data.financials, a.financial_signal,
+                                           data.cik, data.derived));
 
   // trials, linked out to ClinicalTrials.gov
-  detailResults.appendChild(trialsCard(data.trials, p.total_trials));
+  detailResults.appendChild(trialsCard(data.trials, p.total_trials,
+                                       p.total_trials_reported, p.truncated));
 
   const d = document.createElement("p");
   d.className = "disclaimer";
@@ -340,7 +344,7 @@ function bucketPhases(byPhase) {
   return b;
 }
 
-function financialsCard(fin, signal, cik) {
+function financialsCard(fin, signal, cik, derived) {
   const cls = signalClass(signal.label);
   const evidence = (signal.evidence || []).map((l) => `<li>${escapeHtml(l)}</li>`).join("");
 
@@ -348,15 +352,37 @@ function financialsCard(fin, signal, cik) {
   if (!fin || !fin.available) {
     body = `<p class="muted-cell">${escapeHtml((fin && fin.reason) || "Financials unavailable.")}</p>`;
   } else {
-    const rd = fin.rd_expense, cash = fin.cash;
-    let runway = "";
-    if (rd && cash && rd.value > 0) runway = (cash.value / rd.value).toFixed(1) + "×";
-    body = `
-      <div class="figures">
-        ${figure("R&D expense", money(rd), rd ? "FY" + rd.fiscal_year : "")}
-        ${figure("Cash", money(cash), cash ? "FY" + cash.fiscal_year : "")}
-        ${runway ? figure("Runway proxy", runway, "cash ÷ annual R&D") : ""}
-      </div>`;
+    const d = derived || {};
+    // every figure here comes from the API. runway in particular is NOT worked
+    // out again in the browser: which balance counts toward it, which burn
+    // figure it divides by, and whether it applies at all are real rules, and a
+    // second copy of them here would drift from the one the evidence describes.
+    const figures = [
+      figure("Cash", money(fin.cash), period(fin.cash)),
+      figure("Securities", money(fin.marketable_securities),
+             period(fin.marketable_securities)),
+      // what the two above add up to, when their dates allow it
+      figure("Liquidity", money(d.liquidity), period(d.liquidity)),
+      figure("Annual burn", money(d.burn === null || d.burn === undefined
+                                  ? null : { value: d.burn }),
+             d.burn_source || ""),
+      figure("R&D expense", money(fin.rd_expense), period(fin.rd_expense)),
+      figure("Revenue", money(fin.revenue), period(fin.revenue)),
+      figure("Debt", money(fin.debt), period(fin.debt)),
+      figure("Shares outstanding", count(fin.shares_outstanding),
+             period(fin.shares_outstanding)),
+    ];
+
+    // a company funding itself out of operations has no runway to run out of,
+    // which is a different statement from not being able to work one out
+    if (d.cash_generative) {
+      figures.push(figure("Runway", "n/a", "operations generate cash"));
+    } else if (d.runway !== null && d.runway !== undefined) {
+      figures.push(figure("Runway", d.runway.toFixed(1) + " yrs",
+                          "liquidity ÷ " + (d.burn_source || "burn")));
+    }
+
+    body = `<div class="figures">${figures.join("")}</div>`;
   }
 
   const src = cik
@@ -373,6 +399,9 @@ function financialsCard(fin, signal, cik) {
 }
 
 function figure(label, val, sub) {
+  // a figure the company never reported is left out entirely rather than shown
+  // as "n/a", so the card says what is known instead of listing what isn't
+  if (val === "n/a" && label !== "Runway") return "";
   return `<div class="figure">
     <div class="flabel">${label}</div>
     <div class="fval">${val}</div>
@@ -380,7 +409,32 @@ function figure(label, val, sub) {
   </div>`;
 }
 
-function trialsCard(trials, total) {
+// which period a figure covers. these are not all the same kind of number: a
+// balance is true on a date, a total covers a year, so saying "FY2025" for both
+// would claim something different from what was filed.
+function period(entry) {
+  if (!entry) return "";
+  if (entry.fiscal_period === "FY") return "FY" + entry.fiscal_year + ", full year";
+  if (entry.period_end) return "as of " + entry.period_end;
+  return entry.fiscal_year ? "FY" + entry.fiscal_year : "";
+}
+
+// runway as the API computed it. the title says which burn figure it divided by,
+// because R&D expense is the weaker fallback and the two shouldn't look alike.
+function runwayCell(c) {
+  if (c.runway === null || c.runway === undefined) return "n/a";
+  const src = c.burn_source || "burn";
+  const weak = src === "R&D expense" ? " *" : "";
+  return `<span title="liquidity ÷ ${escapeHtml(src)}">${c.runway.toFixed(1)}y${weak}</span>`;
+}
+
+function count(entry) {
+  if (!entry) return "n/a";
+  const m = entry.value / 1e6;
+  return m >= 1 ? m.toFixed(1) + "M" : Math.round(entry.value).toLocaleString();
+}
+
+function trialsCard(trials, total, sponsorTotal, truncated) {
   if (!trials || !trials.length) {
     return card(`
       <p class="card-title">Registered trials</p>
@@ -395,8 +449,17 @@ function trialsCard(trials, total) {
       <td class="muted-cell">${escapeHtml(t.status || "")}</td>
     </tr>`).join("");
   const shown = total > trials.length ? `showing ${trials.length} of ${total}` : `${total} total`;
+  // a few very large sponsors register more studies than one ingest will pull.
+  // say so, rather than presenting part of a pipeline as the whole of it.
+  const partial = truncated && sponsorTotal
+    ? `<p class="muted-cell">This sponsor has ${sponsorTotal.toLocaleString()} registered
+       studies in total. Ingestion stops short of fetching them all, so the counts and
+       phase breakdown above cover the ${total.toLocaleString()} stored here, not the
+       full set.</p>`
+    : "";
   return card(`
     <p class="card-title">Registered trials <span class="muted-cell">(${shown})</span></p>
+    ${partial}
     <div class="table-scroll"><table>
       <thead><tr><th>NCT id</th><th>Title</th><th>Phase</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
