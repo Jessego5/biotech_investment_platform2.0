@@ -1,4 +1,4 @@
-// This is the frontend for the Biotech Agent. It has two views, a live browse and
+// This is the frontend for the platform. It has two views, a live browse and
 // filter screen and a detail view for one company. The detail view shows its work,
 // every figure ties back to and links to its real source. The backend runs on port 8000.
 const API = "http://127.0.0.1:8000";
