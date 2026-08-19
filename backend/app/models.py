@@ -199,3 +199,34 @@ class FilingChunk(Base):
     embedding = Column(Embedding)
 
     filing = relationship("Filing", back_populates="chunks")
+
+
+class RegistryTrial(Base):
+    __tablename__ = "registry_trials"
+
+    # trials from the wider registry, deliberately NOT in the trials table.
+    # that one holds studies led by a company in our universe, and every pipeline
+    # count, phase label and signal is computed from it. Mixing a hundred thousand
+    # studies run by everyone else into it would silently turn a competitor's
+    # Phase 3 into part of a company's own pipeline, which is the one thing the
+    # grounded numbers cannot survive.
+    #
+    # This table answers a different question: who else is developing for this
+    # indication, and when are their readouts due.
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nct_id = Column(String, index=True, unique=True)
+    sponsor = Column(String, index=True)
+    sponsor_class = Column(String)        # INDUSTRY, NIH, OTHER, ...
+    phase = Column(String, index=True)
+    status = Column(String, index=True)
+    conditions = Column(Text)             # what it studies, joined with "; "
+    # dates carry whether they happened or are forecast. an estimated completion
+    # is when a readout is expected; an actual one is when it arrived. reporting
+    # the first as though it were the second would invent history.
+    start_date = Column(String)
+    start_date_type = Column(String)      # ACTUAL or ESTIMATED
+    completion_date = Column(String)
+    completion_date_type = Column(String)
+    enrollment = Column(Integer)
+    enrollment_type = Column(String)
+    fetched_at = Column(DateTime, default=_now)
