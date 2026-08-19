@@ -34,6 +34,8 @@ from .narrative import generate_narrative
 from .retrieval import (trials_from_db, financials_from_db, query_companies,
                         derived_figures)
 from .chat import answer_question
+from .changes import compare, compare_universe, latest_pair
+from .raw_store import get_store, snapshot_coverage
 
 app = FastAPI(title="Biotech Agent API", version="0.3.0")
 
@@ -217,3 +219,59 @@ def analyze_company(ticker: str):
         "assessment": assessment,
         "trials": trials[:20],
     }
+
+
+@app.get("/snapshots")
+def list_snapshots():
+    """
+    Which dated snapshots the archive holds, and how many companies each covers.
+    The count is there because not every run covers the universe: repairing a few
+    companies writes a date holding only those, and it is not a baseline anyone
+    should compare against.
+    """
+    coverage = snapshot_coverage()
+    return {"snapshots": [{"date": d, "companies": n} for d, n in coverage]}
+
+
+@app.get("/changes")
+def universe_changes(since: str = None, until: str = None):
+    """
+    What changed across the universe between two snapshots. With no dates it uses
+    the newest snapshot and the most recent earlier one covering a comparable set
+    of companies.
+
+    Everything here is derived by comparing two archived payloads, so it needs no
+    API call and says which two dates it compared.
+    """
+    store = get_store()
+    if since and until:
+        pair = (since, until)
+    else:
+        pair = latest_pair(store)
+    # one snapshot is not an error, it just means nothing can be said yet
+    if pair is None:
+        return {"from": None, "to": None, "companies": [],
+                "reason": "need two snapshots covering a comparable set of companies"}
+
+    names = {t: SPONSOR_OVERRIDES.get(t, n) for t, n in COMPANY_NAMES.items()}
+    return compare_universe(store, names, pair[0], pair[1])
+
+
+@app.get("/company/{ticker}/changes")
+def company_changes(ticker: str, since: str = None, until: str = None):
+    """What changed for one company between two snapshots."""
+    ticker = ticker.upper()
+    store = get_store()
+    pair = (since, until) if since and until else latest_pair(store)
+    if pair is None:
+        raise HTTPException(status_code=404,
+                            detail="not enough snapshots to compare")
+
+    name = SPONSOR_OVERRIDES.get(ticker, COMPANY_NAMES.get(ticker, ticker))
+    result = compare(store, ticker, name, pair[0], pair[1])
+    # absent from one of the dates, which is a different answer from no change
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"{ticker} is not in both snapshots ({pair[0]} and {pair[1]})")
+    return result

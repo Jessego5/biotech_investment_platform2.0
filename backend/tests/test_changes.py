@@ -247,3 +247,42 @@ def test_compare_reports_both_kinds_of_change_together():
 
     assert result["from"] == "2026-08-07" and result["to"] == "2026-08-19"
     assert {c["kind"] for c in result["changes"]} == {"status_changed", "figure_changed"}
+
+
+# - caching, which is safe only because the archive never changes
+
+def test_a_repeated_comparison_does_not_reread_the_archive():
+    # reading a thousand compressed snapshots is the whole cost of the feature,
+    # and a snapshot never changes once written
+    objects = {}
+    objects.update(keys("AAA", "2026-08-07", payload([study("NCT001")]), {}))
+    objects.update(keys("AAA", "2026-08-19", payload([study("NCT002")]), {}))
+
+    class CountingStore(FakeStore):
+        reads = 0
+
+        def get(self, key):
+            CountingStore.reads += 1
+            return super().get(key)
+
+    store = CountingStore(objects)
+    from app.changes import compare_universe
+    compare_universe(store, {"AAA": SPONSOR}, "2026-08-07", "2026-08-19")
+    after_first = CountingStore.reads
+    compare_universe(store, {"AAA": SPONSOR}, "2026-08-07", "2026-08-19")
+
+    assert after_first > 0
+    assert CountingStore.reads == after_first
+
+
+def test_a_different_date_pair_is_computed_separately():
+    objects = {}
+    for date in ("2026-08-07", "2026-08-19", "2026-08-20"):
+        objects.update(keys("AAA", date, payload([study("NCT001")]), {}))
+    store = FakeStore(objects)
+    from app.changes import compare_universe
+
+    a = compare_universe(store, {"AAA": SPONSOR}, "2026-08-07", "2026-08-19")
+    b = compare_universe(store, {"AAA": SPONSOR}, "2026-08-07", "2026-08-20")
+
+    assert a["to"] == "2026-08-19" and b["to"] == "2026-08-20"

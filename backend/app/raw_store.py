@@ -105,3 +105,68 @@ def get_store():
     if RAW_BUCKET:
         return S3RawStore(RAW_BUCKET)
     return LocalRawStore(RAW_DIR)
+
+
+def _dates_local(directory, source):
+    """Snapshot dates on local disk, newest first."""
+    prefix = os.path.join(directory, RAW_PREFIX, source)
+    if not os.path.isdir(prefix):
+        return []
+    return sorted((d for d in os.listdir(prefix)
+                   if os.path.isdir(os.path.join(prefix, d))), reverse=True)
+
+
+def _dates_s3(client, bucket, source):
+    """
+    Snapshot dates in S3, newest first. Listing with a delimiter returns the date
+    folders themselves rather than every object under them, which matters because
+    each date holds hundreds of companies.
+    """
+    paginator = client.get_paginator("list_objects_v2")
+    dates = set()
+    for page in paginator.paginate(Bucket=bucket, Prefix=f"{RAW_PREFIX}/{source}/",
+                                   Delimiter="/"):
+        for entry in page.get("CommonPrefixes", []):
+            dates.add(entry["Prefix"].rstrip("/").rsplit("/", 1)[-1])
+    return sorted(dates, reverse=True)
+
+
+def snapshot_dates(source="clinicaltrials"):
+    """
+    Which dates the archive holds, newest first. This is what lets the app offer a
+    comparison without being told in advance which runs exist.
+    """
+    if RAW_BUCKET:
+        import boto3
+        return _dates_s3(boto3.client("s3"), RAW_BUCKET, source)
+    return _dates_local(RAW_DIR, source)
+
+
+def _count_local(directory, source, date):
+    path = os.path.join(directory, RAW_PREFIX, source, date)
+    return len(os.listdir(path)) if os.path.isdir(path) else 0
+
+
+def _count_s3(client, bucket, source, date):
+    paginator = client.get_paginator("list_objects_v2")
+    return sum(page.get("KeyCount", 0) for page in
+               paginator.paginate(Bucket=bucket,
+                                  Prefix=f"{RAW_PREFIX}/{source}/{date}/"))
+
+
+def snapshot_coverage(source="clinicaltrials"):
+    """
+    How many companies each snapshot date holds, newest first.
+
+    Not every run covers the universe: repairing a handful of companies writes a
+    date with only those few in it. Comparing against one of those would report
+    almost every company as absent rather than unchanged, so anything choosing a
+    baseline needs to see the coverage rather than just the date.
+    """
+    if RAW_BUCKET:
+        import boto3
+        client = boto3.client("s3")
+        return [(d, _count_s3(client, RAW_BUCKET, source, d))
+                for d in _dates_s3(client, RAW_BUCKET, source)]
+    return [(d, _count_local(RAW_DIR, source, d))
+            for d in _dates_local(RAW_DIR, source)]

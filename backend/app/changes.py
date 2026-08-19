@@ -12,7 +12,7 @@ number in this project can.
 """
 
 from .data_sources import parse_trials
-from .raw_store import raw_key
+from .raw_store import raw_key, snapshot_coverage
 
 # statuses worth calling out when a trial arrives in one, since they are the
 # outcomes a reader is watching for rather than routine progress
@@ -168,3 +168,68 @@ def compare(store, ticker, sponsor_name, earlier, later):
                     + financial_changes(pair["before"]["financials"],
                                         pair["after"]["financials"])),
     }
+
+
+# how much of the newest snapshot a baseline has to cover to be worth comparing
+# against. a repair run writes a date holding a handful of companies, and using
+# one as the baseline reports the rest as absent rather than as unchanged.
+MIN_BASELINE_COVERAGE = 0.8
+
+
+def latest_pair(store):
+    """
+    The newest snapshot and the most recent earlier one that covers a comparable
+    set of companies, oldest first. None when there is no such pair.
+
+    Coverage matters more than recency here. The archive holds a date with eight
+    companies in it, written while repairing the ones a run had lost, and taking
+    simply the two newest dates would pick it and report the other 470 companies
+    as missing.
+    """
+    coverage = snapshot_coverage()
+    if len(coverage) < 2:
+        return None
+    (newest, newest_count), rest = coverage[0], coverage[1:]
+    for date, count in rest:
+        if count >= newest_count * MIN_BASELINE_COVERAGE:
+            return date, newest
+    return None
+
+
+# a comparison already made, keyed by the two dates and how many companies were
+# asked for. safe to keep indefinitely because a snapshot never changes once
+# written, so the diff between two dates is a pure function of those dates.
+_comparisons = {}
+
+
+def compare_universe(store, companies, earlier, later, use_cache=True):
+    """
+    Every company's changes between two dates, skipping the ones with nothing to
+    report. companies is {ticker: sponsor_name}, since the sponsor name is what
+    the trial payloads are parsed against.
+
+    Companies present in only one of the two dates are counted separately rather
+    than dropped silently: a run that missed half the universe should be visible
+    as missing, not as a quiet period.
+
+    Cached, because the work is reading a thousand compressed snapshots off disk
+    rather than comparing them: about ten seconds for the universe, of which the
+    comparison itself is under a fifth of a second. Repeating that per page load
+    would be the whole cost of the feature for no new information.
+    """
+    key = (earlier, later, len(companies))
+    if use_cache and key in _comparisons:
+        return _comparisons[key]
+
+    results, incomparable = [], []
+    for ticker, sponsor_name in sorted(companies.items()):
+        result = compare(store, ticker, sponsor_name, earlier, later)
+        if result is None:
+            incomparable.append(ticker)
+        elif result["changes"]:
+            results.append(result)
+    result = {"from": earlier, "to": later, "companies": results,
+              "not_in_both_snapshots": incomparable}
+    if use_cache:
+        _comparisons[key] = result
+    return result
