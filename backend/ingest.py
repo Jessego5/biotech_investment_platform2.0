@@ -12,8 +12,13 @@ companies in slice 2 of 8, which is how it runs as several container tasks at on
 against a rate-limited API, with each task doing a fair share and no company done
 twice. With no shard arguments it does the whole universe, exactly as before.
 
+--snapshot-only archives what the APIs returned without writing to the database.
+Writing replaces a company's trial rows, which drops their embeddings, so this is
+how a snapshot gets captured for history without costing a re-embed of everything.
+
     python ingest.py                    # the whole universe
     python ingest.py --shard 2 --of 8   # just this slice
+    python ingest.py --snapshot-only    # capture history, touch nothing
 """
 
 import argparse
@@ -179,6 +184,10 @@ def parse_args():
                         help="which slice of the universe this run handles")
     parser.add_argument("--of", type=int, default=None, dest="shard_count",
                         help="how many slices the universe is split into")
+    parser.add_argument("--snapshot-only", action="store_true",
+                        help="archive what the APIs return without writing to the "
+                             "database, so history can be captured without "
+                             "disturbing what the app is serving")
     return parser.parse_args()
 
 
@@ -220,6 +229,13 @@ def main():
                 print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} "
                       f"ARCHIVE FAILED: {e}")
 
+            # archiving is the whole job in snapshot-only mode. this exists
+            # because writing replaces a company's trial rows, which drops their
+            # embeddings, and capturing history should not cost a re-embed.
+            if args.snapshot_only:
+                print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} archived")
+                continue
+
             # write this company and commit it, rolling back if the write fails
             try:
                 trials = parse_trials(raw_trials, row.get("search_name", row["name"]))
@@ -233,7 +249,10 @@ def main():
                 print(f"  [{done:>3}/{len(universe)}] {row['ticker']:6} ERROR: {e}")
 
     db.close()
-    print("\nDONE. Database populated. Start the API with: uvicorn app.main:app --reload")
+    if args.snapshot_only:
+        print(f"\nDONE. Snapshots written for {date}. The database was not touched.")
+    else:
+        print("\nDONE. Database populated. Start the API with: uvicorn app.main:app --reload")
 
 
 if __name__ == "__main__":
