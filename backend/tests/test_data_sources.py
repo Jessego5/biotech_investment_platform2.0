@@ -12,7 +12,7 @@ import requests
 from app import data_sources
 from app.data_sources import (_core_name, _search_term, _trial_text,
                               summarize_pipeline, fetch_trials,
-                              _latest_annual, fetch_financials)
+                              _latest_annual, _latest_balance, fetch_financials)
 
 
 class FakeResponse:
@@ -551,10 +551,10 @@ def test_a_known_cik_skips_the_ticker_file_entirely(monkeypatch):
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map",
                         lambda: {})   # ticker no longer listed anywhere
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None:
                         {"value": 1, "fiscal_year": 2025, "fiscal_period": "FY",
                          "period_end": "2025-12-31", "tag": tags[0]})
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags: None)
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None: None)
 
     result = fetch_financials("CPRX", "0001369568")
 
@@ -567,8 +567,8 @@ def test_the_ticker_file_is_only_a_fallback(monkeypatch):
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map",
                         lambda: {"RXRX": "0001601830"})
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags: None)
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags: None)
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None: None)
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None: None)
 
     assert fetch_financials("RXRX")["cik"] == "0001601830"
 
@@ -590,8 +590,8 @@ def test_fetch_financials_explains_an_ifrs_filer(monkeypatch):
                         lambda: {"BNTX": "0001776985"})
     # a 20-F filer reporting under ifrs-full has no us-gaap figures at all, so
     # both lookups have to come back empty
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags: None)
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags: None)
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None: None)
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None: None)
 
     result = fetch_financials("BNTX")
 
@@ -604,10 +604,10 @@ def test_fetch_financials_returns_both_metrics_keyed_by_cik(monkeypatch):
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map",
                         lambda: {"FATE": "0001434316"})
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None:
                         {"value": 100, "fiscal_year": 2024, "fiscal_period": "FY",
                          "period_end": "2024-12-31", "tag": tags[0]})
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None:
                         {"value": 250, "fiscal_year": 2026, "fiscal_period": "Q2",
                          "period_end": "2026-06-30", "tag": tags[0]})
 
@@ -626,11 +626,11 @@ def test_rd_comes_from_the_year_and_cash_from_the_latest_balance(monkeypatch):
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map", lambda: {"AAA": "1"})
     asked = {}
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None:
                         asked.setdefault("annual", tags) and None or
                         {"value": 1, "fiscal_year": 2025, "fiscal_period": "FY",
                          "period_end": "2025-12-31", "tag": tags[0]})
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None:
                         asked.setdefault("balance", tags) and None or
                         {"value": 2, "fiscal_year": 2026, "fiscal_period": "Q2",
                          "period_end": "2026-06-30", "tag": tags[0]})
@@ -648,10 +648,10 @@ def test_fetch_financials_is_available_when_only_one_metric_resolves(monkeypatch
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map", lambda: {"AAA": "1"})
     # R&D resolves, cash does not
-    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags:
+    monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None:
                         {"value": 50, "fiscal_year": 2024, "fiscal_period": "FY",
                          "period_end": "2024-12-31", "tag": tags[0]})
-    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags: None)
+    monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None: None)
 
     result = fetch_financials("AAA")
 
@@ -785,3 +785,76 @@ def test_latest_balance_does_not_leak_its_sort_key(monkeypatch):
     PAYLOAD = facts(Tag=[balance(100, "2026-06-30")])
 
     assert "_key" not in data_sources._latest_balance(PAYLOAD, ["Tag"])
+
+
+# - point-in-time reconstruction
+
+def test_a_figure_filed_after_the_as_of_date_is_invisible():
+    # a 10-K covering 2025 is not public until early 2026, so reconstructing the
+    # end of 2025 must not see it. this is the whole of lookahead bias: select on
+    # the period a figure covers and every signal looks prescient.
+    payload = facts(Tag=[entry(500, 2025, filed="2026-02-15")])
+
+    assert _latest_annual(payload, ["Tag"], as_of="2025-12-31") is None
+    assert _latest_annual(payload, ["Tag"], as_of="2026-03-01")["value"] == 500
+
+
+def test_the_as_of_boundary_includes_the_filing_day_itself():
+    payload = facts(Tag=[entry(500, 2025, filed="2026-02-15")])
+
+    assert _latest_annual(payload, ["Tag"], as_of="2026-02-15")["value"] == 500
+    assert _latest_annual(payload, ["Tag"], as_of="2026-02-14") is None
+
+
+def test_reconstruction_falls_back_to_what_was_public_then():
+    # asking about early 2026 should see the 2024 figure, not the 2025 one that
+    # had not been filed yet
+    payload = facts(Tag=[entry(300, 2024, filed="2025-02-15"),
+                         entry(500, 2025, filed="2026-02-15")])
+
+    best = _latest_annual(payload, ["Tag"], as_of="2026-01-01")
+
+    assert best["value"] == 300
+    assert best["fiscal_year"] == 2024
+
+
+def test_without_an_as_of_date_nothing_is_filtered():
+    # the live path asks for the current picture and must be unaffected
+    payload = facts(Tag=[entry(500, 2025, filed="2026-02-15")])
+
+    assert _latest_annual(payload, ["Tag"])["value"] == 500
+
+
+def test_an_entry_with_no_filing_date_is_excluded_from_reconstruction():
+    # assuming it was public would put back the bias this exists to remove
+    undated = {"val": 500, "fy": 2025, "fp": "FY", "form": "10-K",
+               "start": "2025-01-01", "end": "2025-12-31"}
+    payload = facts(Tag=[undated])
+
+    assert _latest_annual(payload, ["Tag"], as_of="2026-06-01") is None
+    # but it is still usable when asking for the present
+    assert _latest_annual(payload, ["Tag"])["value"] == 500
+
+
+def test_balances_honour_the_as_of_date_too():
+    payload = facts(Tag=[balance(100, "2026-03-31", filed="2026-05-01"),
+                         balance(200, "2026-06-30", filed="2026-08-01")])
+
+    assert _latest_balance(payload, ["Tag"], as_of="2026-07-01")["value"] == 100
+    assert _latest_balance(payload, ["Tag"], as_of="2026-09-01")["value"] == 200
+
+
+def test_fetch_financials_reconstructs_a_past_date(monkeypatch):
+    monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
+    seen = {}
+    monkeypatch.setattr(data_sources, "_latest_annual",
+                        lambda facts, tags, as_of=None: seen.setdefault("annual", as_of))
+    monkeypatch.setattr(data_sources, "_latest_balance",
+                        lambda facts, tags, as_of=None: seen.setdefault("balance", as_of))
+
+    data_sources.fetch_financials("AAA", "1", as_of="2021-12-31")
+
+    # both kinds of lookup have to be reconstructed, or the picture is half past
+    # and half present
+    assert seen["annual"] == "2021-12-31"
+    assert seen["balance"] == "2021-12-31"

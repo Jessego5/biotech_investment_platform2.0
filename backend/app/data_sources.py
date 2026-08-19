@@ -431,7 +431,27 @@ def _entries_for(facts, tag):
     return [e for entries in concept.get("units", {}).values() for e in entries]
 
 
-def _latest_annual(facts, tags):
+def _was_public_by(entry, as_of):
+    """
+    Whether a figure had been filed by a given date.
+
+    This is the whole of point-in-time reconstruction. A 10-K covering 2021 is
+    not public until early 2022, so asking what a company looked like at the end
+    of 2021 has to exclude it: the period a figure covers says nothing about when
+    anyone could see it. Selecting on the period instead of the filing date is
+    how a backtest ends up trading on information that did not exist yet, and
+    every signal it produces looks prescient.
+
+    An entry with no filing date is excluded rather than assumed public, since
+    assuming would reintroduce exactly the bias this exists to remove.
+    """
+    if as_of is None:
+        return True
+    filed = entry.get("filed")
+    return bool(filed) and filed <= as_of
+
+
+def _latest_annual(facts, tags, as_of=None):
     """
     Return the most recent annual value across ALL candidate tags.
 
@@ -447,6 +467,9 @@ def _latest_annual(facts, tags):
         for e in _entries_for(facts, tag):
             # only keep figures that came from an annual report form
             if e.get("fp") != "FY" or e.get("form") not in ANNUAL_FORMS:
+                continue
+            # and, when reconstructing a past date, only what was public by then
+            if not _was_public_by(e, as_of):
                 continue
             start, end = e.get("start"), e.get("end")
             # an expense is a total over a period, so it must have both dates,
@@ -472,7 +495,7 @@ def _latest_annual(facts, tags):
     return best
 
 
-def _latest_balance(facts, tags):
+def _latest_balance(facts, tags, as_of=None):
     """
     Return the most recent balance-sheet value across ALL candidate tags. These
     are the entries with an end date and no start; anything covering a period
@@ -491,6 +514,8 @@ def _latest_balance(facts, tags):
                 continue
             if e.get("form") not in REPORTED_FORMS:
                 continue
+            if not _was_public_by(e, as_of):
+                continue
             end = e.get("end")
             if not end:
                 continue
@@ -508,7 +533,7 @@ def _latest_balance(facts, tags):
     return best
 
 
-def fetch_financials(ticker, cik=None):
+def fetch_financials(ticker, cik=None, as_of=None):
     """
     Return real financials for a public company, or a reason it's unavailable.
     Everything is keyed by CIK, EDGAR's stable identifier.
@@ -534,7 +559,7 @@ def fetch_financials(ticker, cik=None):
     # filings report both the quarter and the year to date under the same tag and
     # period, so "the newest one" is ambiguous, and a three-month total compared
     # against cash on hand would overstate runway roughly fourfold.
-    figures = {metric: _latest_annual(facts, tags) for metric, tags in (
+    figures = {metric: _latest_annual(facts, tags, as_of) for metric, tags in (
         ("rd_expense", RD_TAGS),
         # the real burn. R&D leaves out G&A and everything else, so using it as
         # the denominator of runway makes every company look longer-lived.
@@ -545,7 +570,7 @@ def fetch_financials(ticker, cik=None):
     )}
     # balances are a value on a date, so the newest one reported is the right
     # one, quarterly filings included
-    figures.update({metric: _latest_balance(facts, tags) for metric, tags in (
+    figures.update({metric: _latest_balance(facts, tags, as_of) for metric, tags in (
         ("cash", CASH_TAGS),
         # kept separate from cash rather than summed here: whether the two can be
         # added depends on their dates matching, which is a judgement the analysis
