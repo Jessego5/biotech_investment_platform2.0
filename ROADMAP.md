@@ -10,7 +10,7 @@ assessment, the LLM narrative layer that only phrases the facts, the sourced and
 filtered company universe, the database and ingestion behind a filterable API, and
 the two-level frontend (browse the universe, then drill into one company).
 
-## Phase 2: change history (storage done, diffing to go)
+## Phase 2: change history (done, showing it in the app to go)
 
 Done: every ingestion run archives what the APIs returned, one snapshot per
 company per source under a dated key, and nothing overwrites an earlier date
@@ -23,13 +23,30 @@ changes every quarter instead of once a year. Without that, diffing two snapshot
 a month apart would have shown no financial change at all for eleven months of
 the twelve.
 
-To do: read two dates back and diff them into the changes a person would care
-about, then show that. The database rows are still wiped and replaced on each
-ingest, which is fine while the snapshots behind them are the source of truth,
-but showing change in the app means either diffing snapshots on read or storing
-several versions of a row.
+Also done: `app/changes.py` reads two dates back out of the archive and reports
+what moved, with no API call. Run against snapshots twelve days apart it found
+275 of 478 companies changed: 392 figures updated as companies filed their
+quarter, 69 trial status flips, 29 new registrations, one phase advance. The
+individual events are the ones worth knowing about, a trial going to TERMINATED,
+a programme moving from Phase 2 to Phase 3, several reaching COMPLETED.
 
-## Phase 3: monitoring (scheduling written, alerting to go)
+`ingest.py --snapshot-only` captures a snapshot without writing to the database,
+because writing replaces trial rows and drops their embeddings. History should
+not cost a re-embed of everything.
+
+One real limit came out of this. For a sponsor whose fetch was truncated we hold
+the first 1,000 studies of several thousand, and the search does not return them
+in a stable order, so a different subset arrives each run. Comparing them claimed
+1,178 changes at Pfizer in a fortnight when seven trials had been registered. So
+truncated sponsors report only their registry total, and say why. Asking the
+search for a deterministic order would make the subset stable and is worth doing
+before the next capture, though it would still only cover a fixed slice of a
+large sponsor.
+
+To do: show it. The API and the frontend still only describe the present, so the
+changes exist in the archive and nowhere a reader can see them.
+
+## Phase 3: monitoring (scheduling and detection done, alerting to go)
 
 Written but not deployed: the two functions that turn a schedule into ingestion
 work (`infra/lambdas/`). A schedule fires the dispatcher, which puts one message
@@ -37,10 +54,19 @@ per slice of the universe on a queue; the runner turns each message into a
 container task running that slice. This is what keeps the long job out of a
 Lambda's time limit. `ingest.py` takes `--shard N --of M` for exactly this.
 
-To do: the CloudFormation to actually create the queue, cluster, task definition
-and schedule (Phase 6), then the part that matters here, which is detecting the
-changes worth telling someone about (a Phase 3 readout, a newly terminated trial,
-a big drop in cash) and alerting on them.
+Also done: detecting the changes worth telling someone about, which is Phase 2's
+`app/changes.py`. A newly terminated trial, a programme reaching Phase 3 and a
+quarter's figures moving all come out of it already.
+
+To do: deploying it (Phase 6), and deciding what to do when something is found.
+Everything so far writes to a report; nobody is told.
+
+The measured cadence should set the schedule rather than a guess. Of 490 changes
+over twelve days, 392 were companies filing their quarter, which cluster around
+earnings rather than arriving evenly. The trial events, the ones actually worth
+an alert, were a few dozen in a fortnight. So a daily run mostly finds nothing
+and a weekly one loses little, which makes the current daily ScheduleExpression
+in `pipeline.yaml` more than the data asks for.
 
 ## Phase 4: backtesting (last, and blocked on most of the rest)
 
