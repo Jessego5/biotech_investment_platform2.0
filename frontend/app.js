@@ -32,10 +32,11 @@ function route() {
 // live filtering. debounce the number inputs so it feels like an instrument,
 // and update right away on the selects and checkbox
 const debouncedFilter = debounce(runFilters, 250);
-["f-minrd", "f-mincash", "f-minactive"].forEach((id) =>
+["f-minrd", "f-mincash", "f-minactive", "f-minrunway"].forEach((id) =>
   el(id).addEventListener("input", debouncedFilter));
 el("f-sector").addEventListener("change", runFilters);
 el("f-phase3").addEventListener("change", runFilters);
+el("f-sort").addEventListener("change", runFilters);
 el("clear").addEventListener("click", clearFilters);
 el("back").addEventListener("click", () => showBrowse());
 
@@ -157,12 +158,17 @@ async function runFilters() {
   const minrd = numVal("f-minrd");
   const mincash = numVal("f-mincash");
   const minactive = numVal("f-minactive");
+  const minrunway = numVal("f-minrunway");
   const sector = el("f-sector").value;
+  const sortBy = el("f-sort").value;
   if (minrd !== null) params.set("min_rd", minrd * 1e6);
   if (mincash !== null) params.set("min_cash", mincash * 1e6);
   if (minactive !== null) params.set("min_active_trials", minactive);
   if (el("f-phase3").checked) params.set("has_phase3", "true");
   if (sector) params.set("sector", sector);
+  // runway is in years, the same unit the backend works in, so it goes straight through
+  if (minrunway !== null) params.set("min_runway", minrunway);
+  if (sortBy) params.set("sort_by", sortBy);
 
   try {
     const data = await (await fetch(API + "/companies?" + params.toString())).json();
@@ -176,9 +182,10 @@ async function runFilters() {
 }
 
 function clearFilters() {
-  ["f-minrd", "f-mincash", "f-minactive"].forEach((id) => (el(id).value = ""));
+  ["f-minrd", "f-mincash", "f-minactive", "f-minrunway"].forEach((id) => (el(id).value = ""));
   el("f-phase3").checked = false;
   el("f-sector").value = "";
+  el("f-sort").value = "";
   runFilters();
 }
 
@@ -232,10 +239,51 @@ async function showDetail(ticker, fromRoute) {
     if (!r.ok) { detailStatus.className = "status error"; detailStatus.textContent = data.detail || ("Error " + r.status); return; }
     detailStatus.textContent = ""; detailStatus.className = "status";
     renderDetail(data);
+    // what changed is a separate request on purpose: it compares two archived
+    // snapshots and is slower, so the page should not wait on it to draw
+    loadChanges(ticker);
   } catch (e) {
     detailStatus.className = "status error";
     detailStatus.textContent = "Couldn't reach the backend at " + API + ".";
   }
+}
+
+async function loadChanges(ticker) {
+  // a company with only one snapshot, or none, is the normal case rather than an
+  // error, so a 404 here means there is simply nothing to compare
+  let data;
+  try {
+    const r = await fetch(API + "/company/" + ticker + "/changes");
+    if (!r.ok) return;
+    data = await r.json();
+  } catch (e) { return; }
+  if (!data.changes || !data.changes.length) return;
+  detailResults.insertBefore(changesCard(data), detailResults.lastChild);
+}
+
+// what moved between two archived snapshots. the dates are shown because the
+// window is what makes "changed" mean anything.
+function changesCard(data) {
+  const rows = data.changes.map((c) => {
+    const notable = c.notable || c.kind === "phase_changed";
+    const what = c.nct_id
+      ? `<a href="https://clinicaltrials.gov/study/${encodeURIComponent(c.nct_id)}"
+           target="_blank" rel="noopener">${escapeHtml(c.nct_id)}</a>`
+      : escapeHtml(c.metric || "");
+    return `<li class="${notable ? "change notable" : "change"}">
+      <span class="change-kind">${escapeHtml(c.kind.replace(/_/g, " "))}</span>
+      <span class="change-what">${what}</span>
+      <span class="change-detail">${escapeHtml(c.detail || "")}</span>
+      ${c.note ? `<span class="change-note">${escapeHtml(c.note)}</span>` : ""}
+    </li>`;
+  }).join("");
+
+  return card(`
+    <p class="card-title">What changed</p>
+    <p class="meta">Comparing the archived snapshots of ${escapeHtml(data.from)}
+      and ${escapeHtml(data.to)}. Everything here is a difference between two
+      stored responses, not a new lookup.</p>
+    <ul class="changes">${rows}</ul>`);
 }
 
 function showBrowse(fromRoute) {

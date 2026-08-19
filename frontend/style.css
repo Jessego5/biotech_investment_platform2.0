@@ -372,3 +372,35 @@ td.nct a:hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* what changed between two snapshots */
+.changes { list-style: none; margin: .6rem 0 0; padding: 0; }
+.change {
+  display: grid;
+  grid-template-columns: 11rem 8rem 1fr;
+  gap: .5rem 1rem;
+  padding: .5rem 0;
+  border-top: 1px solid var(--line, #e3e6ea);
+  align-items: baseline;
+}
+.change:first-child { border-top: 0; }
+.change-kind {
+  font-size: .78rem;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--muted, #5a6472);
+}
+.change-what { font-variant-numeric: tabular-nums; }
+.change-detail { font-variant-numeric: tabular-nums; }
+/* the outcomes someone is actually watching for: a trial stopping, a phase moving */
+.change.notable .change-kind { color: #9a3412; font-weight: 600; }
+.change.notable .change-detail { font-weight: 600; }
+/* why a truncated sponsor has no trial-level detail, so its absence is explained */
+.change-note {
+  grid-column: 1 / -1;
+  font-size: .82rem;
+  color: var(--muted, #5a6472);
+}
+@media (max-width: 640px) {
+  .change { grid-template-columns: 1fr; gap: .15rem; }
+}

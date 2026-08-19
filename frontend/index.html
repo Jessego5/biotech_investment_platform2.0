@@ -85,6 +85,21 @@
           <label for="f-minactive">Min active trials</label>
           <input id="f-minactive" type="number" min="0" step="1" placeholder="any" inputmode="numeric" />
         </div>
+        <div class="filter">
+          <label for="f-minrunway">Min runway <span class="unit">years</span></label>
+          <input id="f-minrunway" type="number" min="0" step="0.5" placeholder="any" inputmode="decimal" />
+        </div>
+        <div class="filter">
+          <label for="f-sort">Sort by</label>
+          <select id="f-sort">
+            <option value="">Ticker</option>
+            <option value="runway">Runway</option>
+            <option value="cash">Cash</option>
+            <option value="rd">R&amp;D expense</option>
+            <option value="active_trials">Active trials</option>
+            <option value="total_trials">Total trials</option>
+          </select>
+        </div>
         <div class="filter switch">
           <label><input id="f-phase3" type="checkbox" /> <span>Has Phase&nbsp;3+</span></label>
         </div>
