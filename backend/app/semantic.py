@@ -26,7 +26,7 @@ except ImportError:
     pass
 
 from .database import SessionLocal, engine
-from .models import Trial
+from .models import Trial, Filing, FilingChunk
 
 EMBED_MODEL = "text-embedding-3-small"
 
@@ -157,3 +157,68 @@ def semantic_search(query, k=8):
         m["score"] = float(score)
         results.append(m)
     return results
+
+
+# - filing narrative
+
+def _filing_hit(chunk, filing, score):
+    """One matching passage, with enough context to be checkable."""
+    return {
+        "ticker": filing.company_ticker,
+        "section": chunk.section,
+        "form": filing.form,
+        "filed": filing.filed,
+        "text": chunk.text,
+        "score": score,
+    }
+
+
+def search_filings(query, k=6, ticker=None):
+    """
+    Search the narrative sections of annual reports, which is where a company
+    says in its own words what could go wrong. Pass a ticker to ask what one
+    company says rather than searching every filing.
+
+    Separate from the trial search rather than merged with it: a risk factor and
+    a trial description answer different questions, and mixing them would let a
+    trial outrank the passage that actually addresses "what are its risks".
+    """
+    q = _embed_query(query)[0]
+
+    db = SessionLocal()
+    try:
+        if _uses_pgvector():
+            distance = FilingChunk.embedding.cosine_distance(list(q))
+            query_ = (db.query(FilingChunk, Filing, distance.label("d"))
+                        .join(Filing, FilingChunk.filing_id == Filing.id)
+                        .filter(FilingChunk.embedding.isnot(None)))
+            if ticker:
+                query_ = query_.filter(Filing.company_ticker == ticker)
+            rows = query_.order_by(distance).limit(k).all()
+            hits = [_filing_hit(c, f, 1.0 - float(d)) for c, f, d in rows]
+        else:
+            # no vector search here, so score every stored chunk in memory. the
+            # trial path builds a FAISS index because it is queried constantly;
+            # this one is a plain dot product because the chunks are fewer and
+            # the query is rarer.
+            query_ = (db.query(FilingChunk, Filing)
+                        .join(Filing, FilingChunk.filing_id == Filing.id)
+                        .filter(FilingChunk.embedding.isnot(None)))
+            if ticker:
+                query_ = query_.filter(Filing.company_ticker == ticker)
+            rows = query_.all()
+            if not rows:
+                return []
+            m = np.vstack([c.embedding for c, _ in rows]).astype(np.float32)
+            # both sides unit length, so the dot product is cosine similarity
+            m /= np.linalg.norm(m, axis=1, keepdims=True)
+            scores = m @ (q / np.linalg.norm(q))
+            order = np.argsort(-scores)[:k]
+            hits = [_filing_hit(rows[i][0], rows[i][1], float(scores[i]))
+                    for i in order]
+
+        # the same floor as the trial search, so an off-topic question gets an
+        # honest "no data" rather than the least bad passage
+        return [h for h in hits if h["score"] >= MIN_SCORE]
+    finally:
+        db.close()

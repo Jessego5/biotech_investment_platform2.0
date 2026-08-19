@@ -12,7 +12,7 @@ import json
 import os
 
 from .retrieval import query_companies, company_facts
-from .semantic import semantic_search
+from .semantic import semantic_search, search_filings
 
 CHAT_MODEL = "gpt-4o-mini"
 
@@ -23,7 +23,7 @@ PLAN_SYSTEM = (
     "query plan. You do NOT answer the question and you know no company data "
     "yourself. Return ONLY JSON of this shape:\n"
     '{\n'
-    '  "intent": "filter" | "company" | "search" | "greeting" | "refuse",\n'
+    '  "intent": "filter" | "company" | "search" | "risks" | "greeting" | "refuse",\n'
     '  "reason": string,               // if refuse, a short why\n'
     '  "ticker": string | null,        // if the question is about ONE company\n'
     '  "search_query": string | null,  // for intent=search: a concise search phrase\n'
@@ -52,13 +52,19 @@ PLAN_SYSTEM = (
     "they are answered by semantic search over trial descriptions. Do NOT map "
     "them to sector: sector is only one of exactly Biologics, Pharma "
     "preparations, or Bio research. "
+    "If the question asks what a company SAYS about its risks, challenges, "
+    "competition, regulatory exposure or how it explains its own results, use "
+    "intent=risks and put the topic in search_query. Those answers come from "
+    "the narrative of its annual report, not from the structured fields. "
     "If the question asks to predict the future, give buy/sell or investment "
     "advice, or asks anything neither the structured data nor the trial text can "
     "answer, use intent=refuse. "
     "Data available per company: name, sector (those three labels only), trial "
     "counts by phase and status, active and terminated counts, and these SEC "
     "figures: R&D expense, cash, marketable securities, debt, operating cash "
-    "flow, net income, revenue, and shares outstanding. Runway is years of "
+    "flow, net income, revenue, and shares outstanding. The Risk Factors and "
+    "Management's Discussion narrative of each company's latest annual report "
+    "is also searchable. Runway is years of "
     "liquidity (cash plus marketable securities) divided by a year of cash burn, "
     "not a cash-to-R&D ratio."
 )
@@ -178,6 +184,26 @@ def _retrieve(plan, db):
         # unique tickers in their original order, for the source chips
         sources = list(dict.fromkeys(t["ticker"] for t in trials if t["ticker"]))
         return "\n".join(lines), sources, len(trials)
+
+    # risks intent: search the narrative of the annual reports
+    if intent == "risks":
+        query = plan.get("search_query") or ""
+        # a named company narrows it to that company's own filing
+        ticker = (plan.get("ticker") or "").upper() or None
+        passages = search_filings(query, k=6, ticker=ticker) if query else []
+        # nothing matched, so retrieve nothing and let the answer say so
+        if not passages:
+            return "", [], 0
+        lines = ["Passages from annual report narrative:", ""]
+        for p in passages:
+            # say which filing each passage came from, so a claim can be checked
+            # against the actual document
+            lines.append(
+                f"{p['ticker']} {p['form']} filed {p['filed']} "
+                f"({p['section']}):\n  {p['text'][:600]}"
+            )
+        sources = list(dict.fromkeys(p["ticker"] for p in passages if p["ticker"]))
+        return "\n".join(lines), sources, len(passages)
 
     # any other intent retrieves nothing
     return "", [], 0

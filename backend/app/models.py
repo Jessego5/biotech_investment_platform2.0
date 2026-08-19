@@ -2,9 +2,10 @@
 These are the database models for the biotech universe. It runs on SQLite for
 dev but uses plain SQLAlchemy so it can move to Postgres later, and the one place
 the two databases really differ, the trial embedding, is handled by a column type
-that stores whichever form each can search. Every row carries timestamps. For now we only keep the current snapshot, but keeping fetched_at and
-updated_at means we can store several snapshots later without a redesign, which is
-what makes monitoring and backtesting possible down the road.
+that stores whichever form each can search. Every row carries timestamps. For now
+we only keep the current snapshot, but keeping fetched_at and updated_at means we
+can store several snapshots later without a redesign, which is what makes
+monitoring and backtesting possible down the road.
 """
 
 from datetime import datetime, timezone
@@ -81,13 +82,6 @@ FINANCIAL_METRICS = ("rd_expense", "cash", "marketable_securities", "debt",
                      "operating_cash_flow", "net_income", "revenue",
                      "shares_outstanding")
 
-# the financial figures we keep, one Financial row per metric per company. this
-# table is keyed by metric name rather than having a column per figure, so adding
-# one here is the whole change: no migration, just more rows.
-FINANCIAL_METRICS = ("rd_expense", "cash", "marketable_securities", "debt",
-                     "operating_cash_flow", "net_income", "revenue",
-                     "shares_outstanding")
-
 
 def _now():
     # use timezone-aware UTC so the timestamps are never ambiguous
@@ -114,6 +108,8 @@ class Company(Base):
                           cascade="all, delete-orphan")
     financials = relationship("Financial", back_populates="company",
                               cascade="all, delete-orphan")
+    filings = relationship("Filing", back_populates="company",
+                           cascade="all, delete-orphan")
 
 
 class Trial(Base):
@@ -161,3 +157,45 @@ class Financial(Base):
     fetched_at = Column(DateTime, default=_now)
 
     company = relationship("Company", back_populates="financials")
+
+
+class Filing(Base):
+    __tablename__ = "filings"
+
+    # one row per annual report we read the narrative out of. it records what was
+    # extracted as well as what was fetched, because a filing yielding no risk
+    # factors is a normal outcome and has to be distinguishable from never having
+    # been read at all. without that, a gap in the data looks like a fact about
+    # the company.
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    form = Column(String)            # "10-K", or "20-F" for a foreign issuer
+    filed = Column(String)           # ISO date the filing was submitted
+    accession = Column(String)       # EDGAR's id for it, unique per filing
+    document = Column(String)        # the primary document's filename
+    text_chars = Column(Integer)     # size of the whole filing once stripped to text
+    # which sections were found, comma separated, empty when none were. a filing
+    # can incorporate its risk factors by reference or use headings the reader
+    # doesn't recognise, and this is what makes that visible rather than silent.
+    sections_found = Column(String)
+    fetched_at = Column(DateTime, default=_now)
+
+    company = relationship("Company", back_populates="filings")
+    chunks = relationship("FilingChunk", back_populates="filing",
+                          cascade="all, delete-orphan")
+
+
+class FilingChunk(Base):
+    __tablename__ = "filing_chunks"
+
+    # a piece of one section, small enough that its embedding means something. a
+    # biotech's risk factors run past 300,000 characters, and one vector over all
+    # of that describes nothing in particular.
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    filing_id = Column(Integer, ForeignKey("filings.id"), index=True)
+    section = Column(String, index=True)   # "risk_factors" or "mdna"
+    ordinal = Column(Integer)              # position within the section, from 0
+    text = Column(Text)
+    embedding = Column(Embedding)
+
+    filing = relationship("Filing", back_populates="chunks")
