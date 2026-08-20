@@ -18,6 +18,13 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# the financials check comes from the app rather than being written again here.
+# it used to be a second implementation, and the two drifted: the app learned to
+# read ifrs-full tags and to fetch everything a company filed in one request,
+# while this file kept probing us-gaap tag by tag. That is why BioNTech and
+# GlaxoSmithKline were never candidates at all, despite filing full accounts.
+from app.data_sources import fetch_company_facts, RD_TAGS as APP_RD_TAGS
+
 # load backend/.env so SEC_USER_AGENT is picked up when running this directly
 try:
     from dotenv import load_dotenv
@@ -45,15 +52,7 @@ SIC_LABELS = {
 BROWSE = "https://www.sec.gov/cgi-bin/browse-edgar"
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
 CT_BASE = "https://clinicaltrials.gov/api/v2/studies"
-SEC_CONCEPT = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik}/us-gaap/{tag}.json"
-
 HEADERS = {"User-Agent": SEC_USER_AGENT}
-
-# the same R&D tags the app uses. some companies only report the "excluding IPR&D" one
-RD_TAGS = [
-    "ResearchAndDevelopmentExpense",
-    "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost",
-]
 
 # corporate suffixes we strip when matching a company name to a trial's sponsor
 SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
@@ -148,6 +147,10 @@ def _search_term(name):
     return " ".join(words) or name
 
 
+class TrialCheckFailed(Exception):
+    """The trials check could not be completed, which is not the same as no trials."""
+
+
 def has_trials(name):
     """True if this company actually leads at least one registered trial."""
     try:
@@ -165,31 +168,64 @@ def has_trials(name):
             if first and first in lead.lower():
                 return True
         return False
-    # any error just counts as no trials
-    except Exception:
-        return False
+    # a failed request is not an answer. letting it read as "no trials" silently
+    # removes a real company from a committed file, and across 781 candidates
+    # that happens several times a run: IQVIA, Phathom and PMV Pharma all
+    # vanished that way, each of them plainly running trials.
+    except Exception as e:
+        raise TrialCheckFailed(str(e)) from e
 
 
 def has_financials(cik):
-    """True if EDGAR has an R&D expense figure for this company."""
-    # try each candidate R&D tag and return True on the first one that has data
-    for tag in RD_TAGS:
-        try:
-            r = _get(SEC_CONCEPT.format(cik=cik, tag=tag))
-            if r.status_code == 200:
-                return True
-        except Exception:
-            pass
+    """
+    True if EDGAR reports an R&D expense for this company, under either
+    accounting standard.
+
+    One request for everything the company filed, rather than a request per tag
+    name. Asking per tag cannot tell "this company does not report that" from "I
+    guessed the wrong name", since both come back 404, and it read every foreign
+    issuer as having no financials because their figures are in ifrs-full.
+    """
+    try:
+        facts = fetch_company_facts(cik).get("facts", {})
+    except Exception:
+        return False
+    for tag in APP_RD_TAGS:
+        taxonomy, _, name = tag.rpartition(":")
+        if name in facts.get(taxonomy or "us-gaap", {}):
+            return True
     return False
 
 
 def check_company(cik, sic, info):
-    """Return a universe row if this company has BOTH trials and financials, else None."""
+    """
+    Return a universe row if this company has BOTH trials and financials, else
+    None. Raises TrialCheckFailed if the trials check could not be made, so the
+    caller can keep what it already knew rather than dropping the company.
+    """
     ticker, name = info["ticker"], info["name"]
     # keep the company only if it has both a real pipeline and real financials
     if has_trials(name) and has_financials(cik):
         return {"ticker": ticker, "name": name, "cik": cik, "sector": SIC_LABELS[sic]}
     return None
+
+
+def load_previous():
+    """
+    The universe from the last run, keyed by CIK.
+
+    Sourcing replaces this file wholesale, and two things make that lossy. A
+    company can drop out of SEC's ticker file while still filing perfectly good
+    accounts, and a transient error during a check reads as a company having
+    nothing. Either way it disappears from a committed file with no trace, so a
+    company that qualified before is kept unless this run positively finds it no
+    longer qualifies.
+    """
+    try:
+        with open("companies.json") as f:
+            return {r["cik"]: r for r in json.load(f) if r.get("cik")}
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 
 def main():
@@ -198,6 +234,10 @@ def main():
         print("!! Edit SEC_USER_AGENT to your email first.\n")
 
     tickers = load_ticker_file()
+    previous = load_previous()
+    if previous:
+        print(f"{len(previous)} companies from the previous run, kept unless this "
+              f"run finds they no longer qualify.\n")
 
     # full sweep: page through every SIC, remembering the FIRST SIC each CIK
     # showed up under (that's the sector label we keep).
@@ -221,21 +261,47 @@ def main():
     # the trials and financials checks are just independent network calls, so run
     # a pool of them at once instead of waiting on each one serially.
     universe = []
-    done = 0
+    done = failed = 0
+    checked_ciks = set()
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
         # kick off a check for every candidate at once
-        futures = [pool.submit(check_company, cik, sic, info)
-                   for cik, sic, info in candidates]
+        futures = {pool.submit(check_company, cik, sic, info): cik
+                   for cik, sic, info in candidates}
         # collect the results as each one finishes
         for fut in as_completed(futures):
             done += 1
-            row = fut.result()
+            cik = futures[fut]
+            try:
+                row = fut.result()
+            except TrialCheckFailed:
+                # the check never completed, so this says nothing about the
+                # company. fall back to whatever the last run concluded.
+                failed += 1
+                if cik in previous:
+                    universe.append(previous[cik])
+                continue
+            checked_ciks.add(cik)
             # keep the row only if the company survived both checks
             if row:
                 universe.append(row)
             # print a progress line every 50 companies
             if done % 50 == 0:
                 print(f"  ...checked {done}/{len(candidates)}, kept {len(universe)}")
+
+    # a company that qualified before and was not checked this time is kept. it
+    # usually means it dropped out of SEC's ticker file, which is a fact about
+    # the file rather than about the company: Catalyst Pharmaceuticals is listed
+    # and filing, and simply is not listed there any more.
+    known = {c["cik"] for c in universe if c.get("cik")}
+    carried = [row for cik, row in previous.items()
+               if cik not in known and cik not in checked_ciks]
+    universe.extend(carried)
+    if carried:
+        print(f"\n  carried over {len(carried)} companies that qualified before "
+              f"and were not re-checked this run")
+    if failed:
+        print(f"  {failed} checks could not be completed and did not count "
+              f"against the company")
 
     # sort by ticker and write the surviving universe out to companies.json
     universe.sort(key=lambda c: c["ticker"])
