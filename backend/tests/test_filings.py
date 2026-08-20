@@ -27,6 +27,16 @@ def test_a_word_split_by_inline_markup_stays_one_word():
     assert "Risk Factors" in html_to_text("<p>Item 1A. Ris<span>k</span> Factors</p>")
 
 
+def test_hex_html_entities_are_stripped_like_decimal_ones():
+    # Medicenna's 20-F writes every space as "&#xa0;" and its quotes as
+    # "&#x201c;". Only decimal entities were stripped, so the hex ones survived
+    # into the text and split every heading, leaving the filing with no sections
+    text = html_to_text("<p>3.D.&#xa0;&#xa0;Risk&#xa0;Factors&#x201d;</p>")
+
+    assert "&#x" not in text
+    assert "Risk Factors" in text
+
+
 def test_block_tags_still_separate_words():
     # the other half of the same rule: without this, two paragraphs run together
     # into one nonsense word
@@ -95,6 +105,17 @@ def test_a_citation_in_running_prose_is_not_a_heading():
     text = "see the Item 1A. Risk Factors section for more"
     pos = text.index("Item 1A")
     assert _is_heading(text, pos) is False
+
+
+def test_a_citation_opening_a_sentence_is_not_a_heading():
+    from app.filings import _is_heading
+
+    # "See" is capitalised, so the lowercase-prose rule alone read it as a page
+    # header. OKYO's 20-F closes sub-items with "See Item 5. Operating and
+    # Financial Review", one of them inside Item 5, which rejected the real
+    # section for appearing to contain its own heading
+    text = "D. Trend Information See Item 5. Operating and Financial Review"
+    assert _is_heading(text, text.index("Item 5")) is False
 
 
 def test_a_heading_after_a_page_marker_is_a_heading():

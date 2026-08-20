@@ -99,8 +99,11 @@ def html_to_text(html):
     text = re.sub(r"<[^>]+>", "", text)
     # a non-breaking space is a real space; the rest carry no meaning worth
     # embedding, and decoding them would only reintroduce markup-like characters
-    text = re.sub(r"&nbsp;|&#160;", " ", text)
-    text = re.sub(r"&[a-zA-Z]+;|&#\d+;", "", text)
+    text = re.sub(r"&nbsp;|&#160;|&#[xX]0*[aA]0;", " ", text)
+    # hex entities as well as decimal. filers write both, and Medicenna's 20-F
+    # uses hex throughout, so leaving them in wrapped every heading in "&#xa0;"
+    # and none of the section patterns matched
+    text = re.sub(r"&[a-zA-Z]+;|&#\d+;|&#[xX][0-9a-fA-F]+;", "", text)
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -109,15 +112,15 @@ def html_to_text(html):
 # and the heading of whatever comes next.
 _TENK_BOUNDS = {
     "risk_factors": (
-        r"Item\s*1A[.\s\-–—]*Risk\s*Factors",
+        r"Item\s*1A[.:\s\-–—]*Risk\s*Factors",
         # 1B is often absent (it is usually "none"), so Item 2 is the fallback end
-        [r"Item\s*1B[.\s\-–—]*Unresolved", r"Item\s*1C[.\s\-–—]*Cyber",
-         r"Item\s*2[.\s\-–—]*Propert"],
+        [r"Item\s*1B[.:\s\-–—]*Unresolved", r"Item\s*1C[.:\s\-–—]*Cyber",
+         r"Item\s*2[.:\s\-–—]*Propert"],
     ),
     "mdna": (
-        r"Item\s*7[.\s\-–—]*Management.{0,3}s\s*Discussion",
-        [r"Item\s*7A[.\s\-–—]*Quantitative",
-         r"Item\s*8[.\s\-–—]*Financial\s*Statements"],
+        r"Item\s*7[.:\s\-–—]*Management.{0,3}s\s*Discussion",
+        [r"Item\s*7A[.:\s\-–—]*Quantitative",
+         r"Item\s*8[.:\s\-–—]*Financial\s*Statements"],
     ),
 }
 
@@ -132,12 +135,12 @@ _TENK_BOUNDS = {
 _TWENTYF_BOUNDS = {
     "risk_factors": (
         r"Risk\s*Factors",
-        [r"Item\s*4[.\s\-–—]*Information\s*on\s*the\s*Company",
-         r"Item\s*4[.\s\-–—]*Information"],
+        [r"Item\s*4[.:\s\-–—]*Information\s*on\s*the\s*Company",
+         r"Item\s*4[.:\s\-–—]*Information"],
     ),
     "mdna": (
-        r"Item\s*5[.\s\-–—]*Operating\s*and\s*Financial",
-        [r"Item\s*6[.\s\-–—]*Directors", r"Item\s*7[.\s\-–—]*Major\s*Shareholders"],
+        r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial",
+        [r"Item\s*6[.:\s\-–—]*Directors", r"Item\s*7[.:\s\-–—]*Major\s*Shareholders"],
     ),
 }
 
@@ -153,6 +156,12 @@ def bounds_for(form):
 
 def _positions(pattern, text):
     return [m.start() for m in re.finditer(pattern, text, re.I)]
+
+
+# words that introduce a cross-reference rather than a section. lowercase prose
+# is already caught by the rule below; these are the ones that open a sentence
+# and so arrive capitalised.
+_CITATION_WORDS = {"see", "refer", "under", "within", "per"}
 
 
 def _is_heading(text, pos):
@@ -171,11 +180,19 @@ def _is_heading(text, pos):
     header, so the preceding word is capitalised or numeric. Testing the
     character rather than the word is not enough: Recursion's real heading
     follows the page header "Table of Contents" and so ends in a lowercase "s".
+
+    A citation opening a sentence is the exception, because "See" is capitalised
+    and so reads as a page header by that rule alone. OKYO's 20-F closes several
+    sub-items with "See Item 5. Operating and Financial Review", one of which
+    sits inside Item 5 itself, and taking it for a heading rejects the real
+    section for containing its own heading.
     """
     before = text[max(0, pos - 80):pos].rstrip()
     if not before:
         return True
     last_word = before.rsplit(" ", 1)[-1]
+    if last_word.lower().strip(",.;:") in _CITATION_WORDS:
+        return False
     # entirely lowercase letters means running prose, so this is a citation
     return not (last_word.isalpha() and last_word.islower())
 
