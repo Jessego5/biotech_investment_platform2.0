@@ -584,20 +584,45 @@ def test_fetch_financials_for_a_delisted_ticker_says_why(monkeypatch):
     assert "not found in EDGAR" in result["reason"]
 
 
-def test_fetch_financials_explains_an_ifrs_filer(monkeypatch):
+def test_a_company_with_nothing_in_either_taxonomy_says_so(monkeypatch):
+    # this used to mean "probably a foreign issuer we cannot read". now that
+    # ifrs-full is searched too, it means the figures are genuinely not there.
     monkeypatch.setattr(data_sources, "fetch_company_facts", lambda cik: {})
     monkeypatch.setattr(data_sources, "_load_ticker_map",
-                        lambda: {"BNTX": "0001776985"})
-    # a 20-F filer reporting under ifrs-full has no us-gaap figures at all, so
-    # both lookups have to come back empty
+                        lambda: {"AAA": "0000000001"})
     monkeypatch.setattr(data_sources, "_latest_annual", lambda facts, tags, as_of=None: None)
     monkeypatch.setattr(data_sources, "_latest_balance", lambda facts, tags, as_of=None: None)
 
-    result = fetch_financials("BNTX")
+    result = fetch_financials("AAA")
 
     assert result["available"] is False
-    assert result["cik"] == "0001776985"
-    assert "IFRS" in result["reason"]
+    assert "us-gaap or ifrs-full" in result["reason"]
+
+
+def test_every_metric_offers_an_ifrs_alternative():
+    # a foreign private issuer files a 20-F and reports under IFRS, so a
+    # us-gaap-only lookup reads BioNTech and GSK as having no financials at all
+    for tags in (data_sources.RD_TAGS, data_sources.CASH_TAGS,
+                 data_sources.OPERATING_CASH_FLOW_TAGS,
+                 data_sources.NET_INCOME_TAGS, data_sources.REVENUE_TAGS):
+        assert any(t.startswith("ifrs-full:") for t in tags), tags
+
+
+def test_us_gaap_is_tried_before_ifrs():
+    # a company reporting under both must not have its figures mixed: combining
+    # two accounting standards in one runway calculation would be meaningless
+    for tags in (data_sources.RD_TAGS, data_sources.CASH_TAGS):
+        first_ifrs = next(i for i, t in enumerate(tags) if t.startswith("ifrs-full:"))
+        assert all(not tags[i].startswith("ifrs-full:") for i in range(first_ifrs))
+
+
+def test_an_ifrs_tag_is_read_from_its_own_taxonomy():
+    payload = facts(**{"ifrs-full__ResearchAndDevelopmentExpense": [
+        entry(2_104_900_000, 2025, form="20-F")]})
+
+    best = _latest_annual(payload, ["ifrs-full:ResearchAndDevelopmentExpense"])
+
+    assert best["value"] == 2_104_900_000
 
 
 def test_fetch_financials_returns_both_metrics_keyed_by_cik(monkeypatch):

@@ -134,13 +134,20 @@ SEC_FACTS = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 # 10x Genomics, for example, only reports the "excluding acquired IPR&D" variant.
 # a tag may name its taxonomy as "dei:Thing"; anything unqualified is us-gaap,
 # which is where nearly all financial reporting lives.
+# each list ends with its ifrs-full equivalents, for foreign private issuers.
+# they file a 20-F and report under IFRS, so a us-gaap-only lookup reads them as
+# having no financials at all: BioNTech has no us-gaap R&D tag whatsoever, and
+# GlaxoSmithKline the same, despite both filing complete annual accounts.
+# the entries themselves are shaped identically, so only the names differ.
 RD_TAGS = [
     "ResearchAndDevelopmentExpense",
     "ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost",
+    "ifrs-full:ResearchAndDevelopmentExpense",
 ]
 CASH_TAGS = [
     "CashAndCashEquivalentsAtCarryingValue",
     "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+    "ifrs-full:CashAndCashEquivalents",
 ]
 # cash actually consumed by running the business. this is the real burn, and the
 # reason it beats R&D expense is that R&D isn't a cash figure at all: it excludes
@@ -148,20 +155,23 @@ CASH_TAGS = [
 OPERATING_CASH_FLOW_TAGS = [
     "NetCashProvidedByUsedInOperatingActivities",
     "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+    "ifrs-full:CashFlowsFromUsedInOperatingActivities",
 ]
-NET_INCOME_TAGS = ["NetIncomeLoss"]
+NET_INCOME_TAGS = ["NetIncomeLoss", "ifrs-full:ProfitLoss"]
 # whether a company sells anything yet, which splits the universe into two kinds
 # of business that aren't comparable on any other measure.
 REVENUE_TAGS = [
     "Revenues",
     "RevenueFromContractWithCustomerExcludingAssessedTax",
     "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "ifrs-full:RevenueFromContractsWithCustomers",
 ]
 # the cover page of every filing carries this, which makes it the most reliably
 # present share count. the us-gaap one is a fallback for filers that omit it.
 SHARES_TAGS = [
     "dei:EntityCommonStockSharesOutstanding",
     "CommonStockSharesOutstanding",
+    "ifrs-full:NumberOfSharesOutstanding",
 ]
 # money held in securities rather than as cash. biotechs park most of their
 # funding here, so cash alone badly understates what they have to spend:
@@ -587,8 +597,7 @@ def fetch_financials(ticker, cik=None, as_of=None):
         return {
             "available": False,
             "cik": cik,
-            "reason": "no us-gaap annual figures; likely a foreign issuer "
-                      "reporting under IFRS (not parsed by this tool)",
+            "reason": "no annual figures found under us-gaap or ifrs-full",
         }
 
     return {"available": True, "cik": cik, **figures}
