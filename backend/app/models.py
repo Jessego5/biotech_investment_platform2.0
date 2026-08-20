@@ -178,6 +178,12 @@ class Filing(Base):
     # can incorporate its risk factors by reference or use headings the reader
     # doesn't recognise, and this is what makes that visible rather than silent.
     sections_found = Column(String)
+    # how long each section came out, so a partial extraction is detectable.
+    # "found" is not enough: Pfizer's risk factors extracted as 10k characters
+    # against a normal 200k, which reads as present and is not, and the only
+    # signal was the length. these make that a query rather than a hunch.
+    risk_factors_chars = Column(Integer)
+    mdna_chars = Column(Integer)
     fetched_at = Column(DateTime, default=_now)
 
     company = relationship("Company", back_populates="filings")

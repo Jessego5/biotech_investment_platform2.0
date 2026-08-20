@@ -31,9 +31,10 @@ ANNUAL_FORMS = ("10-K", "20-F")
 CHUNK_CHARS = 3000
 CHUNK_OVERLAP = 300
 
-# a section shorter than this is almost certainly a cross-reference or a stub
-# ("see Item 1A"), not the section itself
-MIN_SECTION_CHARS = 500
+# a section shorter than this is a stub or a stray match rather than the thing
+# itself. 500 was too generous: a 20-F matched a few hundred characters of Item 5
+# and stored it as a Management's Discussion, which is worse than finding none.
+MIN_SECTION_CHARS = 2000
 
 
 def latest_annual_filing(cik):
@@ -106,7 +107,7 @@ def html_to_text(html):
 # the headings that bound each section. a 10-K has no markup saying "this is the
 # risk factors section", so the only way to find one is to look for its heading
 # and the heading of whatever comes next.
-_SECTION_BOUNDS = {
+_TENK_BOUNDS = {
     "risk_factors": (
         r"Item\s*1A[.\s\-–—]*Risk\s*Factors",
         # 1B is often absent (it is usually "none"), so Item 2 is the fallback end
@@ -120,9 +121,63 @@ _SECTION_BOUNDS = {
     ),
 }
 
+# a 20-F is numbered differently: risk factors sit inside Item 3 (Key
+# Information) and the operating review is Item 5, so none of the 10-K headings
+# appear at all. BioNTech's filing does not even write "Item 3.D", it just heads
+# the section "Risk Factors", which is why the start pattern here is the bare
+# phrase. That is loose on its own, and safe only because a section still has to
+# be the longest span that does not contain another copy of its own heading: the
+# contents line pairs with the contents copy of Item 4 and is far too short, and
+# the cross-references later in the document have no closing heading after them.
+_TWENTYF_BOUNDS = {
+    "risk_factors": (
+        r"Risk\s*Factors",
+        [r"Item\s*4[.\s\-–—]*Information\s*on\s*the\s*Company",
+         r"Item\s*4[.\s\-–—]*Information"],
+    ),
+    "mdna": (
+        r"Item\s*5[.\s\-–—]*Operating\s*and\s*Financial",
+        [r"Item\s*6[.\s\-–—]*Directors", r"Item\s*7[.\s\-–—]*Major\s*Shareholders"],
+    ),
+}
+
+
+def bounds_for(form):
+    """
+    Which set of headings to look for. A 10-K and a 20-F share no section
+    numbering, so reading one with the other's patterns finds nothing at all,
+    which is what left every foreign issuer with no risk factors.
+    """
+    return _TWENTYF_BOUNDS if (form or "").upper().startswith("20-F") else _TENK_BOUNDS
+
 
 def _positions(pattern, text):
     return [m.start() for m in re.finditer(pattern, text, re.I)]
+
+
+def _is_heading(text, pos):
+    """
+    Whether a match is the heading itself rather than prose referring to it.
+
+    Filings cite their own sections inline, and large ones do it constantly:
+    Pfizer's 10-K contains "Item 1A. Risk Factors" twenty-nine times, nearly all
+    of them mid-sentence and most of them inside the section they name. Those
+    references defeat the span rules, because every candidate span then contains
+    another copy of its own heading and only an isolated fragment survives, which
+    is how Pfizer's risk factors extracted as ten thousand characters.
+
+    The tell is the word before it. A reference follows ordinary prose ("see
+    the", "in the section titled"); a heading follows a page number or a page
+    header, so the preceding word is capitalised or numeric. Testing the
+    character rather than the word is not enough: Recursion's real heading
+    follows the page header "Table of Contents" and so ends in a lowercase "s".
+    """
+    before = text[max(0, pos - 80):pos].rstrip()
+    if not before:
+        return True
+    last_word = before.rsplit(" ", 1)[-1]
+    # entirely lowercase letters means running prose, so this is a citation
+    return not (last_word.isalpha() and last_word.islower())
 
 
 def _find_section(text, start_pattern, end_patterns):
@@ -136,7 +191,12 @@ def _find_section(text, start_pattern, end_patterns):
     thousands of characters.
     """
     best = None
-    starts = _positions(start_pattern, text)
+    # drop citations before anything else: they are not candidate starts, and
+    # leaving them in makes every real span look like it contains its own heading
+    starts = [p for p in _positions(start_pattern, text) if _is_heading(text, p)]
+    # starts only. a citation used as a start defeats the span rules, but a
+    # closing heading may legitimately follow prose with no page number between,
+    # and discarding it would lose the section entirely.
     ends = sorted(p for pattern in end_patterns for p in _positions(pattern, text))
     for start in starts:
         # the nearest closing heading after this one. a cross-reference usually
@@ -155,9 +215,10 @@ def _find_section(text, start_pattern, end_patterns):
     return best
 
 
-def extract_sections(text):
+def extract_sections(text, form="10-K"):
     """
-    Pull the narrative sections out of a filing's text.
+    Pull the narrative sections out of a filing's text, using the headings that
+    the given form actually uses.
 
     Returns {section: text} containing only the sections that were found and are
     long enough to be real. A filing that doesn't yield a section is not an error:
@@ -165,7 +226,7 @@ def extract_sections(text):
     this doesn't recognise, and a missing section is better than a wrong one.
     """
     sections = {}
-    for name, (start_pattern, end_patterns) in _SECTION_BOUNDS.items():
+    for name, (start_pattern, end_patterns) in bounds_for(form).items():
         found = _find_section(text, start_pattern, end_patterns)
         if found is None:
             continue

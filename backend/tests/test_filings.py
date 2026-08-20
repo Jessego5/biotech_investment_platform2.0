@@ -13,7 +13,7 @@ from app.filings import (html_to_text, extract_sections, chunk_text, filing_url,
                          latest_annual_filing, MIN_SECTION_CHARS)
 
 
-def body(marker, length=2000):
+def body(marker, length=6000):
     """Filler long enough to count as a real section."""
     return f" {marker} " + "word " * (length // 5)
 
@@ -75,13 +75,44 @@ def test_a_contents_line_cannot_swallow_the_document():
     # that ran through half the filing
     html = ("<p>Item 1A. Risk Factors</p>"          # contents, no 1B alongside
             "<p>Some other part of the filing</p>" + body("FILLER") +
-            "<p>Item 1A. Risk Factors</p>" + body("REALRISKS") +
+            # a real heading follows a page marker, which is what tells it apart
+            # from a citation in running prose
+            "<p>Table of Contents</p><p>Item 1A. Risk Factors</p>" + body("REALRISKS") +
             "<p>Item 1B. Unresolved Staff Comments</p>")
 
     sections = extract_sections(html_to_text(html))
 
     assert "REALRISKS" in sections["risk_factors"]
     assert "FILLER" not in sections["risk_factors"]
+
+
+def test_a_citation_in_running_prose_is_not_a_heading():
+    # Pfizer's 10-K names its own section twenty-nine times, nearly all of them
+    # mid-sentence and inside the section itself, which left every real span
+    # looking like it contained its own heading
+    from app.filings import _is_heading
+
+    text = "see the Item 1A. Risk Factors section for more"
+    pos = text.index("Item 1A")
+    assert _is_heading(text, pos) is False
+
+
+def test_a_heading_after_a_page_marker_is_a_heading():
+    from app.filings import _is_heading
+
+    # a page number, and a running header, are what precede a real heading
+    for prefix in ("...of the foregoing. 43 ", "...report. 70 Table of Contents "):
+        text = prefix + "Item 1A. Risk Factors"
+        assert _is_heading(text, text.index("Item 1A")) is True
+
+
+def test_a_short_stray_match_is_not_stored_as_a_section():
+    # a 20-F matched a few hundred characters of Item 5 and stored it as a
+    # Management's Discussion, which is worse than reporting none
+    html = ("<p>Item 5. Operating and Financial Review</p><p>Brief note.</p>"
+            "<p>Item 6. Directors</p>")
+
+    assert extract_sections(html_to_text(html), "20-F") == {}
 
 
 def test_a_cross_reference_after_the_section_is_not_the_section():
@@ -232,3 +263,43 @@ def test_a_company_with_no_annual_report_is_not_an_error(monkeypatch):
     monkeypatch.setattr(filings, "_sec_get", lambda url: Resp())
 
     assert latest_annual_filing("1") is None
+
+
+# - making a partial extraction detectable
+
+def test_section_lengths_are_recorded_not_just_which_were_found(db):
+    # "found" is not enough. Pfizer's risk factors extracted as 10k characters
+    # against a normal 200k: present by any flag, and wrong. the length is the
+    # only signal, so it has to be stored rather than only printed.
+    from app.models import Company, Filing
+    from embed_filings import store_filing
+
+    company = Company(ticker="AAA", name="Alpha")
+    db.add(company)
+    db.flush()
+    meta = {"form": "10-K", "filed": "2026-02-25", "accession": "a", "document": "d.htm"}
+    store_filing(db, company, meta, "x" * 900000,
+                 {"risk_factors": "r" * 240000, "mdna": "m" * 40000})
+    db.commit()
+
+    filing = db.query(Filing).one()
+    assert filing.risk_factors_chars == 240000
+    assert filing.mdna_chars == 40000
+
+
+def test_a_missing_section_records_zero_length_not_null(db):
+    # zero says "read it, found none of this"; null would be indistinguishable
+    # from a filing written before lengths were recorded
+    from app.models import Company, Filing
+    from embed_filings import store_filing
+
+    company = Company(ticker="AAA", name="Alpha")
+    db.add(company)
+    db.flush()
+    meta = {"form": "20-F", "filed": "2026-03-10", "accession": "a", "document": "d.htm"}
+    store_filing(db, company, meta, "x" * 500000, {"mdna": "m" * 20000})
+    db.commit()
+
+    filing = db.query(Filing).one()
+    assert filing.risk_factors_chars == 0
+    assert filing.mdna_chars == 20000

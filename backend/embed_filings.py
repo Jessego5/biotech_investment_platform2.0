@@ -62,6 +62,8 @@ def store_filing(db, company, meta, text, sections):
         # empty string means the filing was read and yielded nothing, which is
         # different from never having been read
         sections_found=",".join(sorted(sections)),
+        risk_factors_chars=len(sections.get("risk_factors", "")),
+        mdna_chars=len(sections.get("mdna", "")),
     )
     db.add(filing)
     db.flush()
@@ -104,7 +106,7 @@ def main():
                 continue
             text = fetch_filing_text(company.cik, meta["accession"],
                                      meta["document"])
-            sections = extract_sections(text)
+            sections = extract_sections(text, meta['form'])
         except Exception as e:
             # a failed fetch is not recorded, so the next run tries again rather
             # than treating this company as read and empty
