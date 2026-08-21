@@ -135,6 +135,47 @@ def test_a_cross_reference_is_not_a_closing_heading():
     assert "REALRISKS" in rf and "MORERISKS" in rf
 
 
+def test_a_part_reference_with_a_comma_is_not_a_heading():
+    from app.filings import _is_heading, _is_cross_reference
+
+    # ImmunityBio points at its accounts as "in Part II, Item 8. Financial
+    # Statements" three times before the real closing heading, and there is no
+    # cue word anywhere in it. Gilead does the same with "including Part I,
+    # Item 1A. Risk Factors", which was being read as the section itself
+    for text in ("the notes thereto in Part II, Item 8. Financial Statements",
+                 "this Annual Report, including Part I, Item 1A. Risk Factors"):
+        pos = text.index("Item")
+        assert _is_heading(text, pos) is True      # the old rule allowed it
+        assert _is_cross_reference(text, pos) is True
+
+
+def test_a_structural_part_heading_has_no_comma():
+    from app.filings import _is_cross_reference
+
+    text = "PART II Item 7. Management's Discussion"
+    assert _is_cross_reference(text, text.index("Item")) is False
+
+
+def test_the_full_stops_in_an_item_number_do_not_end_a_sentence():
+    from app.filings import _is_cross_reference
+
+    # ProQR cites "described in Part I, Item 3.D: Risk Factors" and Sanofi
+    # "discussed under Item 3. Key Information D. Risk Factors". Reading those
+    # full stops as the end of a sentence let both citations pass as headings
+    for text in ("including those described in Part I, Item 3.D: Risk Factors",
+                 "those discussed under Item 3. Key Information D. Risk Factors"):
+        assert _is_cross_reference(text, text.rindex("Risk Factors")) is True
+
+
+def test_a_sentence_ending_before_a_heading_is_not_a_reference():
+    from app.filings import _is_cross_reference
+
+    # Bio-Path's real heading follows "publicly disclosed pursuant to rules of
+    # the SEC.", where the cue word belongs to the sentence before it
+    text = "publicly disclosed pursuant to rules of the SEC. ITEM 1A. RISK FACTORS"
+    assert _is_cross_reference(text, text.index("ITEM 1A")) is False
+
+
 def test_a_citation_in_running_prose_is_not_a_heading():
     # Pfizer's 10-K names its own section twenty-nine times, nearly all of them
     # mid-sentence and inside the section itself, which left every real span
