@@ -83,7 +83,10 @@ def test_a_contents_line_cannot_swallow_the_document():
     # Recursion's contents does not list Item 1B, so its contents line paired
     # with the REAL closing heading and produced a "section" of 587k characters
     # that ran through half the filing
-    html = ("<p>Item 1A. Risk Factors</p>"          # contents, no 1B alongside
+    html = (# a contents block lists consecutive items. Recursion's omits Item
+            # 1B, which is what let its contents line reach the real one
+            "<p>Item 1. Business 9</p><p>Item 1A. Risk Factors 46</p>"
+            "<p>Item 2. Properties 92</p><p>Item 3. Legal Proceedings 93</p>"
             "<p>Some other part of the filing</p>" + body("FILLER") +
             # a real heading follows a page marker, which is what tells it apart
             # from a citation in running prose
@@ -94,6 +97,42 @@ def test_a_contents_line_cannot_swallow_the_document():
 
     assert "REALRISKS" in sections["risk_factors"]
     assert "FILLER" not in sections["risk_factors"]
+
+
+def test_a_page_header_repeated_through_the_section_is_not_its_start():
+    # Supernus repeats "ITEM 1A. RISK FACTORS." as a page header on all 46 pages
+    # of the section. Every candidate span then contained what looked like its
+    # own heading, so only the fragment after the last page header survived and
+    # the section stored as 2,963 characters against a true 199,757
+    pages = "".join("<p>%d Table of Contents</p><p>Item 1A. Risk Factors</p>%s"
+                    % (n, body("PAGE%d" % n, 3000)) for n in range(2, 8))
+    html = ("<p>Item 1. Business 4</p><p>Item 1A. Risk Factors 33</p>"
+            "<p>Item 2. Properties 72</p>"
+            "<p>1 Table of Contents</p><p>Item 1A. Risk Factors</p>"
+            + body("REALRISKS") + pages
+            + "<p>Item 1B. Unresolved Staff Comments</p>")
+
+    rf = extract_sections(html_to_text(html))["risk_factors"]
+
+    # the section runs from the first real heading through every page of it
+    assert "REALRISKS" in rf and "PAGE7" in rf
+
+
+def test_a_cross_reference_is_not_a_closing_heading():
+    # Galmed's 20-F says "See also Item 4. Information on the Company" eight
+    # times inside its risk factors. Taking the first of those as the end closed
+    # the section early, at 86,396 characters against a true 231,662
+    html = ("<p>Item 1. Business 4</p><p>Item 1A. Risk Factors 33</p>"
+            "<p>Item 2. Properties 72</p>"
+            "<p>1 Table of Contents</p><p>Item 1A. Risk Factors</p>"
+            + body("REALRISKS")
+            + "<p>as we discuss, see Item 1B. Unresolved Staff Comments</p>"
+            + body("MORERISKS")
+            + "<p>92 Item 1B. Unresolved Staff Comments</p>")
+
+    rf = extract_sections(html_to_text(html))["risk_factors"]
+
+    assert "REALRISKS" in rf and "MORERISKS" in rf
 
 
 def test_a_citation_in_running_prose_is_not_a_heading():

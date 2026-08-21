@@ -163,6 +163,16 @@ def _positions(pattern, text):
 # and so arrive capitalised.
 _CITATION_WORDS = {"see", "refer", "under", "within", "per"}
 
+# the same idea a few words further back, for "Refer to Part I, Item 1A", where
+# the word immediately before the heading is "I," rather than the cue. only
+# unambiguous cues belong here: "under", "within" and "per" are ordinary
+# prepositions in this prose ("under the Investors News section", "under U.S.
+# law") and reading them as cross-references drops real headings.
+_CITATION_CUES = {"see", "refer", "pursuant", "described", "discussed"}
+
+# an item heading, used to tell a contents entry from a real one
+_ITEM_HEADING = re.compile(r"Item\s*\d+[A-C]?[.:\s]", re.I)
+
 
 def _is_heading(text, pos):
     """
@@ -197,39 +207,61 @@ def _is_heading(text, pos):
     return not (last_word.isalpha() and last_word.islower())
 
 
+def _is_cross_reference(text, pos):
+    """
+    Whether a cue word a few words back makes this a reference.
+
+    Supernus writes "Refer to Part I, Item 1A Risk Factors" three times before
+    the section itself, and the word immediately before the heading is "I,",
+    which reads as a page marker.
+    """
+    window = text[max(0, pos - 45):pos]
+    return any(w.strip(",.;:()\"'").lower() in _CITATION_CUES
+               for w in window.split())
+
+
+def _is_contents_entry(text, pos, span=130):
+    """
+    Whether this is a line in the table of contents.
+
+    A contents entry is followed by the next item's entry; a real heading is
+    followed by prose. This is what tells the two apart, since both can sit
+    behind a page number.
+    """
+    return len(_ITEM_HEADING.findall(text[pos:pos + span])) >= 2
+
+
+def _real_headings(text, pattern):
+    """The matches that are the heading itself, in document order."""
+    return [p for p in _positions(pattern, text)
+            if _is_heading(text, p)
+            and not _is_cross_reference(text, p)
+            and not _is_contents_entry(text, p)]
+
+
 def _find_section(text, start_pattern, end_patterns):
     """
     Locate one section by its heading and the heading of whatever follows it.
 
     A heading appears several times: in the table of contents, as the section
-    itself, and in cross-references like "see Item 1A" elsewhere. Position cannot
-    tell them apart, so each is paired with the nearest closing heading after it
-    and the longest span wins, since only the real section runs to hundreds of
-    thousands of characters.
+    itself, in cross-references, and as a running page header repeated on every
+    page of the section. Once those three are excluded the section's own heading
+    is the first one left, so the earliest surviving start wins.
     """
-    best = None
-    # drop citations before anything else: they are not candidate starts, and
-    # leaving them in makes every real span look like it contains its own heading
-    starts = [p for p in _positions(start_pattern, text) if _is_heading(text, p)]
-    # starts only. a citation used as a start defeats the span rules, but a
-    # closing heading may legitimately follow prose with no page number between,
-    # and discarding it would lose the section entirely.
-    ends = sorted(p for pattern in end_patterns for p in _positions(pattern, text))
+    starts = _real_headings(text, start_pattern)
+    ends = sorted(set(p for pattern in end_patterns
+                      for p in _real_headings(text, pattern)))
+    # a closing heading may legitimately follow prose with no page number before
+    # it, so rather than lose the section entirely, fall back to every match
+    if not ends:
+        ends = sorted(set(p for pattern in end_patterns
+                          for p in _positions(pattern, text)))
     for start in starts:
-        # the nearest closing heading after this one. a cross-reference usually
-        # has none, which is how Fate's and AbbVie's filings drop theirs.
         end = next((p for p in ends if p > start), None)
-        if end is None:
-            continue
-        # a span containing another copy of its own heading is a contents line
-        # reaching across the document, not a section. Recursion's contents does
-        # not list Item 1B, so without this its contents line pairs with the real
-        # closing heading and swallows everything in between.
-        if any(start < other < end for other in starts):
-            continue
-        if best is None or (end - start) > (best[1] - best[0]):
-            best = (start, end)
-    return best
+        # too short to be the section itself, so this start was a stray match
+        if end is not None and (end - start) >= MIN_SECTION_CHARS:
+            return (start, end)
+    return None
 
 
 def extract_sections(text, form="10-K"):
