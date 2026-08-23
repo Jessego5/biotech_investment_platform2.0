@@ -42,13 +42,21 @@ BATCH = 64
 PAUSE = 0.5
 
 
+# errors worth trying again. a rate limit is the expected one, but a request that
+# times out or drops is just as temporary, and treating it as fatal ended a run
+# 437 filings in with everything after it left unread.
+TRANSIENT = ("rate", "timeout", "timed out", "connection", "temporarily",
+             "502", "503", "504")
+
+
 def embed(client, texts):
-    """Embed a batch, retrying on the tokens-per-minute rate limit."""
+    """Embed a batch, retrying while the failure looks temporary."""
     for attempt in range(6):
         try:
             return client.embeddings.create(model=EMBED_MODEL, input=texts)
         except Exception as e:
-            if "rate" not in str(e).lower() or attempt == 5:
+            message = str(e).lower()
+            if attempt == 5 or not any(t in message for t in TRANSIENT):
                 raise
             time.sleep(5 * (attempt + 1))
 
