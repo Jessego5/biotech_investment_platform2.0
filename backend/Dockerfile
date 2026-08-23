@@ -13,14 +13,26 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# where to install from. the default is PyPI itself; point this at a mirror when
+# building somewhere PyPI is slow, which is the difference between a fifteen
+# minute build and an hour and a half on a throttled connection:
+#   docker build --build-arg PIP_INDEX_URL=https://<mirror>/simple .
+ARG PIP_INDEX_URL=https://pypi.org/simple
+
 # install dependencies first, in their own layer, so editing application code
 # doesn't reinstall faiss and numpy on every build
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --index-url "$PIP_INDEX_URL" -r requirements.txt
 
 # run as a non-root user. ingestion writes as it runs, snapshots and, when no
 # DATABASE_URL is set, the SQLite file, so the app does need to own its directory.
 RUN useradd --create-home --uid 1000 appuser
+
+# WORKDIR created /app as root, and COPY --chown only sets ownership on the files
+# it copies, not on the directory holding them. Without this the app can read its
+# own code but cannot create a file beside it, which is what the SQLite fallback
+# does when DATABASE_URL is unset. One directory, so no layer worth speaking of.
+RUN chown appuser:appuser /app
 
 # copy with ownership already set. a chown -R afterwards would rewrite every file
 # into a second layer, roughly doubling the size the application contributes.
