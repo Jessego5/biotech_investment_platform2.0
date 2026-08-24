@@ -10,7 +10,9 @@ OPENAI_API_KEY. Without the key the chat is simply off.
 
 import json
 import os
+import re
 
+from .models import Company
 from .retrieval import query_companies, company_facts
 from .semantic import semantic_search, search_filings
 
@@ -25,7 +27,9 @@ PLAN_SYSTEM = (
     '{\n'
     '  "intent": "filter" | "company" | "search" | "risks" | "greeting" | "refuse",\n'
     '  "reason": string,               // if refuse, a short why\n'
-    '  "ticker": string | null,        // if the question is about ONE company\n'
+    '  "company": string | null,       // if about ONE company: its NAME exactly\n'
+    '                                  // as written in the question. Never guess\n'
+    '                                  // a ticker; it is looked up here.\n'
     '  "search_query": string | null,  // for intent=search: a concise search phrase\n'
     '  "filters": {                    // for intent=filter; all optional\n'
     '     "min_rd": number|null,       // minimum R&D expense in DOLLARS\n'
@@ -43,8 +47,9 @@ PLAN_SYSTEM = (
     "Convert money to raw dollars (\"$1 billion\" becomes 1000000000). "
     "If the message is a greeting or small talk (hi, hello, how are you), or asks "
     "what you can do or how this works, use intent=greeting. "
-    "If the question is about one named company, use intent=company and put its "
-    "ticker (or the name) in ticker. "
+    "If the question is about one named company, use intent=company and put the "
+    "company's name in company, copied from the question. Do not supply a ticker "
+    "symbol and do not guess one: the name is matched against the database here. "
     "If the question is about trial CONTENT, a disease or condition, a drug, a "
     "therapy or mechanism (e.g. CAR-T, oncology, a specific mutation), or asks "
     "what trials study or test something, use intent=search and put a concise "
@@ -112,13 +117,61 @@ def _plan(question):
     return json.loads(resp.choices[0].message.content)
 
 
+def _resolve_company(named, db):
+    """
+    Turn whatever the model put in "company" into a ticker we actually hold.
+
+    The model is not allowed to supply the ticker itself. Asked eight times for
+    Recursion's, it answered RCKT, RCRN, RECUR and RNLX and never once RXRX, and
+    two of those are not tickers at all. Every one of them retrieves nothing and
+    reads to the user as "we have no data on that company" while its filing sits
+    in the database. Matching against the universe cannot invent a company.
+    """
+    if not named:
+        return None
+    wanted = named.strip().upper()
+    if not wanted:
+        return None
+
+    rows = db.query(Company.ticker, Company.name).all()
+    # a ticker, given exactly
+    for ticker, _ in rows:
+        if ticker and ticker.upper() == wanted:
+            return ticker
+    # something ticker-shaped that matched no ticker is a guess, and matching it
+    # loosely against names is how RECUR would become Recursion by accident. The
+    # same accident lands on the wrong company just as easily, so it stops here
+    if named.strip().isupper() and len(wanted) <= 5 and wanted.isalnum():
+        return None
+    # the company's name, give or take the suffix every filer carries
+    trimmed = re.sub(r"[^A-Z0-9 ]", " ", wanted)
+    trimmed = re.sub(r"\b(INC|CORP|CORPORATION|LTD|LIMITED|PLC|SA|NV|AG|CO|"
+                     r"COMPANY|HOLDINGS|GROUP|THERAPEUTICS|PHARMACEUTICALS|"
+                     r"PHARMA|BIOSCIENCES|BIO|LABS|LABORATORIES)\b", " ", trimmed)
+    trimmed = " ".join(trimmed.split())
+    if not trimmed:
+        return None
+    best = None
+    for ticker, name in rows:
+        if not name:
+            continue
+        upper = name.upper()
+        if upper.startswith(wanted) or wanted in upper:
+            return ticker
+        # fall back to the distinctive part of the name, so "Recursion" finds
+        # "Recursion Pharmaceuticals, Inc."
+        if trimmed and upper.startswith(trimmed):
+            best = best or ticker
+    return best
+
+
 def _retrieve(plan, db):
     """Run the plan against the DB. Returns (facts_text, sources, retrieved_count)."""
     intent = plan.get("intent")
 
     # one named company: pull its full grounded facts and lay them out
     if intent == "company":
-        ticker = (plan.get("ticker") or "").upper()
+        ticker = _resolve_company(plan.get("company"), db)
         facts = company_facts(db, ticker) if ticker else None
         # no ticker or not in the DB means nothing to retrieve
         if not facts:
@@ -189,7 +242,7 @@ def _retrieve(plan, db):
     if intent == "risks":
         query = plan.get("search_query") or ""
         # a named company narrows it to that company's own filing
-        ticker = (plan.get("ticker") or "").upper() or None
+        ticker = _resolve_company(plan.get("company"), db)
         passages = search_filings(query, k=6, ticker=ticker) if query else []
         # nothing matched, so retrieve nothing and let the answer say so
         if not passages:
