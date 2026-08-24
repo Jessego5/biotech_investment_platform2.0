@@ -95,8 +95,18 @@ _SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
              "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings"}
 
 
+# the state a company incorporated in, which EDGAR appends to some names:
+# "HERON THERAPEUTICS, INC. /DE/". It is not part of what anyone calls them, and
+# leaving it in makes the search term "HERON THERAPEUTICS INC DE", which matches
+# nothing at all.
+# the closing slash is optional: EDGAR writes both "INC. /DE/" and "Inc./NV".
+# two letters are required after the slash, so the Danish "A/S" is left alone
+_STATE_MARKER = re.compile(r"/[A-Za-z]{2}/?\s*$")
+
+
 def _core_name(name):
     """Lowercase a company name and drop punctuation + trailing corp suffixes."""
+    name = _STATE_MARKER.sub("", (name or "").strip())
     # lowercase each word and strip out everything that isn't a letter or number
     words = [re.sub(r"[^a-z0-9]", "", w.lower()) for w in name.split()]
     # drop any words that came out empty after stripping
@@ -380,6 +390,11 @@ def fetch_trials_raw(sponsor_name, page_size=100,
     }
 
 
+def _squash(name):
+    """The core name with every gap removed, so "CEL-SCI" and "CEL SCI" agree."""
+    return _core_name(name).replace(" ", "")
+
+
 def _leads(sponsor_name, lead):
     """
     Whether this trial is led by the company we asked about.
@@ -391,6 +406,11 @@ def _leads(sponsor_name, lead):
     they lead. The registry spellings are accepted as well.
     """
     if _core_name(sponsor_name) in _core_name(lead):
+        return True
+    # a hyphen and a space are the same gap: the registry writes "CEL-SCI
+    # Corporation" and the filing says "CEL SCI CORP", so one reads as "celsci"
+    # and the other as "cel sci" and neither contains the other
+    if _squash(sponsor_name) and _squash(sponsor_name) in _squash(lead):
         return True
     folded = _fold(lead)
     return any(_fold(name) == folded for name in sponsor_names_for(sponsor_name))

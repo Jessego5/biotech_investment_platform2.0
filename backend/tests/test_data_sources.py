@@ -793,6 +793,26 @@ def test_latest_balance_searches_every_tag():
     assert best["tag"] == "NewTag"
 
 
+def test_the_state_of_incorporation_is_not_part_of_the_name():
+    # EDGAR writes "HERON THERAPEUTICS, INC. /DE/". Left in, the search asks for
+    # "HERON THERAPEUTICS INC DE" and matches nothing, so Heron stored no trials
+    # at all while running 26
+    assert data_sources._core_name("HERON THERAPEUTICS, INC. /DE/") == "heron therapeutics"
+    assert data_sources._core_name("TuHURA Biosciences, Inc./NV") == "tuhura biosciences"
+
+
+def test_a_hyphen_and_a_space_are_the_same_gap():
+    # the registry writes "CEL-SCI Corporation" and the filing "CEL SCI CORP",
+    # which come out as "celsci" and "cel sci", neither inside the other
+    assert data_sources._leads("CEL SCI CORP", "CEL-SCI Corporation") is True
+    assert data_sources._leads("Can-Fite BioPharma Ltd.", "Can-Fite BioPharma") is True
+
+
+def test_squashing_does_not_merge_two_companies():
+    # removing gaps must not make different names equal
+    assert data_sources._leads("CEL SCI CORP", "Celsion Corporation") is False
+
+
 def registry(monkeypatch, *names):
     """Pin what the registry table holds, without touching a database."""
     monkeypatch.setattr(data_sources._registry_names, "cache", set(names))
