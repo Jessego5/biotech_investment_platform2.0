@@ -1,10 +1,10 @@
 # AI-Assisted Biotech Investment Platform
 
 A full-stack web app for browsing public biotech companies by pipeline stage and
-financials, where every figure traces back to a primary source. It holds 554
-companies, 16,139 trials, 112,812 industry-sponsored interventional studies from
-the wider registry, and 542 annual reports split into 55,959 embedded passages,
-behind 351 tests. The data comes from two places:
+financials, where every figure traces back to a primary source. It holds 746
+companies, 22,706 trials, 112,812 industry-sponsored interventional studies from
+the wider registry, and 732 annual reports split into 71,872 embedded passages,
+behind 362 tests. The data comes from two places:
 
 - Clinical trials from the [ClinicalTrials.gov v2 API](https://clinicaltrials.gov/data-api/api)
 - Financials from [SEC EDGAR](https://www.sec.gov/edgar/sec-api-documentation):
@@ -234,8 +234,8 @@ re-parsing an old snapshot.
 A run can also do part of the universe:
 
 ```bash
-python ingest.py                    # all 552 companies
-python ingest.py --shard 2 --of 8   # just this slice (69 companies)
+python ingest.py                    # all 746 companies
+python ingest.py --shard 2 --of 8   # just this slice (93 companies)
 ```
 
 Slices are dealt round-robin over a ticker-sorted universe, so they are the same no
@@ -261,7 +261,7 @@ well past what a Lambda is allowed to run, so the functions only do the parts th
 take milliseconds (deciding the slices, starting the tasks) and the actual fetching
 happens somewhere with no time limit. Slicing is also what makes the run finish in
 a reasonable time without going faster against SEC than its rate limit allows: eight
-tasks each doing sixty-nine companies, rather than one doing all 552.
+tasks each doing ninety-three companies, rather than one doing all 746.
 
 Both functions are tested without AWS. Their real work is plain data (the queue
 messages, the RunTask call), so the tests check that data directly and never need
@@ -401,9 +401,13 @@ The methodology and the results, including where it does poorly, are in
 
 ## Some notes
 
-- Around 550 companies, from a full sweep of the three biotech SIC codes filtered
-  to the ones with a real pipeline and real financials. It is broad but not every
-  public biotech.
+- Around 750 companies, from a full sweep of twelve medical SIC codes filtered to
+  the ones with a real pipeline and real financials, plus any SEC filer sponsoring
+  phase-labelled trials whatever it files under. Each company records which of
+  those put it there, because no single rule draws the line: anything admitting
+  argenx also admits Colgate-Palmolive, whose hundred phased trials are real
+  clinical research, and anything excluding Colgate also excludes Edwards
+  Lifesciences, whose device studies are not phase-labelled at all.
 - US-GAAP and IFRS filers both. A foreign private issuer files a 20-F and reports
   under `ifrs-full`, so a us-gaap-only lookup read BioNTech and GlaxoSmithKline as
   having no financials at all rather than as unreadable. IFRS tag names come last
