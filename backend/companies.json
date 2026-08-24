@@ -49,6 +49,13 @@
     "included_because": "SIC 8731"
   },
   {
+    "ticker": "ABT",
+    "name": "ABBOTT LABORATORIES",
+    "cik": "0000001800",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "ABUS",
     "name": "Arbutus Biopharma Corp",
     "cik": "0001447028",
@@ -131,6 +138,13 @@
     "cik": "0001818838",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ADAPY",
+    "name": "Adaptimmune Therapeutics PLC",
+    "cik": "0001621227",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ADCT",
@@ -496,6 +510,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "ARGX",
+    "name": "ARGENX SE",
+    "cik": "0001697862",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
     "ticker": "ARMP",
     "name": "Armata Pharmaceuticals, Inc.",
     "cik": "0000921114",
@@ -534,6 +555,13 @@
     "ticker": "ASMB",
     "name": "ASSEMBLY BIOSCIENCES, INC.",
     "cik": "0001426800",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ASND",
+    "name": "Ascendis Pharma A/S",
+    "cik": "0001612042",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
   },
@@ -1063,6 +1091,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "CANF",
+    "name": "Can-Fite BioPharma Ltd.",
+    "cik": "0001536196",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "CASIF",
     "name": "CASI Pharmaceuticals, Inc.",
     "cik": "0001962738",
@@ -1208,6 +1243,13 @@
     "cik": "0000744218",
     "sector": "Diagnostics",
     "included_because": "SIC 2835"
+  },
+  {
+    "ticker": "CLGN",
+    "name": "CollPlant Biotechnologies Ltd",
+    "cik": "0001631487",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "CLLS",
@@ -1537,6 +1579,13 @@
     "included_because": "SIC 2836"
   },
   {
+    "ticker": "DARE",
+    "name": "Dare Bioscience, Inc.",
+    "cik": "0001401914",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "DBVTF",
     "name": "DBV Technologies S.A.",
     "cik": "0001613780",
@@ -1577,6 +1626,13 @@
     "cik": "0001714899",
     "sector": "Biologics",
     "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "DNTH",
+    "name": "Dianthus Therapeutics, Inc. /DE/",
+    "cik": "0001690585",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "DRMAW",
@@ -1935,6 +1991,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "GEHC",
+    "name": "GE HealthCare Technologies Inc.",
+    "cik": "0001932393",
+    "sector": "Medical devices",
+    "included_because": "SIC 3844"
+  },
+  {
     "ticker": "GENB",
     "name": "Generate Biomedicines, Inc.",
     "cik": "0002100782",
@@ -2033,11 +2096,25 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "GNMSF",
+    "name": "GENMAB A/S",
+    "cik": "0001434265",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "GNPX",
     "name": "Genprex, Inc.",
     "cik": "0001595248",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "GNTA",
+    "name": "Genenta Science S.p.A.",
+    "cik": "0001838716",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "GOSS",
@@ -2144,6 +2221,13 @@
     "included_because": "sponsors phase-labelled trials"
   },
   {
+    "ticker": "HMDCF",
+    "name": "HUTCHMED (China) Ltd",
+    "cik": "0001648257",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "HOWL",
     "name": "Werewolf Therapeutics, Inc.",
     "cik": "0001785530",
@@ -2172,6 +2256,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "HRTX",
+    "name": "HERON THERAPEUTICS, INC. /DE/",
+    "cik": "0000818033",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "HTFL",
     "name": "Heartflow, Inc.",
     "cik": "0001464521",
@@ -2184,6 +2275,13 @@
     "cik": "0001818382",
     "sector": "Biologics",
     "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "HURA",
+    "name": "TuHURA Biosciences, Inc./NV",
+    "cik": "0001498382",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "HYPR",
@@ -2217,6 +2315,13 @@
     "ticker": "ICCM",
     "name": "IceCure Medical Ltd.",
     "cik": "0001584371",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "ICUCW",
+    "name": "SeaStar Medical Holding Corp",
+    "cik": "0001831868",
     "sector": "Medical devices",
     "included_because": "SIC 3841"
   },
@@ -2501,6 +2606,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "ISCO",
+    "name": "International Stem Cell CORP",
+    "cik": "0001355790",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "ISPC",
     "name": "iSpecimen Inc.",
     "cik": "0001558569",
@@ -2513,6 +2625,13 @@
     "cik": "0001035267",
     "sector": "Medical devices",
     "included_because": "SIC 3842"
+  },
+  {
+    "ticker": "ITGR",
+    "name": "Integer Holdings Corp",
+    "cik": "0001114483",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "ITRMF",
@@ -2580,6 +2699,13 @@
     "ticker": "KARD",
     "name": "Kardigan, Inc.",
     "cik": "0002123613",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "KLRA",
+    "name": "Kailera Therapeutics, Inc.",
+    "cik": "0002096997",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
   },
@@ -2899,6 +3025,13 @@
     "included_because": "SIC 2836"
   },
   {
+    "ticker": "MBAI",
+    "name": "Check-Cap Ltd",
+    "cik": "0001610590",
+    "sector": "Medical devices",
+    "included_because": "SIC 3844"
+  },
+  {
     "ticker": "MBIO",
     "name": "MUSTANG BIO, INC.",
     "cik": "0001680048",
@@ -3088,6 +3221,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "MREO",
+    "name": "Mereo BioPharma Group plc",
+    "cik": "0001719714",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "MRK",
     "name": "Merck & Co., Inc.",
     "cik": "0000310158",
@@ -3100,6 +3240,13 @@
     "cik": "0001094038",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MRNA",
+    "name": "Moderna, Inc.",
+    "cik": "0001682852",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "MSLE",
@@ -3156,6 +3303,13 @@
     "cik": "0001709626",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NEOG",
+    "name": "NEOGEN CORP",
+    "cik": "0000711377",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "NERV",
@@ -3379,6 +3533,13 @@
     "cik": "0001372299",
     "sector": "Biologics",
     "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "OCSAW",
+    "name": "Oculis Holding AG",
+    "cik": "0001953530",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OCUL",
@@ -3633,6 +3794,20 @@
     "included_because": "SIC 3841"
   },
   {
+    "ticker": "PLUR",
+    "name": "Pluri Inc.",
+    "cik": "0001158780",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "PLX",
+    "name": "Protalix BioTherapeutics, Inc.",
+    "cik": "0001006281",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
     "ticker": "PLYX",
     "name": "Polaryx Therapeutics, Inc.",
     "cik": "0002075320",
@@ -3734,6 +3909,13 @@
     "ticker": "PRRUF",
     "name": "IMMUTEP Ltd",
     "cik": "0001506184",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PRTCY",
+    "name": "PureTech Health plc",
+    "cik": "0001782999",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
   },
@@ -3843,6 +4025,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "RAPH",
+    "name": "Raphael Pharmaceutical Inc.",
+    "cik": "0001415397",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
+  },
+  {
     "ticker": "RAPP",
     "name": "Rapport Therapeutics, Inc.",
     "cik": "0002012593",
@@ -3948,6 +4137,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "RKTO",
+    "name": "Rocket One Inc.",
+    "cik": "0001711786",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "RLAY",
     "name": "Relay Therapeutics, Inc.",
     "cik": "0001812364",
@@ -4011,6 +4207,20 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "ROIV",
+    "name": "Roivant Sciences Ltd.",
+    "cik": "0001635088",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "RPRX",
+    "name": "Royalty Pharma plc",
+    "cik": "0001802768",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
     "ticker": "RSMDF",
     "name": "RESMED INC",
     "cik": "0000943819",
@@ -4070,6 +4280,13 @@
     "ticker": "SCYX",
     "name": "SCYNEXIS INC",
     "cik": "0001178253",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SDGR",
+    "name": "Schrodinger, Inc.",
+    "cik": "0001490978",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
   },
@@ -4144,6 +4361,13 @@
     "included_because": "SIC 3841"
   },
   {
+    "ticker": "SIBN",
+    "name": "SI-BONE, Inc.",
+    "cik": "0001459839",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
     "ticker": "SIGA",
     "name": "SIGA TECHNOLOGIES INC",
     "cik": "0001010086",
@@ -4170,6 +4394,13 @@
     "cik": "0001707502",
     "sector": "Biologics",
     "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "SLGL",
+    "name": "Sol-Gel Technologies Ltd.",
+    "cik": "0001684693",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SLNCF",
@@ -4487,6 +4718,13 @@
     "included_because": "SIC 2834"
   },
   {
+    "ticker": "TLRY",
+    "name": "Tilray Brands, Inc.",
+    "cik": "0001731348",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
+  },
+  {
     "ticker": "TLSA",
     "name": "Tiziana Life Sciences Ltd",
     "cik": "0001723069",
@@ -4506,6 +4744,13 @@
     "cik": "0001630627",
     "sector": "Medical devices",
     "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "TMDX",
+    "name": "TransMedics Group, Inc.",
+    "cik": "0001756262",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "TNDM",
@@ -4676,6 +4921,13 @@
     "included_because": "SIC 3845"
   },
   {
+    "ticker": "VASO",
+    "name": "VASO Corp",
+    "cik": "0000839087",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
+  },
+  {
     "ticker": "VCEL",
     "name": "Vericel Corp",
     "cik": "0000887359",
@@ -4800,6 +5052,13 @@
     "cik": "0001422142",
     "sector": "Pharma preparations",
     "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "WINT",
+    "name": "WINDTREE THERAPEUTICS INC /DE/",
+    "cik": "0000946486",
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "WVE",

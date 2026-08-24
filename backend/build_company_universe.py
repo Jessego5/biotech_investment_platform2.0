@@ -16,6 +16,7 @@ import requests
 import json
 import re
 import time
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # the financials check comes from the app rather than being written again here.
@@ -97,14 +98,31 @@ SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
             "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings"}
 
 
-def _get(url, params=None):
-    """GET with one retry if SEC (or CT) throttles us with 403/429."""
-    r = requests.get(url, params=params, headers=HEADERS, timeout=30)
-    # a 403 or 429 means we got throttled, so wait a second and try once more
-    if r.status_code in (403, 429):
-        time.sleep(1.0)
-        r = requests.get(url, params=params, headers=HEADERS, timeout=30)
-    return r
+def _get(url, params=None, attempts=4):
+    """
+    GET, retrying while the failure looks temporary.
+
+    Throttling is the expected one, but a read timeout is just as temporary and
+    used to propagate. Paging through a SIC code is a single call covering
+    hundreds of companies, so one timeout removed the whole code from the sweep:
+    3841 dropped out that way and took the sector label off Boston Scientific,
+    Glaukos, Integra and eighteen more, which then qualified only under the
+    weaker sponsor rule and came out labelled "Other".
+    """
+    last = None
+    for attempt in range(attempts):
+        try:
+            r = requests.get(url, params=params, headers=HEADERS, timeout=30)
+        except requests.exceptions.RequestException as e:
+            last = e
+            time.sleep(1.5 * (attempt + 1))
+            continue
+        # a 403 or 429 means we got throttled, so wait and try again
+        if r.status_code in (403, 429) and attempt < attempts - 1:
+            time.sleep(1.5 * (attempt + 1))
+            continue
+        return r
+    raise last
 
 
 def ciks_in_sic(sic):
@@ -189,8 +207,71 @@ class TrialCheckFailed(Exception):
     """The trials check could not be completed, which is not the same as no trials."""
 
 
+def _fold(text):
+    """
+    Lowercase, strip accents and punctuation. ClinicalTrials.gov writes
+    "Schrodinger, Inc." with an umlaut and SEC writes it without, and comparing
+    them as typed drops the company.
+    """
+    text = unicodedata.normalize("NFKD", text or "")
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    return " ".join(re.sub(r"[^a-z0-9 ]", " ", text.lower()).split())
+
+
+def _registry_sponsors():
+    """
+    Every sponsor name in the registry table, folded, or None when that table
+    has not been ingested. Cached, since this is asked once per candidate.
+    """
+    if _registry_sponsors.cache is not None:
+        return _registry_sponsors.cache or None
+    try:
+        from app.database import SessionLocal
+        from app.models import RegistryTrial
+        db = SessionLocal()
+        try:
+            names = {_fold(n) for (n,) in db.query(RegistryTrial.sponsor)
+                     .filter(RegistryTrial.sponsor.isnot(None)).distinct()}
+        finally:
+            db.close()
+    except Exception:
+        names = set()
+    _registry_sponsors.cache = names
+    return names or None
+
+
+_registry_sponsors.cache = None
+
+
+def _leads_a_registry_trial(name):
+    """
+    Whether the registry we already hold lists this company as a sponsor.
+
+    The API is asked for an exact term, and its sponsor search does not match on
+    prefixes: "Moderna" returns one study, led by Vertex, while "ModernaTX"
+    returns 140. Every company whose registry name extends its SEC name was
+    therefore read as having no trials at all. Checking the names we hold
+    compares them properly, and costs no request.
+    """
+    sponsors = _registry_sponsors()
+    if not sponsors:
+        return None                      # nothing ingested, so no opinion
+    core = _fold(" ".join(w for w in _fold(name).split() if w not in SUFFIXES))
+    if len(core) < 4:
+        return None                      # too short to match on safely
+    for sponsor in sponsors:
+        if sponsor.startswith(core) or core.startswith(sponsor):
+            return True
+    return False
+
+
 def has_trials(name):
     """True if this company actually leads at least one registered trial."""
+    # the registry we hold answers this without a request, and matches names the
+    # API's exact-term sponsor search cannot
+    local = _leads_a_registry_trial(name)
+    if local:
+        return True
     try:
         # search ClinicalTrials.gov by the cleaned sponsor name
         r = _get(CT_BASE, {"query.spons": _search_term(name), "pageSize": 20})
