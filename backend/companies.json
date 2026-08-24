@@ -3,325 +3,449 @@
     "ticker": "AARD",
     "name": "Aardvark Therapeutics, Inc.",
     "cik": "0001774857",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AAVXF",
     "name": "Abivax S.A.",
     "cik": "0001956827",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ABBV",
     "name": "AbbVie Inc.",
     "cik": "0001551152",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ABCL",
     "name": "AbCellera Biologics Inc.",
     "cik": "0001703057",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ABEO",
     "name": "ABEONA THERAPEUTICS INC.",
     "cik": "0000318306",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ABOS",
     "name": "Acumen Pharmaceuticals, Inc.",
     "cik": "0001576885",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ABSI",
     "name": "Absci Corp",
     "cik": "0001672688",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
   },
   {
     "ticker": "ABUS",
     "name": "Arbutus Biopharma Corp",
     "cik": "0001447028",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ACAD",
     "name": "ACADIA PHARMACEUTICALS INC",
     "cik": "0001070494",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ACB",
+    "name": "AURORA CANNABIS INC",
+    "cik": "0001683541",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
+  },
+  {
+    "ticker": "ACHV",
+    "name": "ACHIEVE LIFE SCIENCES, INC.",
+    "cik": "0000949858",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "ACIU",
     "name": "AC Immune SA",
     "cik": "0001651625",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ACOG",
     "name": "Alpha Cognition Inc.",
     "cik": "0001655923",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "ACONW",
+    "name": "Aclarion, Inc.",
+    "cik": "0001635077",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "ACRS",
     "name": "Aclaris Therapeutics, Inc.",
     "cik": "0001557746",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ACRV",
     "name": "Acrivon Therapeutics, Inc.",
     "cik": "0001781174",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ACTU",
     "name": "ACTUATE THERAPEUTICS, INC.",
     "cik": "0001652935",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ACXP",
     "name": "Acurx Pharmaceuticals, Inc.",
     "cik": "0001736243",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ADAG",
     "name": "Adagene Inc.",
     "cik": "0001818838",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ADCT",
     "name": "ADC Therapeutics SA",
     "cik": "0001771910",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ADGM",
+    "name": "Adagio Medical Holdings, Inc.",
+    "cik": "0002006986",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ADIL",
     "name": "ADIAL PHARMACEUTICALS, INC.",
     "cik": "0001513525",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ADMA",
     "name": "ADMA BIOLOGICS, INC.",
     "cik": "0001368514",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ADPT",
     "name": "Adaptive Biotechnologies Corp",
     "cik": "0001478320",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ADTX",
     "name": "Aditxt, Inc.",
     "cik": "0001726711",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "AEMD",
+    "name": "AETHLON MEDICAL INC",
+    "cik": "0000882291",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "AEON",
     "name": "AEON Biopharma, Inc.",
     "cik": "0001837607",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AGEN",
     "name": "AGENUS INC",
     "cik": "0001098972",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "AGIO",
     "name": "AGIOS PHARMACEUTICALS, INC.",
     "cik": "0001439222",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AIM",
     "name": "AIM ImmunoTech Inc.",
     "cik": "0000946644",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "AKBA",
     "name": "Akebia Therapeutics, Inc.",
     "cik": "0001517022",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AKTS",
     "name": "Aktis Oncology, Inc.",
     "cik": "0002035832",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AKTX",
     "name": "Akari Therapeutics Plc",
     "cik": "0001541157",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALDX",
     "name": "Aldeyra Therapeutics, Inc.",
     "cik": "0001341235",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALEC",
     "name": "Alector, Inc.",
     "cik": "0001653087",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "ALGN",
+    "name": "ALIGN TECHNOLOGY INC",
+    "cik": "0001097149",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "ALGS",
     "name": "Aligos Therapeutics, Inc.",
     "cik": "0001799448",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ALKS",
     "name": "Alkermes plc.",
     "cik": "0001520262",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALLO",
     "name": "Allogene Therapeutics, Inc.",
     "cik": "0001737287",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ALLR",
     "name": "Allarity Therapeutics, Inc.",
     "cik": "0001860657",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALMS",
     "name": "ALUMIS INC.",
     "cik": "0001847367",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALNY",
     "name": "ALNYLAM PHARMACEUTICALS, INC.",
     "cik": "0001178670",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALT",
     "name": "Altimmune, Inc.",
     "cik": "0001326190",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ALURW",
+    "name": "ALLURION TECHNOLOGIES, INC.",
+    "cik": "0001964979",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ALVOW",
     "name": "Alvotech",
     "cik": "0001898416",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ALXO",
     "name": "ALX ONCOLOGY HOLDINGS INC",
     "cik": "0001810182",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ALZN",
     "name": "Alzamend Neuro, Inc.",
     "cik": "0001677077",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AMGN",
     "name": "AMGEN INC",
     "cik": "0000318154",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "AMLX",
     "name": "Amylyx Pharmaceuticals, Inc.",
     "cik": "0001658551",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AMPH",
     "name": "Amphastar Pharmaceuticals, Inc.",
     "cik": "0001297184",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AMRX",
     "name": "Amneal Pharmaceuticals, Inc.",
     "cik": "0001723128",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANAB",
     "name": "ANAPTYSBIO, INC",
     "cik": "0001370053",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANEB",
     "name": "Anebulo Pharmaceuticals, Inc.",
     "cik": "0001815974",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ANGO",
+    "name": "ANGIODYNAMICS INC",
+    "cik": "0001275187",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "ANIK",
+    "name": "Anika Therapeutics, Inc.",
+    "cik": "0000898437",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ANL",
     "name": "Adlai Nortye Ltd.",
     "cik": "0001944552",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANNX",
     "name": "Annexon, Inc.",
     "cik": "0001528115",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANRO",
     "name": "Alto Neuroscience, Inc.",
     "cik": "0001999480",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANTX",
     "name": "AN2 Therapeutics, Inc.",
     "cik": "0001880438",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ANVS",
     "name": "Annovis Bio, Inc.",
     "cik": "0001477845",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "AORT",
+    "name": "ARTIVION, INC.",
+    "cik": "0000784199",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "APGE",
     "name": "Apogee Therapeutics, Inc.",
     "cik": "0001974640",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "APLMW",
     "name": "Apollomics Inc.",
     "cik": "0001944885",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "APRE",
     "name": "Aprea Therapeutics, Inc.",
     "cik": "0001781983",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "APTOF",
@@ -333,487 +457,778 @@
     "ticker": "APVO",
     "name": "Aptevo Therapeutics Inc.",
     "cik": "0001671584",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "APYX",
+    "name": "Apyx Medical Corp",
+    "cik": "0000719135",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "AQST",
     "name": "Aquestive Therapeutics, Inc.",
     "cik": "0001398733",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ARAY",
+    "name": "ACCURAY INC",
+    "cik": "0001138723",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ARCT",
     "name": "Arcturus Therapeutics Holdings Inc.",
     "cik": "0001768224",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ARDX",
     "name": "ARDELYX, INC.",
     "cik": "0001437402",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ARMP",
     "name": "Armata Pharmaceuticals, Inc.",
     "cik": "0000921114",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ARQT",
     "name": "Arcutis Biotherapeutics, Inc.",
     "cik": "0001787306",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ARTV",
     "name": "Artiva Biotherapeutics, Inc.",
     "cik": "0001817241",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ARVN",
     "name": "ARVINAS, INC.",
     "cik": "0001655759",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ARWR",
     "name": "ARROWHEAD PHARMACEUTICALS, INC.",
     "cik": "0000879407",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ASMB",
     "name": "ASSEMBLY BIOSCIENCES, INC.",
     "cik": "0001426800",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ATEC",
+    "name": "Alphatec Holdings, Inc.",
+    "cik": "0001350653",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ATNM",
     "name": "Actinium Pharmaceuticals, Inc.",
     "cik": "0001388320",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ATOS",
     "name": "ATOSSA THERAPEUTICS, INC.",
     "cik": "0001488039",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ATRA",
     "name": "Atara Biotherapeutics, Inc.",
     "cik": "0001604464",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "ATRC",
+    "name": "AtriCure, Inc.",
+    "cik": "0001323885",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ATXI",
     "name": "AVENUE THERAPEUTICS, INC.",
     "cik": "0001644963",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ATYR",
     "name": "aTYR PHARMA INC",
     "cik": "0001339970",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "AUPH",
     "name": "Aurinia Pharmaceuticals Inc.",
     "cik": "0001600620",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AURA",
     "name": "Aura Biosciences, Inc.",
     "cik": "0001501796",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "AURX",
+    "name": "Nuo Therapeutics, Inc.",
+    "cik": "0001091596",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "AVBP",
     "name": "ArriVent BioPharma, Inc.",
     "cik": "0001868279",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "AVHHL",
+    "name": "AVITA Medical, Inc.",
+    "cik": "0001762303",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "AVIR",
     "name": "Atea Pharmaceuticals, Inc.",
     "cik": "0001593899",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AVLN",
     "name": "Avalyn Pharma Inc.",
     "cik": "0001540171",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AVTX",
     "name": "Avalo Therapeutics, Inc.",
     "cik": "0001534120",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AVXL",
     "name": "ANAVEX LIFE SCIENCES CORP.",
     "cik": "0001314052",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "AXGN",
+    "name": "Axogen, Inc.",
+    "cik": "0000805928",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "AXIM",
     "name": "AXIM BIOTECHNOLOGIES, INC.",
     "cik": "0001514946",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AXSM",
     "name": "Axsome Therapeutics, Inc.",
     "cik": "0001579428",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AYTU",
     "name": "AYTU BIOPHARMA, INC",
     "cik": "0001385818",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AZN",
     "name": "ASTRAZENECA PLC",
     "cik": "0000901832",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "AZTR",
     "name": "Azitra, Inc.",
     "cik": "0001701478",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BBIO",
     "name": "BridgeBio Pharma, Inc.",
     "cik": "0001743881",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BBLGW",
+    "name": "Bone Biologics Corp",
+    "cik": "0001419554",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
+  },
+  {
+    "ticker": "BBNX",
+    "name": "Beta Bionics, Inc.",
+    "cik": "0001674632",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BBOT",
     "name": "BridgeBio Oncology Therapeutics, Inc.",
     "cik": "0001869105",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BCAB",
     "name": "BioAtla, Inc.",
     "cik": "0001826892",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BCAX",
     "name": "Bicara Therapeutics Inc.",
     "cik": "0002023658",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BCDA",
     "name": "BioCardia, Inc.",
     "cik": "0000925741",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BCLI",
     "name": "BRAINSTORM CELL THERAPEUTICS INC.",
     "cik": "0001137883",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BCRX",
     "name": "BIOCRYST PHARMACEUTICALS INC",
     "cik": "0000882796",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BCTXZ",
     "name": "BriaCell Therapeutics Corp.",
     "cik": "0001610820",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BDRX",
     "name": "Biodexa Pharmaceuticals Plc",
     "cik": "0001643918",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BDSX",
+    "name": "BIODESIX INC",
+    "cik": "0001439725",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "BDTX",
     "name": "Black Diamond Therapeutics, Inc.",
     "cik": "0001701541",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "BDX",
+    "name": "BECTON DICKINSON & CO",
+    "cik": "0000010795",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BEAM",
     "name": "Beam Therapeutics Inc.",
     "cik": "0001745999",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "BEAT",
+    "name": "HeartBeam, Inc.",
+    "cik": "0001779372",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BEIGF",
     "name": "BeOne Medicines Ltd.",
     "cik": "0001651308",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BFLY",
+    "name": "Butterfly Network, Inc.",
+    "cik": "0001804176",
+    "sector": "Medical devices",
+    "included_because": "SIC 3844"
   },
   {
     "ticker": "BFRIW",
     "name": "Biofrontera Inc.",
     "cik": "0001858685",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BHVN",
     "name": "Biohaven Ltd.",
     "cik": "0001935979",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BIAFW",
     "name": "bioAffinity Technologies, Inc.",
     "cik": "0001712762",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
   },
   {
     "ticker": "BIIB",
     "name": "BIOGEN INC.",
     "cik": "0000875045",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BIOA",
     "name": "BioAge Labs, Inc.",
     "cik": "0001709941",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BIOM",
     "name": "SB Technology Holdings, Inc.",
     "cik": "0001091326",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BIVIW",
     "name": "BIOVIE INC.",
     "cik": "0001580149",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BIXT",
     "name": "BIOXYTRAN, INC",
     "cik": "0001445815",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BJDX",
+    "name": "Bluejay Diagnostics, Inc.",
+    "cik": "0001704287",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "BLCO",
+    "name": "Bausch & Lomb Corp",
+    "cik": "0001860742",
+    "sector": "Other",
+    "included_because": "sponsors phase-labelled trials"
+  },
+  {
+    "ticker": "BLLN",
+    "name": "BillionToOne, Inc.",
+    "cik": "0002070849",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "BLRX",
     "name": "BioLineRx Ltd.",
     "cik": "0001498403",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BLTE",
     "name": "BELITE BIO, INC",
     "cik": "0001889109",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BMEA",
     "name": "Biomea Fusion, Inc.",
     "cik": "0001840439",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BMRA",
+    "name": "BIOMERICA INC",
+    "cik": "0000073290",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "BMRN",
     "name": "BIOMARIN PHARMACEUTICAL INC",
     "cik": "0001048477",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BNGO",
+    "name": "Bionano Genomics, Inc.",
+    "cik": "0001411690",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3826"
   },
   {
     "ticker": "BNTC",
     "name": "Benitec Biopharma Inc.",
     "cik": "0001808898",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BNTX",
     "name": "BioNTech SE",
     "cik": "0001776985",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "BOLD",
     "name": "Boundless Bio, Inc.",
     "cik": "0001782303",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BOLT",
     "name": "Bolt Biotherapeutics, Inc.",
     "cik": "0001641281",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "BPTH",
     "name": "BIO-PATH HOLDINGS, INC.",
     "cik": "0001133818",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BRKRP",
+    "name": "BRUKER CORP",
+    "cik": "0001109354",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3826"
   },
   {
     "ticker": "BRNS",
     "name": "Barinthus Biotherapeutics plc.",
     "cik": "0001828185",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BRSYF",
+    "name": "Brainsway Ltd.",
+    "cik": "0001505065",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BSEM",
     "name": "BioStem Technologies, Inc.",
     "cik": "0001658678",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "BSX",
+    "name": "BOSTON SCIENTIFIC CORP",
+    "cik": "0000885725",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BTAI",
     "name": "BioXcel Therapeutics, Inc.",
     "cik": "0001720893",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BVS",
+    "name": "Bioventus Inc.",
+    "cik": "0001665988",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "BYSI",
     "name": "BeyondSpring Inc.",
     "cik": "0001677940",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "BZYR",
+    "name": "BURZYNSKI RESEARCH INSTITUTE INC",
+    "cik": "0000724445",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "CABA",
     "name": "Cabaletta Bio, Inc.",
     "cik": "0001759138",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CADL",
     "name": "Candel Therapeutics, Inc.",
     "cik": "0001841387",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CALC",
     "name": "CalciMedica, Inc.",
     "cik": "0001534133",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CAMP",
     "name": "Camp4 Therapeutics Corp",
     "cik": "0001736730",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CASIF",
     "name": "CASI Pharmaceuticals, Inc.",
     "cik": "0001962738",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CATX",
     "name": "Perspective Therapeutics, Inc.",
     "cik": "0000728387",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CBIO",
     "name": "CRESCENT BIOPHARMA, INC.",
     "cik": "0001253689",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "CBLL",
+    "name": "Ceribell, Inc.",
+    "cik": "0001861107",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "CCCC",
     "name": "C4 Therapeutics, Inc.",
     "cik": "0001662579",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "CDNA",
+    "name": "CareDx, Inc.",
+    "cik": "0001217234",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
+  },
+  {
+    "ticker": "CELC",
+    "name": "Celcuity Inc.",
+    "cik": "0001603454",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "CELG-RI",
     "name": "BRISTOL MYERS SQUIBB CO",
     "cik": "0000014272",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CELU",
     "name": "Celularity Inc",
     "cik": "0001752828",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CELZ",
     "name": "CREATIVE MEDICAL TECHNOLOGY HOLDINGS, INC.",
     "cik": "0001187953",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CEROW",
     "name": "CERO THERAPEUTICS HOLDINGS, INC.",
     "cik": "0001870404",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "CERS",
+    "name": "CERUS CORP",
+    "cik": "0001020214",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "CGC",
+    "name": "Canopy Growth Corp",
+    "cik": "0001737927",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
   },
   {
     "ticker": "CGEM",
     "name": "Cullinan Therapeutics, Inc.",
     "cik": "0001789972",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CGEN",
     "name": "COMPUGEN LTD",
     "cik": "0001119774",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CGON",
     "name": "CG Oncology, Inc.",
     "cik": "0001991792",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CGTX",
     "name": "COGNITION THERAPEUTICS INC",
     "cik": "0001455365",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CHRS",
     "name": "Coherus Oncology, Inc.",
     "cik": "0001512762",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CINGW",
     "name": "Cingulate Inc.",
     "cik": "0001862150",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "CL",
+    "name": "COLGATE PALMOLIVE CO",
+    "cik": "0000021665",
+    "sector": "Other",
+    "included_because": "sponsors phase-labelled trials"
+  },
+  {
+    "ticker": "CLDX",
+    "name": "Celldex Therapeutics, Inc.",
+    "cik": "0000744218",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "CLLS",
     "name": "Cellectis S.A.",
     "cik": "0001627281",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CLNN",
     "name": "Clene Inc.",
     "cik": "0001822791",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CLRB",
     "name": "Cellectar Biosciences, Inc.",
     "cik": "0001279704",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CLSDQ",
@@ -825,85 +1240,120 @@
     "ticker": "CLYM",
     "name": "Climb Bio, Inc.",
     "cik": "0001768446",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CMND",
     "name": "Clearmind Medicine Inc.",
     "cik": "0001892500",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CMPS",
     "name": "COMPASS Pathways plc",
     "cik": "0001816590",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CMPX",
     "name": "Compass Therapeutics, Inc.",
     "cik": "0001738021",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "CNMD",
+    "name": "CONMED Corp",
+    "cik": "0000816956",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "CNSP",
     "name": "CNS Pharmaceuticals, Inc.",
     "cik": "0001729427",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CNTB",
     "name": "Connect Biopharma Holdings Ltd",
     "cik": "0001835268",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CNTX",
     "name": "Context Therapeutics Inc.",
     "cik": "0001842952",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "COCHW",
+    "name": "Envoy Medical, Inc.",
+    "cik": "0001840877",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "COCP",
     "name": "Cocrystal Pharma, Inc.",
     "cik": "0001412486",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "COGT",
     "name": "Cogent Biosciences, Inc.",
     "cik": "0001622229",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "COHR",
+    "name": "COHERENT CORP.",
+    "cik": "0000820318",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3827"
   },
   {
     "ticker": "COLL",
     "name": "COLLEGIUM PHARMACEUTICAL, INC",
     "cik": "0001267565",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CORT",
     "name": "CORCEPT THERAPEUTICS INC",
     "cik": "0001088856",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "COYA",
     "name": "Coya Therapeutics, Inc.",
     "cik": "0001835022",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CPHI",
     "name": "CHINA PHARMA HOLDINGS, INC.",
     "cik": "0001106644",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CPIX",
     "name": "CUMBERLAND PHARMACEUTICALS INC",
     "cik": "0001087294",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CPRX",
@@ -915,295 +1365,428 @@
     "ticker": "CRBP",
     "name": "Corbus Pharmaceuticals Holdings, Inc.",
     "cik": "0001595097",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CRBU",
     "name": "Caribou Biosciences, Inc.",
     "cik": "0001619856",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CRDF",
     "name": "Cardiff Oncology, Inc.",
     "cik": "0001213037",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CRDL",
     "name": "Cardiol Therapeutics Inc.",
     "cik": "0001702123",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CRIS",
     "name": "CURIS INC",
     "cik": "0001108205",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CRMD",
     "name": "CorMedix Inc.",
     "cik": "0001410098",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CRNX",
     "name": "Crinetics Pharmaceuticals, Inc.",
     "cik": "0001658247",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CRSP",
     "name": "CRISPR Therapeutics AG",
     "cik": "0001674416",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "CRVS",
     "name": "Corvus Pharmaceuticals, Inc.",
     "cik": "0001626971",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CSBR",
     "name": "CHAMPIONS ONCOLOGY, INC.",
     "cik": "0000771856",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "CSTL",
+    "name": "CASTLE BIOSCIENCES INC",
+    "cik": "0001447362",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "CTMX",
     "name": "CytomX Therapeutics, Inc.",
     "cik": "0001501989",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CTNM",
     "name": "Contineum Therapeutics, Inc.",
     "cik": "0001855175",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CTRVP",
     "name": "Hepion Pharmaceuticals, Inc.",
     "cik": "0001583771",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "CTSO",
+    "name": "Cytosorbents Corp",
+    "cik": "0001175151",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "CTXR",
     "name": "Citius Pharmaceuticals, Inc.",
     "cik": "0001506251",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CUE",
     "name": "Cue Biopharma, Inc.",
     "cik": "0001645460",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CVM",
     "name": "CEL SCI CORP",
     "cik": "0000725363",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "CVRX",
+    "name": "CVRx, Inc.",
+    "cik": "0001235912",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "CVSI",
     "name": "CV Sciences, Inc.",
     "cik": "0001510964",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "CYAN",
+    "name": "CYANOTECH CORP",
+    "cik": "0000768408",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
   },
   {
     "ticker": "CYCN",
     "name": "Cyclerion Therapeutics, Inc.",
     "cik": "0001755237",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CYDY",
     "name": "CytoDyn Inc.",
     "cik": "0001175680",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CYTK",
     "name": "CYTOKINETICS INC",
     "cik": "0001061983",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "CYVNY",
     "name": "Opthea Ltd",
     "cik": "0001815620",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "DBVTF",
     "name": "DBV Technologies S.A.",
     "cik": "0001613780",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "DCTH",
+    "name": "DELCATH SYSTEMS, INC.",
+    "cik": "0000872912",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "DERM",
     "name": "Journey Medical Corp",
     "cik": "0001867066",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "DFTX",
+    "name": "Definium Therapeutics, Inc.",
+    "cik": "0001813814",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
   },
   {
     "ticker": "DMAC",
     "name": "DiaMedica Therapeutics Inc.",
     "cik": "0001401040",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "DNLI",
     "name": "Denali Therapeutics Inc.",
     "cik": "0001714899",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "DRMAW",
     "name": "Dermata Therapeutics, Inc.",
     "cik": "0001853816",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "DRTSW",
+    "name": "Alpha Tau Medical Ltd.",
+    "cik": "0001871321",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "DRUG",
     "name": "BRIGHT MINDS BIOSCIENCES INC.",
     "cik": "0001827401",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "DSGN",
     "name": "Design Therapeutics, Inc.",
     "cik": "0001807120",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "DTIL",
     "name": "PRECISION BIOSCIENCES INC",
     "cik": "0001357874",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "DWTX",
     "name": "Dogwood Therapeutics, Inc.",
     "cik": "0001818844",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "DXCM",
+    "name": "DEXCOM INC",
+    "cik": "0001093557",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "DYN",
     "name": "Dyne Therapeutics, Inc.",
     "cik": "0001818794",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "EBRCZ",
+    "name": "EBR Systems, Inc.",
+    "cik": "0001347123",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "EBS",
     "name": "Emergent BioSolutions Inc.",
     "cik": "0001367644",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ECOR",
+    "name": "electroCore, Inc.",
+    "cik": "0001560258",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "EDIT",
     "name": "Editas Medicine, Inc.",
     "cik": "0001650664",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "EDSA",
     "name": "Edesa Biotech, Inc.",
     "cik": "0001540159",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "EIKN",
     "name": "Eikon Therapeutics, Inc.",
     "cik": "0001861123",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ELDN",
     "name": "Eledon Pharmaceuticals, Inc.",
     "cik": "0001404281",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ELMD",
+    "name": "Electromed, Inc.",
+    "cik": "0001488917",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "ELOX",
     "name": "Eloxx Pharmaceuticals, Inc.",
     "cik": "0001035354",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ELTX",
     "name": "Elicio Therapeutics, Inc.",
     "cik": "0001601485",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ELUT",
     "name": "ELUTIA INC.",
     "cik": "0001708527",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ELVN",
     "name": "Enliven Therapeutics, Inc.",
     "cik": "0001672619",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "EMBC",
+    "name": "Embecta Corp.",
+    "cik": "0001872789",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "ENLV",
     "name": "Enlivex Ltd.",
     "cik": "0001596812",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ENSC",
     "name": "Ensysce Biosciences, Inc.",
     "cik": "0001716947",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ENTA",
     "name": "ENANTA PHARMACEUTICALS INC",
     "cik": "0001177648",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ENTX",
     "name": "Entera Bio Ltd.",
     "cik": "0001638097",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "EOLS",
     "name": "Evolus, Inc.",
     "cik": "0001570562",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "EPRX",
     "name": "EUPRAXIA PHARMACEUTICALS INC.",
     "cik": "0001581178",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "EQ",
     "name": "Equillium, Inc.",
     "cik": "0001746466",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ERAS",
     "name": "Erasca, Inc.",
     "cik": "0001761918",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ESLAW",
     "name": "Estrella Immunopharma, Inc.",
     "cik": "0001844417",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ESPR",
@@ -1212,178 +1795,284 @@
     "sector": "Pharma preparations"
   },
   {
+    "ticker": "ESTA",
+    "name": "ESTABLISHMENT LABS HOLDINGS INC.",
+    "cik": "0001688757",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
+  },
+  {
     "ticker": "EVMN",
     "name": "Evommune, Inc.",
     "cik": "0002044725",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "EW",
+    "name": "Edwards Lifesciences Corp",
+    "cik": "0001099800",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "EWTX",
     "name": "Edgewise Therapeutics, Inc.",
     "cik": "0001710072",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "EXEL",
     "name": "EXELIXIS, INC.",
     "cik": "0000939767",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "EYPT",
+    "name": "EyePoint, Inc.",
+    "cik": "0001314102",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3826"
   },
   {
     "ticker": "FATE",
     "name": "FATE THERAPEUTICS INC",
     "cik": "0001434316",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "FBLG",
     "name": "FibroBiologics, Inc.",
     "cik": "0001958777",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "FBRX",
     "name": "Forte Biosciences, Inc.",
     "cik": "0001419041",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "FDMT",
     "name": "4D Molecular Therapeutics, Inc.",
     "cik": "0001650648",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "FEMY",
+    "name": "FEMASYS INC",
+    "cik": "0001339005",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "FHTX",
     "name": "Foghorn Therapeutics Inc.",
     "cik": "0001822462",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "FIXX",
+    "name": "Q32 Bio Inc.",
+    "cik": "0001661998",
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "FOCL",
+    "name": "EDAP TMS SA",
+    "cik": "0001041934",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "FTH",
     "name": "Faeth Therapeutics, Inc.",
     "cik": "0001829802",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "FULC",
     "name": "Fulcrum Therapeutics, Inc.",
     "cik": "0001680581",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GALT",
     "name": "GALECTIN THERAPEUTICS INC",
     "cik": "0001133416",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GANX",
     "name": "Gain Therapeutics, Inc.",
     "cik": "0001819411",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "GCTK",
+    "name": "Glucotrack, Inc.",
+    "cik": "0001506983",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "GDTC",
     "name": "CytoMed Therapeutics Ltd",
     "cik": "0001873093",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GENB",
     "name": "Generate Biomedicines, Inc.",
     "cik": "0002100782",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GERN",
     "name": "GERON CORP",
     "cik": "0000886744",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "GH",
+    "name": "Guardant Health, Inc.",
+    "cik": "0001576280",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "GHRS",
     "name": "GH Research PLC",
     "cik": "0001855129",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GIKLY",
     "name": "Grifols SA",
     "cik": "0001438569",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GILD",
     "name": "GILEAD SCIENCES, INC.",
     "cik": "0000882095",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "GKOS",
+    "name": "GLAUKOS Corp",
+    "cik": "0001192448",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "GLAXF",
     "name": "GSK plc",
     "cik": "0001131399",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GLMD",
     "name": "Galmed Pharmaceuticals Ltd.",
     "cik": "0001595353",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GLPGF",
     "name": "Lakefront Biotherapeutics NV",
     "cik": "0001421876",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GLSI",
     "name": "Greenwich LifeSciences, Inc.",
     "cik": "0001799788",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GLUE",
     "name": "Monte Rosa Therapeutics, Inc.",
     "cik": "0001826457",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "GMED",
+    "name": "GLOBUS MEDICAL INC",
+    "cik": "0001237831",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "GNLX",
     "name": "GENELUX Corp",
     "cik": "0001231457",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GNPX",
     "name": "Genprex, Inc.",
     "cik": "0001595248",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GOSS",
     "name": "Gossamer Bio, Inc.",
     "cik": "0001728117",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GPCR",
     "name": "Structure Therapeutics Inc.",
     "cik": "0001888886",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "GRAL",
+    "name": "GRAIL, Inc.",
+    "cik": "0001699031",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "GRCE",
     "name": "Grace Therapeutics, Inc.",
     "cik": "0001444192",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GRI",
     "name": "GRI Bio, Inc.",
     "cik": "0001824293",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "GRTX",
@@ -1395,271 +2084,435 @@
     "ticker": "GTBP",
     "name": "GT Biopharma, Inc.",
     "cik": "0000109657",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "GTHP",
+    "name": "GUIDED THERAPEUTICS INC",
+    "cik": "0000924515",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
+  },
+  {
+    "ticker": "GUTS",
+    "name": "FRACTYL HEALTH, INC.",
+    "cik": "0001572616",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "HAE",
+    "name": "HAEMONETICS CORP",
+    "cik": "0000313143",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "HALO",
     "name": "HALOZYME THERAPEUTICS, INC.",
     "cik": "0001159036",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "HCWB",
     "name": "HCW Biologics Inc.",
     "cik": "0001828673",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "HELP",
     "name": "CYBIN INC.",
     "cik": "0001833141",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "HIND",
     "name": "Vyome Holdings, Inc",
     "cik": "0001427570",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "HLNCF",
+    "name": "Haleon plc",
+    "cik": "0001900304",
+    "sector": "Other",
+    "included_because": "sponsors phase-labelled trials"
   },
   {
     "ticker": "HOWL",
     "name": "Werewolf Therapeutics, Inc.",
     "cik": "0001785530",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "HRGN",
+    "name": "Harvard Apparatus Regenerative Technology, Inc.",
+    "cik": "0001563665",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "HRMY",
     "name": "Harmony Biosciences Holdings, Inc.",
     "cik": "0001802665",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "HROW",
     "name": "HARROW, INC.",
     "cik": "0001360214",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "HTFL",
+    "name": "Heartflow, Inc.",
+    "cik": "0001464521",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "HUMAW",
     "name": "Humacyte, Inc.",
     "cik": "0001818382",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "HYPR",
+    "name": "Hyperfine, Inc.",
+    "cik": "0001833769",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
+  },
+  {
+    "ticker": "IART",
+    "name": "INTEGRA LIFESCIENCES HOLDINGS CORP",
+    "cik": "0000917520",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "IBIO",
     "name": "iBio, Inc.",
     "cik": "0001420720",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IBRX",
     "name": "ImmunityBio, Inc.",
     "cik": "0001326110",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "ICCM",
+    "name": "IceCure Medical Ltd.",
+    "cik": "0001584371",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "IDYA",
     "name": "IDEAYA Biosciences, Inc.",
     "cik": "0001676725",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IFRX",
     "name": "InflaRx N.V.",
     "cik": "0001708688",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IGC",
     "name": "IGC Pharma, Inc.",
     "cik": "0001326205",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IKT",
     "name": "Inhibikase Therapeutics, Inc.",
     "cik": "0001750149",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "ILMN",
+    "name": "ILLUMINA, INC.",
+    "cik": "0001110803",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3826"
   },
   {
     "ticker": "IMCR",
     "name": "Immunocore Holdings plc",
     "cik": "0001671927",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "IMDX",
+    "name": "Insight Molecular Diagnostics Inc.",
+    "cik": "0001642380",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "IMMX",
     "name": "Immix Biopharma, Inc.",
     "cik": "0001873835",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMNM",
     "name": "Immunome Inc.",
     "cik": "0001472012",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMNN",
     "name": "Imunon, Inc.",
     "cik": "0000749647",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMRN",
     "name": "Immuron Ltd",
     "cik": "0001660046",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMRX",
     "name": "Immuneering Corp",
     "cik": "0001790340",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMTX",
     "name": "Immatics N.V.",
     "cik": "0001809196",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "IMUX",
     "name": "IMMUNIC, INC.",
     "cik": "0001280776",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IMVT",
     "name": "Immunovant, Inc.",
     "cik": "0001764013",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "INAB",
     "name": "IN8BIO, INC.",
     "cik": "0001740279",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "INBS",
+    "name": "INTELLIGENT BIO SOLUTIONS INC.",
+    "cik": "0001725430",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "INBX",
     "name": "Inhibrx Biosciences, Inc.",
     "cik": "0002007919",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "INCY",
     "name": "INCYTE CORP",
     "cik": "0000879169",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
   },
   {
     "ticker": "INDP",
     "name": "Indaptus Therapeutics, Inc.",
     "cik": "0001857044",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "INGN",
+    "name": "Inogen Inc",
+    "cik": "0001294133",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "INKT",
     "name": "MiNK Therapeutics, Inc.",
     "cik": "0001840229",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "INM",
     "name": "InMed Pharmaceuticals Inc.",
     "cik": "0001728328",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "INMB",
     "name": "Inmune Bio, Inc.",
     "cik": "0001711754",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "INMD",
+    "name": "InMode Ltd.",
+    "cik": "0001742692",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "INO",
     "name": "INOVIO PHARMACEUTICALS, INC.",
     "cik": "0001055726",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "INSM",
     "name": "INSMED Inc",
     "cik": "0001104506",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "INSP",
+    "name": "Inspire Medical Systems, Inc.",
+    "cik": "0001609550",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "INTS",
     "name": "INTENSITY THERAPEUTICS, INC.",
     "cik": "0001567264",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "INVA",
     "name": "Innoviva, Inc.",
     "cik": "0001080014",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IOBTQ",
     "name": "IO Biotech, Inc.",
     "cik": "0001865494",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IONS",
     "name": "IONIS PHARMACEUTICALS INC",
     "cik": "0000874015",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IOVA",
     "name": "IOVANCE BIOTHERAPEUTICS, INC.",
     "cik": "0001425205",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "IPHYF",
     "name": "Innate Pharma SA",
     "cik": "0001598599",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "IPSC",
     "name": "Century Therapeutics, Inc.",
     "cik": "0001850119",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "IQV",
     "name": "IQVIA HOLDINGS INC.",
     "cik": "0001478242",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
   },
   {
     "ticker": "IRD",
     "name": "Opus Genetics, Inc.",
     "cik": "0001228627",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IRON",
     "name": "Disc Medicine, Inc.",
     "cik": "0001816736",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "IRTC",
+    "name": "iRhythm Holdings, Inc.",
+    "cik": "0001388658",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "IRWD",
     "name": "IRONWOOD PHARMACEUTICALS INC",
     "cik": "0001446847",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ISPC",
     "name": "iSpecimen Inc.",
     "cik": "0001558569",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
+  },
+  {
+    "ticker": "ISRG",
+    "name": "INTUITIVE SURGICAL INC",
+    "cik": "0001035267",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "ITRMF",
@@ -1671,511 +2524,764 @@
     "ticker": "IVEVF",
     "name": "Inventiva S.A.",
     "cik": "0001756594",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "IVVD",
     "name": "Invivyd, Inc.",
     "cik": "0001832038",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "IXHL",
     "name": "Incannex Healthcare Inc.",
     "cik": "0001873875",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "JANX",
     "name": "Janux Therapeutics, Inc.",
     "cik": "0001817713",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "JAZZ",
     "name": "Jazz Pharmaceuticals plc",
     "cik": "0001232524",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "JBIO",
     "name": "Jade Biosciences, Inc.",
     "cik": "0001798749",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "JNJ",
     "name": "JOHNSON & JOHNSON",
     "cik": "0000200406",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "JSPRW",
     "name": "Jasper Therapeutics, Inc.",
     "cik": "0001788028",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "KARD",
     "name": "Kardigan, Inc.",
     "cik": "0002123613",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KMDA",
     "name": "KAMADA LTD",
     "cik": "0001567529",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "KMTS",
+    "name": "KESTRA MEDICAL TECHNOLOGIES, LTD.",
+    "cik": "0001877184",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "KNSA",
     "name": "Kiniksa Pharmaceuticals International, plc",
     "cik": "0001730430",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KOD",
     "name": "Kodiak Sciences Inc.",
     "cik": "0001468748",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "KPHMW",
     "name": "KIORA PHARMACEUTICALS INC",
     "cik": "0001372514",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KPTI",
     "name": "Karyopharm Therapeutics Inc.",
     "cik": "0001503802",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "KRMD",
+    "name": "KORU Medical Systems, Inc.",
+    "cik": "0000704440",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "KROS",
     "name": "Keros Therapeutics, Inc.",
     "cik": "0001664710",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KRRO",
     "name": "Korro Bio, Inc.",
     "cik": "0001703647",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KRYS",
     "name": "Krystal Biotech, Inc.",
     "cik": "0001711279",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "KTTA",
     "name": "Pasithea Therapeutics Corp.",
     "cik": "0001841330",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KURA",
     "name": "Kura Oncology, Inc.",
     "cik": "0001422143",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KYMR",
     "name": "Kymera Therapeutics, Inc.",
     "cik": "0001815442",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "KYNB",
     "name": "KYNTRA BIO, INC.",
     "cik": "0000921299",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "KYTX",
     "name": "Kyverna Therapeutics, Inc.",
     "cik": "0001994702",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "KZIA",
     "name": "KAZIA THERAPEUTICS LTD",
     "cik": "0001075880",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LBRX",
     "name": "LB PHARMACEUTICALS INC",
     "cik": "0001691082",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LCTX",
     "name": "Lineage Cell Therapeutics, Inc.",
     "cik": "0000876343",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "LEGN",
     "name": "Legend Biotech Corp",
     "cik": "0001801198",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LENZ",
     "name": "LENZ Therapeutics, Inc.",
     "cik": "0001815776",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "LEXX",
     "name": "Lexaria Bioscience Corp.",
     "cik": "0001348362",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
-    "ticker": "LGNZZ",
+    "ticker": "LGNYZ",
     "name": "LIGAND PHARMACEUTICALS INC",
     "cik": "0000886163",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LGVN",
     "name": "Longeveron Inc.",
     "cik": "0001721484",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "LH",
+    "name": "LABCORP HOLDINGS INC.",
+    "cik": "0000920148",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "LIANY",
     "name": "LianBio",
     "cik": "0001831283",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LIPO",
     "name": "LIPELLA PHARMACEUTICALS INC.",
     "cik": "0001347242",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "LIVN",
+    "name": "LivaNova PLC",
+    "cik": "0001639691",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "LLY",
     "name": "ELI LILLY & Co",
     "cik": "0000059478",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "LMAT",
+    "name": "LEMAITRE VASCULAR INC",
+    "cik": "0001158895",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "LNSR",
+    "name": "LENSAR, Inc.",
+    "cik": "0001320350",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "LNTH",
+    "name": "Lantheus Holdings, Inc.",
+    "cik": "0001521036",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "LONA",
     "name": "LeonaBio, Inc.",
     "cik": "0001620463",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "LPCN",
     "name": "Lipocine Inc.",
     "cik": "0001535955",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LQDA",
     "name": "Liquidia Corp",
     "cik": "0001819576",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LRMR",
     "name": "Larimar Therapeutics, Inc.",
     "cik": "0001374690",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LSTA",
     "name": "LISATA THERAPEUTICS, INC.",
     "cik": "0000320017",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LTRN",
     "name": "Lantern Pharma Inc.",
     "cik": "0001763950",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "LUCD",
+    "name": "Lucid Diagnostics Inc.",
+    "cik": "0001799011",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "LUNG",
+    "name": "Pulmonx Corp",
+    "cik": "0001127537",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "LXEO",
     "name": "Lexeo Therapeutics, Inc.",
     "cik": "0001907108",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "LXRX",
     "name": "LEXICON PHARMACEUTICALS, INC.",
     "cik": "0001062822",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "LYEL",
     "name": "Lyell Immunopharma, Inc.",
     "cik": "0001806952",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MAIA",
     "name": "MAIA Biotechnology, Inc.",
     "cik": "0001878313",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MANE",
     "name": "Veradermics, Inc",
     "cik": "0001827635",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MAZE",
     "name": "Maze Therapeutics, Inc.",
     "cik": "0001842295",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "MBIO",
     "name": "MUSTANG BIO, INC.",
     "cik": "0001680048",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MBOT",
+    "name": "Microbot Medical Inc.",
+    "cik": "0000883975",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "MBRX",
     "name": "Moleculin Biotech, Inc.",
     "cik": "0001659617",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MBX",
     "name": "MBX Biosciences, Inc.",
     "cik": "0001776111",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MCRB",
     "name": "Seres Therapeutics, Inc.",
     "cik": "0001609809",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MCUJF",
     "name": "MEDICURE INC",
     "cik": "0001133519",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MDAIW",
+    "name": "Spectral AI, Inc.",
+    "cik": "0001833498",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "MDGL",
     "name": "MADRIGAL PHARMACEUTICALS, INC.",
     "cik": "0001157601",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MDLN",
+    "name": "Medline Inc.",
+    "cik": "0002046386",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "MDNAF",
     "name": "Medicenna Therapeutics Corp.",
     "cik": "0001807983",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MDT",
+    "name": "Medtronic plc",
+    "cik": "0001613103",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
+  },
+  {
+    "ticker": "MDWD",
+    "name": "MediWound Ltd.",
+    "cik": "0001593984",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
+  },
+  {
+    "ticker": "MDXG",
+    "name": "MIMEDX GROUP, INC.",
+    "cik": "0001376339",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "MEOBF",
     "name": "MESOBLAST LTD",
     "cik": "0001345099",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "MGNX",
     "name": "MACROGENICS INC",
     "cik": "0001125345",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MGTX",
     "name": "MeiraGTx Holdings plc",
     "cik": "0001735438",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "MIRM",
     "name": "Mirum Pharmaceuticals, Inc.",
     "cik": "0001759425",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MIST",
     "name": "Milestone Pharmaceuticals Inc.",
     "cik": "0001408443",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MLSS",
+    "name": "MILESTONE SCIENTIFIC INC.",
+    "cik": "0000855683",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "MLTX",
     "name": "MoonLake Immunotherapeutics",
     "cik": "0001821586",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MLYS",
     "name": "Mineralys Therapeutics, Inc.",
     "cik": "0001933414",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "MMSI",
+    "name": "MERIT MEDICAL SYSTEMS INC",
+    "cik": "0000856982",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "MNKD",
     "name": "MANNKIND CORP",
     "cik": "0000899460",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MNOV",
     "name": "MEDICINOVA INC",
     "cik": "0001226616",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MNPR",
     "name": "Monopar Therapeutics",
     "cik": "0001645469",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MOLN",
     "name": "MOLECULAR PARTNERS AG",
     "cik": "0001745114",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "MPLT",
     "name": "MapLight Therapeutics, Inc.",
     "cik": "0001770069",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MRK",
     "name": "Merck & Co., Inc.",
     "cik": "0000310158",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MRKR",
     "name": "Marker Therapeutics, Inc.",
     "cik": "0001094038",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MSLE",
     "name": "Satellos Bioscience Inc.",
     "cik": "0001421642",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MTNB",
     "name": "Matinas BioPharma Holdings, Inc.",
     "cik": "0001582554",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "MXCT",
     "name": "MAXCYTE, INC.",
     "cik": "0001287098",
-    "sector": "Bio research"
+    "sector": "Bio research",
+    "included_because": "SIC 8731"
+  },
+  {
+    "ticker": "MYGN",
+    "name": "MYRIAD GENETICS INC",
+    "cik": "0000899923",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
+  },
+  {
+    "ticker": "MYO",
+    "name": "MYOMO, INC.",
+    "cik": "0001369290",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "NAMSW",
     "name": "NewAmsterdam Pharma Co N.V.",
     "cik": "0001936258",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NBIX",
     "name": "NEUROCRINE BIOSCIENCES INC",
     "cik": "0000914475",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "NCNA",
     "name": "NuCana plc",
     "cik": "0001709626",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NERV",
     "name": "Minerva Neurosciences, Inc.",
     "cik": "0001598646",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NGEN",
     "name": "NERVGEN PHARMA CORP.",
     "cik": "0001751912",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NGNE",
     "name": "Neurogene Inc.",
     "cik": "0001404644",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NKTR",
     "name": "NEKTAR THERAPEUTICS",
     "cik": "0000906709",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NKTX",
     "name": "Nkarta, Inc.",
     "cik": "0001787400",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NMRA",
     "name": "Neumora Therapeutics, Inc.",
     "cik": "0001885522",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "NMTC",
+    "name": "NEUROONE MEDICAL TECHNOLOGIES Corp",
+    "cik": "0001500198",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "NNBXF",
     "name": "Nanobiotix S.A.",
     "cik": "0001760854",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NONOF",
     "name": "NOVO NORDISK A S",
     "cik": "0000353278",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NPCE",
+    "name": "NeuroPace Inc",
+    "cik": "0001528287",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "NRIX",
     "name": "Nurix Therapeutics, Inc.",
     "cik": "0001549595",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NRSNW",
     "name": "NeuroSense Therapeutics Ltd.",
     "cik": "0001875091",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NSPR",
+    "name": "InspireMD, Inc.",
+    "cik": "0001433607",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "NSRX",
     "name": "Nasus Pharma Ltd",
     "cik": "0002029039",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NTHI",
     "name": "NEONC TECHNOLOGIES HOLDINGS, INC.",
     "cik": "0001979414",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NTLA",
+    "name": "Intellia Therapeutics, Inc.",
+    "cik": "0001652130",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
+  },
+  {
+    "ticker": "NTRA",
+    "name": "Natera, Inc.",
+    "cik": "0001604821",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "NUVB",
     "name": "Nuvation Bio Inc.",
     "cik": "0001811063",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NUVL",
@@ -2184,1131 +3290,1655 @@
     "sector": "Pharma preparations"
   },
   {
+    "ticker": "NUWE",
+    "name": "Nuwellis, Inc.",
+    "cik": "0001506492",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
+  },
+  {
+    "ticker": "NVACW",
+    "name": "Profusa, Inc.",
+    "cik": "0001859807",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
     "ticker": "NVAX",
     "name": "NOVAVAX INC",
     "cik": "0001000694",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "NVCR",
+    "name": "NovoCure Ltd",
+    "cik": "0001645113",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "NVCT",
     "name": "Nuvectis Pharma, Inc.",
     "cik": "0001875558",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NVMI",
+    "name": "NOVA LTD.",
+    "cik": "0001109345",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3827"
   },
   {
     "ticker": "NVSEF",
     "name": "NOVARTIS AG",
     "cik": "0001114448",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "NWBO",
     "name": "NORTHWEST BIOTHERAPEUTICS INC",
     "cik": "0001072379",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NXL",
+    "name": "Nexalin Technology, Inc.",
+    "cik": "0001527352",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "NXTC",
     "name": "NextCure, Inc.",
     "cik": "0001661059",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "NYXH",
+    "name": "Nyxoah SA",
+    "cik": "0001857190",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "OBIO",
+    "name": "Orchestra BioMed Holdings, Inc.",
+    "cik": "0001814114",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "OCGN",
     "name": "Ocugen, Inc.",
     "cik": "0001372299",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "OCUL",
     "name": "OCULAR THERAPEUTIX, INC",
     "cik": "0001393434",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ODTX",
     "name": "Odyssey Therapeutics, Inc.",
     "cik": "0001882782",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "OGEN",
     "name": "ORAGENICS INC",
     "cik": "0001174940",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OGN",
     "name": "Organon & Co.",
     "cik": "0001821825",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OKYO",
     "name": "OKYO Pharma Ltd",
     "cik": "0001849296",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "OLMA",
     "name": "Olema Pharmaceuticals, Inc.",
     "cik": "0001750284",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "OM",
+    "name": "Outset Medical, Inc.",
+    "cik": "0001484612",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "OMER",
     "name": "OMEROS CORP",
     "cik": "0001285819",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ONCY",
     "name": "ONCOLYTICS BIOTECH INC",
     "cik": "0001129928",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OPK",
     "name": "OPKO HEALTH, INC.",
     "cik": "0000944809",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ORGO",
     "name": "Organogenesis Holdings Inc.",
     "cik": "0001661181",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ORIC",
     "name": "Oric Pharmaceuticals, Inc.",
     "cik": "0001796280",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ORKA",
     "name": "Oruka Therapeutics, Inc.",
     "cik": "0000907654",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OTLC",
     "name": "Oncotelic Therapeutics, Inc.",
     "cik": "0000908259",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "OTLK",
     "name": "Outlook Therapeutics, Inc.",
     "cik": "0001649989",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PALI",
     "name": "PALISADE BIO, INC.",
     "cik": "0001357459",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PASG",
     "name": "Passage BIO, Inc.",
     "cik": "0001787297",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "PAVM",
+    "name": "PAVmed Inc.",
+    "cik": "0001624326",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PBLS",
     "name": "Parabilis Medicines, Inc.",
     "cik": "0001657677",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PBYI",
     "name": "PUMA BIOTECHNOLOGY, INC.",
     "cik": "0001401667",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PCSA",
     "name": "Processa Pharmaceuticals, Inc.",
     "cik": "0001533743",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PCVX",
     "name": "Vaxcyte, Inc.",
     "cik": "0001649094",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PDSB",
     "name": "PDS Biotechnology Corp",
     "cik": "0001472091",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PEN",
+    "name": "Penumbra Inc",
+    "cik": "0001321732",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PEPG",
     "name": "PepGen Inc.",
     "cik": "0001835597",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PFE",
     "name": "PFIZER INC",
     "cik": "0000078003",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PGEN",
     "name": "PRECIGEN, INC.",
     "cik": "0001356090",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PHAR",
     "name": "Pharming Group N.V.",
     "cik": "0001828316",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PHAT",
     "name": "Phathom Pharmaceuticals, Inc.",
     "cik": "0001783183",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PHGE",
     "name": "BiomX Inc.",
     "cik": "0001739174",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PHIO",
     "name": "Phio Pharmaceuticals Corp.",
     "cik": "0001533040",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PHVS",
     "name": "Pharvaris N.V.",
     "cik": "0001830487",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PLRX",
     "name": "PLIANT THERAPEUTICS, INC.",
     "cik": "0001746473",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PLRZ",
+    "name": "Polyrizon Ltd.",
+    "cik": "0001893645",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "PLSE",
+    "name": "PULSE BIOSCIENCES, INC.",
+    "cik": "0001625101",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "PLSM",
+    "name": "Pulsenmore Ltd.",
+    "cik": "0002064764",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PLYX",
     "name": "Polaryx Therapeutics, Inc.",
     "cik": "0002075320",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PMN",
     "name": "ProMIS Neurosciences Inc.",
     "cik": "0001374339",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PMVP",
     "name": "PMV Pharmaceuticals, Inc.",
     "cik": "0001699382",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PODD",
+    "name": "INSULET CORP",
+    "cik": "0001145197",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PRAX",
     "name": "Praxis Precision Medicines, Inc.",
     "cik": "0001689548",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PRCT",
+    "name": "PROCEPT BioRobotics Corp",
+    "cik": "0001588978",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PRENW",
     "name": "Prenetics Global Ltd",
     "cik": "0001876431",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PRGO",
     "name": "PERRIGO Co plc",
     "cik": "0001585364",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PRLD",
     "name": "Prelude Therapeutics Inc",
     "cik": "0001678660",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PRME",
     "name": "Prime Medicine, Inc.",
     "cik": "0001894562",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PRNAF",
     "name": "ALTERITY THERAPEUTICS LTD",
     "cik": "0001131343",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PROF",
+    "name": "Profound Medical Corp.",
+    "cik": "0001628808",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PROK",
     "name": "PROKIDNEY CORP.",
     "cik": "0001850270",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "PRQR",
     "name": "ProQR Therapeutics N.V.",
     "cik": "0001612940",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PRRUF",
     "name": "IMMUTEP Ltd",
     "cik": "0001506184",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PSNL",
+    "name": "Personalis, Inc.",
+    "cik": "0001527753",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "PTCT",
     "name": "PTC THERAPEUTICS, INC.",
     "cik": "0001070081",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PTGX",
     "name": "Protagonist Therapeutics, Inc",
     "cik": "0001377121",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PTN",
     "name": "PALATIN TECHNOLOGIES INC",
     "cik": "0000911216",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PULM",
     "name": "Pulmatrix, Inc.",
     "cik": "0001574235",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PVCT",
     "name": "PROVECTUS BIOPHARMACEUTICALS, INC.",
     "cik": "0000315545",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "PVLA",
     "name": "PALVELLA THERAPEUTICS, INC.",
     "cik": "0001583648",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "PYPD",
+    "name": "PolyPid Ltd.",
+    "cik": "0001611842",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "PYXS",
     "name": "Pyxis Oncology, Inc.",
     "cik": "0001782223",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "QGEN",
     "name": "QIAGEN N.V.",
     "cik": "0001015820",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "QNCX",
     "name": "Quince Therapeutics, Inc.",
     "cik": "0001662774",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "QNRX",
     "name": "Quoin Pharmaceuticals, Ltd.",
     "cik": "0001671502",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "QNTM",
     "name": "Quantum Biopharma Ltd.",
     "cik": "0001771885",
-    "sector": "Pharma preparations"
-  },
-  {
-    "ticker": "QTTB",
-    "name": "Q32 Bio Inc.",
-    "cik": "0001661998",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "QURE",
     "name": "uniQure N.V.",
     "cik": "0001590560",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RANI",
     "name": "Rani Therapeutics Holdings, Inc.",
     "cik": "0001856725",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RAPP",
     "name": "Rapport Therapeutics, Inc.",
     "cik": "0002012593",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RARE",
     "name": "Ultragenyx Pharmaceutical Inc.",
     "cik": "0001515673",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RCKTW",
     "name": "ROCKET PHARMACEUTICALS, INC.",
     "cik": "0001281895",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RCUS",
     "name": "Arcus Biosciences, Inc.",
     "cik": "0001724521",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "RDGL",
+    "name": "VIVOS INC",
+    "cik": "0001449349",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "RDHL",
     "name": "RedHill Biopharma Ltd.",
     "cik": "0001553846",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RDPTF",
     "name": "Radiopharm Theranostics Ltd",
     "cik": "0001949257",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RDY",
     "name": "DR REDDYS LABORATORIES LTD",
     "cik": "0001135951",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "REGN",
     "name": "REGENERON PHARMACEUTICALS, INC.",
     "cik": "0000872589",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "RENXF",
+    "name": "Renalytix plc",
+    "cik": "0001811115",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "REVBW",
     "name": "REVELATION BIOSCIENCES, INC.",
     "cik": "0001810560",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RFL",
     "name": "Rafael Holdings, Inc.",
     "cik": "0001713863",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RGEN",
     "name": "REPLIGEN CORP",
     "cik": "0000730272",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "RGNX",
     "name": "REGENXBIO Inc.",
     "cik": "0001590877",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "RIGL",
     "name": "RIGEL PHARMACEUTICALS INC",
     "cik": "0001034842",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RLAY",
     "name": "Relay Therapeutics, Inc.",
     "cik": "0001812364",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "RLMD",
     "name": "RELMADA THERAPEUTICS, INC.",
     "cik": "0001553643",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RLYB",
     "name": "Rallybio Corp",
     "cik": "0001739410",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RMTI",
     "name": "ROCKWELL MEDICAL, INC.",
     "cik": "0001041024",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RNA",
     "name": "Atrium Therapeutics, Inc.",
     "cik": "0002093101",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RNAC",
     "name": "Cartesian Therapeutics, Inc.",
     "cik": "0001453687",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RNAZ",
     "name": "Transcode Therapeutics, Inc.",
     "cik": "0001829635",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RNTX",
     "name": "Rein Therapeutics, Inc.",
     "cik": "0001420565",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RNXT",
     "name": "RenovoRx, Inc.",
     "cik": "0001574094",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "RSMDF",
+    "name": "RESMED INC",
+    "cik": "0000943819",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "RVMDW",
     "name": "Revolution Medicines, Inc.",
     "cik": "0001628171",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "RVPH",
     "name": "REVIVA PHARMACEUTICALS HOLDINGS, INC.",
     "cik": "0001742927",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RXRX",
     "name": "RECURSION PHARMACEUTICALS, INC.",
     "cik": "0001601830",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "RYTM",
     "name": "RHYTHM PHARMACEUTICALS, INC.",
     "cik": "0001649904",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "RZLT",
     "name": "Rezolute, Inc.",
     "cik": "0001509261",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SABSW",
     "name": "SAB Biotherapeutics, Inc.",
     "cik": "0001833214",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "SANA",
     "name": "Sana Biotechnology, Inc.",
     "cik": "0001770121",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "SCYX",
     "name": "SCYNEXIS INC",
     "cik": "0001178253",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SEER",
+    "name": "Seer, Inc.",
+    "cik": "0001726445",
+    "sector": "Lab instruments",
+    "included_because": "SIC 3826"
   },
   {
     "ticker": "SEPN",
     "name": "Septerna, Inc.",
     "cik": "0001984086",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SER",
     "name": "Serina Therapeutics, Inc.",
     "cik": "0001708599",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SERA",
+    "name": "SERA PROGNOSTICS, INC.",
+    "cik": "0001534969",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
+  },
+  {
+    "ticker": "SGHT",
+    "name": "Sight Sciences, Inc.",
+    "cik": "0001531177",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "SGMOQ",
     "name": "SANGAMO THERAPEUTICS, INC",
     "cik": "0001001233",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "SGMT",
     "name": "Sagimet Biosciences Inc.",
     "cik": "0001400118",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SGP",
+    "name": "SpyGlass Pharma, Inc.",
+    "cik": "0001778922",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "SHPH",
     "name": "Shuttle Pharmaceuticals Holdings, Inc.",
     "cik": "0001757499",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SI",
+    "name": "SHOULDER INNOVATIONS, INC.",
+    "cik": "0001699350",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "SIGA",
     "name": "SIGA TECHNOLOGIES INC",
     "cik": "0001010086",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SION",
     "name": "Sionna Therapeutics, Inc.",
     "cik": "0002036042",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SKYE",
     "name": "Skye Bioscience, Inc.",
     "cik": "0001516551",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SLDB",
     "name": "Solid Biosciences Inc.",
     "cik": "0001707502",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "SLNCF",
     "name": "Silence Therapeutics plc",
     "cik": "0001479615",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SLS",
     "name": "SELLAS Life Sciences Group, Inc.",
     "cik": "0001390478",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SMMT",
     "name": "Summit Therapeutics Inc.",
     "cik": "0001599298",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SMNRW",
     "name": "Semnur Pharmaceuticals, Inc.",
     "cik": "0001913577",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SNDX",
     "name": "Syndax Pharmaceuticals Inc",
     "cik": "0001395937",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SNGX",
     "name": "SOLIGENIX, INC.",
     "cik": "0000812796",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SNNUF",
+    "name": "SMITH & NEPHEW PLC",
+    "cik": "0000845982",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "SNTI",
     "name": "Senti Biosciences Holdings, Inc.",
     "cik": "0001854270",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "SNYNF",
     "name": "Sanofi",
     "cik": "0001121404",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SOLV",
+    "name": "Solventum Corp",
+    "cik": "0001964738",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "SPRB",
     "name": "SPRUCE BIOSCIENCES, INC.",
     "cik": "0001683553",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SPRO",
     "name": "Spero Therapeutics, Inc.",
     "cik": "0001701108",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SPRY",
     "name": "ARS Pharmaceuticals, Inc.",
     "cik": "0001671858",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SPTX",
     "name": "Seaport Therapeutics, Inc.",
     "cik": "0002042347",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SRPT",
     "name": "Sarepta Therapeutics, Inc.",
     "cik": "0000873303",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SRTS",
+    "name": "Sensus Healthcare, Inc.",
+    "cik": "0001494891",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "STIM",
+    "name": "Neuronetics, Inc.",
+    "cik": "0001227636",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "STOK",
     "name": "Stoke Therapeutics, Inc.",
     "cik": "0001623526",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "STRO",
     "name": "SUTRO BIOPHARMA, INC.",
     "cik": "0001382101",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "STTK",
     "name": "Shattuck Labs, Inc.",
     "cik": "0001680367",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "STXS",
+    "name": "Stereotaxis, Inc.",
+    "cik": "0001289340",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "SUPN",
     "name": "SUPERNUS PHARMACEUTICALS, INC.",
     "cik": "0001356576",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SVA",
     "name": "SINOVAC BIOTECH LTD",
     "cik": "0001084201",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SVRA",
     "name": "Savara Inc",
     "cik": "0001160308",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SXTPW",
     "name": "60 DEGREES PHARMACEUTICALS, INC.",
     "cik": "0001946563",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "SYBX",
     "name": "SYNLOGIC, INC.",
     "cik": "0001527599",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "SYK",
+    "name": "STRYKER CORP",
+    "cik": "0000310764",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "SYRE",
     "name": "Spyre Therapeutics, Inc.",
     "cik": "0001636282",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TARA",
     "name": "Protara Therapeutics, Inc.",
     "cik": "0001359931",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TARS",
     "name": "Tarsus Pharmaceuticals, Inc.",
     "cik": "0001819790",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TBPH",
     "name": "Theravance Biopharma, Inc.",
     "cik": "0001583107",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "TCMD",
+    "name": "TACTILE SYSTEMS TECHNOLOGY INC",
+    "cik": "0001027838",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "TCRT",
     "name": "Alaunos Therapeutics, Inc.",
     "cik": "0001107421",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TCRX",
     "name": "TScan Therapeutics, Inc.",
     "cik": "0001783328",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TECX",
     "name": "Tectonic Therapeutic, Inc.",
     "cik": "0001681087",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
+  },
+  {
+    "ticker": "TELA",
+    "name": "TELA Bio, Inc.",
+    "cik": "0001561921",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "TELO",
     "name": "Telomir Pharmaceuticals, Inc.",
     "cik": "0001971532",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TENX",
     "name": "TENAX THERAPEUTICS, INC.",
     "cik": "0000034956",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TEVJF",
     "name": "TEVA PHARMACEUTICAL INDUSTRIES LTD",
     "cik": "0000818686",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "TFX",
+    "name": "TELEFLEX INC",
+    "cik": "0000096943",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "TGTX",
     "name": "TG THERAPEUTICS, INC.",
     "cik": "0001001316",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TIL",
     "name": "Instil Bio, Inc.",
     "cik": "0001789769",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TKPHF",
     "name": "TAKEDA PHARMACEUTICAL CO LTD",
     "cik": "0001395064",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TLPH",
     "name": "TALPHERA, INC.",
     "cik": "0001427925",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TLPPF",
     "name": "Telix Pharmaceuticals Ltd",
     "cik": "0002007191",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TLSA",
     "name": "Tiziana Life Sciences Ltd",
     "cik": "0001723069",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "TLSIW",
+    "name": "TriSalus Life Sciences, Inc.",
+    "cik": "0001826667",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "TMCI",
+    "name": "TREACE MEDICAL CONCEPTS, INC.",
+    "cik": "0001630627",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "TNDM",
+    "name": "TANDEM DIABETES CARE INC",
+    "cik": "0001438133",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "TNGX",
     "name": "Tango Therapeutics, Inc.",
     "cik": "0001819133",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "TNONW",
+    "name": "Tenon Medical, Inc.",
+    "cik": "0001560293",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "TNYA",
     "name": "Tenaya Therapeutics, Inc.",
     "cik": "0001858848",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TOVX",
     "name": "Theriva Biologics, Inc.",
     "cik": "0000894158",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TPST",
     "name": "Tempest Therapeutics, Inc.",
     "cik": "0001544227",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TRAW",
     "name": "Traws Pharma, Inc.",
     "cik": "0001130598",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TRDA",
     "name": "Entrada Therapeutics, Inc.",
     "cik": "0001689375",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "TRIB",
+    "name": "TRINITY BIOTECH PLC",
+    "cik": "0000888721",
+    "sector": "Diagnostics",
+    "included_because": "SIC 2835"
   },
   {
     "ticker": "TRVI",
     "name": "Trevi Therapeutics, Inc.",
     "cik": "0001563880",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TSHA",
     "name": "Taysha Gene Therapies, Inc.",
     "cik": "0001806310",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "TTRX",
     "name": "Turn Therapeutics Inc.",
     "cik": "0002023016",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TVRD",
     "name": "Tvardi Therapeutics, Inc.",
     "cik": "0001346830",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TVTX",
     "name": "Travere Therapeutics, Inc.",
     "cik": "0001438533",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TXMD",
     "name": "TherapeuticsMD, Inc.",
     "cik": "0000025743",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "TYRA",
     "name": "Tyra Biosciences, Inc.",
     "cik": "0001863127",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "UEEC",
+    "name": "United Health Products, Inc.",
+    "cik": "0001096938",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "UNCY",
     "name": "Unicycive Therapeutics, Inc.",
     "cik": "0001766140",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "UPB",
     "name": "Upstream Bio, Inc.",
     "cik": "0002022626",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "URGN",
     "name": "UroGen Pharma Ltd.",
     "cik": "0001668243",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "USAQ",
+    "name": "QHSLab, Inc.",
+    "cik": "0000856984",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
+  },
+  {
+    "ticker": "USNA",
+    "name": "USANA HEALTH SCIENCES INC",
+    "cik": "0000896264",
+    "sector": "Medicinal chemicals",
+    "included_because": "SIC 2833"
   },
   {
     "ticker": "UTHR",
     "name": "UNITED THERAPEUTICS Corp",
     "cik": "0001082554",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "VANI",
+    "name": "Vivani Medical, Inc.",
+    "cik": "0001266806",
+    "sector": "Medical devices",
+    "included_because": "SIC 3845"
   },
   {
     "ticker": "VCEL",
     "name": "Vericel Corp",
     "cik": "0000887359",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "VCNX",
     "name": "VACCINEX, INC.",
     "cik": "0001205922",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "VCYT",
+    "name": "VERACYTE, INC.",
+    "cik": "0001384101",
+    "sector": "Medical labs",
+    "included_because": "SIC 8071"
   },
   {
     "ticker": "VERA",
     "name": "Vera Therapeutics, Inc.",
     "cik": "0001831828",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VERU",
     "name": "VERU INC.",
     "cik": "0000863894",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VIR",
     "name": "Vir Biotechnology, Inc.",
     "cik": "0001706431",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "VKTX",
     "name": "Viking Therapeutics, Inc.",
     "cik": "0001607678",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VNDA",
     "name": "Vanda Pharmaceuticals Inc.",
     "cik": "0001347178",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VOR",
     "name": "Vor Biopharma Inc.",
     "cik": "0001817229",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "VRCA",
     "name": "Verrica Pharmaceuticals Inc.",
     "cik": "0001660334",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VSTM",
     "name": "Verastem, Inc.",
     "cik": "0001526119",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "VTAK",
+    "name": "Catheter Precision, Inc.",
+    "cik": "0001716621",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "VTGN",
     "name": "Vistagen Therapeutics, Inc.",
     "cik": "0001411685",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VTRS",
     "name": "Viatris Inc",
     "cik": "0001792044",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VTVT",
     "name": "vTv Therapeutics Inc.",
     "cik": "0001641489",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "VXRT",
     "name": "Vaxart, Inc.",
     "cik": "0000072444",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "VYGR",
     "name": "Voyager Therapeutics, Inc.",
     "cik": "0001640266",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "WHWK",
     "name": "Whitehawk Therapeutics, Inc.",
     "cik": "0001422142",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "WVE",
     "name": "Wave Life Sciences, Inc.",
     "cik": "0001631574",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "XAIR",
+    "name": "Beyond Air, Inc.",
+    "cik": "0001641631",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "XBIO",
     "name": "Xenetic Biosciences, Inc.",
     "cik": "0001534525",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "XBIT",
     "name": "XBiotech Inc.",
     "cik": "0001626878",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "XCUR",
     "name": "EXICURE, INC.",
     "cik": "0001698530",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "XENE",
     "name": "Xenon Pharmaceuticals Inc.",
     "cik": "0001582313",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "XFOR",
     "name": "X4 Pharmaceuticals, Inc",
     "cik": "0001501697",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "XNCR",
     "name": "Xencor Inc",
     "cik": "0001326732",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "XTLB",
     "name": "XTL BIOPHARMACEUTICALS LTD",
     "cik": "0001023549",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "XTNT",
+    "name": "Xtant Medical Holdings, Inc.",
+    "cik": "0001453593",
+    "sector": "Medical devices",
+    "included_because": "SIC 3841"
   },
   {
     "ticker": "YARW",
     "name": "Yarrow Bioscience, Inc.",
     "cik": "0001566044",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
+  },
+  {
+    "ticker": "ZBH",
+    "name": "ZIMMER BIOMET HOLDINGS, INC.",
+    "cik": "0001136869",
+    "sector": "Medical devices",
+    "included_because": "SIC 3842"
   },
   {
     "ticker": "ZBIO",
     "name": "Zenas BioPharma, Inc.",
     "cik": "0001953926",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ZEOX",
     "name": "Zeo ScientifiX, Inc.",
     "cik": "0001557376",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ZLAB",
     "name": "Zai Lab Ltd",
     "cik": "0001704292",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ZNTL",
     "name": "Zentalis Pharmaceuticals, Inc.",
     "cik": "0001725160",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ZURA",
     "name": "Zura Bio Ltd",
     "cik": "0001855644",
-    "sector": "Biologics"
+    "sector": "Biologics",
+    "included_because": "SIC 2836"
   },
   {
     "ticker": "ZVRA",
     "name": "ZEVRA THERAPEUTICS, INC.",
     "cik": "0001434647",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ZVSA",
     "name": "ZyVersa Therapeutics, Inc.",
     "cik": "0001859007",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   },
   {
     "ticker": "ZYME",
     "name": "Zymeworks Inc.",
     "cik": "0001937653",
-    "sector": "Pharma preparations"
+    "sector": "Pharma preparations",
+    "included_because": "SIC 2834"
   }
 ]

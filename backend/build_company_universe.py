@@ -39,14 +39,52 @@ SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "biotech-agent your-real-email
 # second, and each candidate makes a couple, so keep this modest.
 WORKERS = 8
 
-# Biotech / pharma SIC codes (2836 biologicals, 2834 pharma prep,
-# 8731 commercial physical & biological research). The labels double as the
-# "sector" we store for each company, so the frontend can filter by it.
-SIC_CODES = ["2836", "2834", "8731"]
+# The SIC codes a medical company files under. The labels double as the "sector"
+# we store, so the frontend can filter by it.
+#
+# Three of these were the whole universe for a long time, which quietly excluded
+# every device and diagnostics company: Boston Scientific runs 373 trials and
+# Edwards Lifesciences 83, and neither files under a pharma code.
+SIC_CODES = ["2836", "2834", "8731", "2835", "2833",
+             "3841", "3845", "3842", "3844", "3826", "3827", "8071"]
 SIC_LABELS = {
     "2836": "Biologics",
     "2834": "Pharma preparations",
     "8731": "Bio research",
+    "2835": "Diagnostics",
+    "2833": "Medicinal chemicals",
+    "3841": "Medical devices",
+    "3845": "Medical devices",
+    "3842": "Medical devices",
+    "3844": "Medical devices",
+    "3826": "Lab instruments",
+    "3827": "Lab instruments",
+    "8071": "Medical labs",
+}
+
+# A SIC code is not enough on its own. A foreign company listing as an ADR gets a
+# generic code whatever it does, so Shionogi (97 trials) and CSL file under
+# "American Depositary Receipts", and argenx sat outside the three original codes
+# entirely. Any SEC filer sponsoring at least this many phase-labelled
+# interventional trials is a candidate too, whatever it files under.
+#
+# This cannot be the only rule either. Colgate-Palmolive runs 105 trials and 100
+# of them are phased, because toothpaste efficacy is real clinical research, and
+# Polaris has 20. So the two rules are a candidate pool rather than an answer,
+# and why each company qualified is recorded on its row.
+MIN_PHASED_TRIALS = 3
+
+# Companies the sponsor rule lets in whose value does not depend on what the
+# trials find, so a pipeline signal and a cash runway say nothing useful about
+# them. Listed by name, with the reason, because this is a judgement and a
+# judgement should be arguable rather than buried in a threshold.
+#
+# Consumer health is deliberately NOT here. Colgate runs a hundred phased trials
+# and Haleon eighteen; their studies are real clinical research and their sector
+# label says what they are, so a reader can filter them out. Only companies whose
+# trials are incidental to the business are dropped.
+NOT_A_PIPELINE = {
+    "ACCENTURE": "IT consulting; its studies are client work, not a pipeline",
 }
 
 BROWSE = "https://www.sec.gov/cgi-bin/browse-edgar"
@@ -197,6 +235,56 @@ def has_financials(cik):
     return False
 
 
+def sponsors_from_registry(tickers, already):
+    """
+    Candidates the SIC sweep cannot see: SEC filers that sponsor phase-labelled
+    interventional trials but file under some other code.
+
+    Reads the registry table ingest_registry.py fills. Without it this returns
+    nothing and the universe is the SIC sweep alone, which is a smaller universe
+    rather than a broken one.
+    """
+    try:
+        from app.database import SessionLocal
+        from app.models import RegistryTrial
+        from sqlalchemy import func
+    except Exception:
+        return {}
+
+    def key(name):
+        n = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper())
+        n = " ".join(w for w in n.split() if w.lower() not in SUFFIXES)
+        return n
+
+    # a filer is findable by its normalised name; collisions are rare enough that
+    # the first one wins and a wrong match would have to share a whole name
+    by_name = {}
+    for cik, info in tickers.items():
+        k = key(info["name"])
+        if k:
+            by_name.setdefault(k, (cik, info))
+
+    db = SessionLocal()
+    try:
+        rows = (db.query(RegistryTrial.sponsor, func.count(RegistryTrial.id))
+                .filter(RegistryTrial.phase.isnot(None),
+                        RegistryTrial.phase.like("PHASE%"))
+                .group_by(RegistryTrial.sponsor).all())
+    except Exception:
+        return {}
+    finally:
+        db.close()
+
+    phased = {}
+    for sponsor, n in rows:
+        hit = by_name.get(key(sponsor))
+        if hit:
+            phased[hit[0]] = phased.get(hit[0], 0) + n
+
+    return {cik: n for cik, n in phased.items()
+            if n >= MIN_PHASED_TRIALS and cik not in already}
+
+
 def check_company(cik, sic, info):
     """
     Return a universe row if this company has BOTH trials and financials, else
@@ -204,9 +292,18 @@ def check_company(cik, sic, info):
     caller can keep what it already knew rather than dropping the company.
     """
     ticker, name = info["ticker"], info["name"]
+    # a company whose trials are incidental to what it does
+    key = re.sub(r"[^A-Z ]", " ", name.upper()).split()
+    if key and key[0] in NOT_A_PIPELINE:
+        return None
     # keep the company only if it has both a real pipeline and real financials
     if has_trials(name) and has_financials(cik):
-        return {"ticker": ticker, "name": name, "cik": cik, "sector": SIC_LABELS[sic]}
+        return {"ticker": ticker, "name": name, "cik": cik,
+                "sector": SIC_LABELS.get(sic, "Other"),
+                # why this company is here, so a reader can disagree with the
+                # judgement rather than having to reverse-engineer it
+                "included_because": (f"SIC {sic}" if sic in SIC_LABELS
+                                     else "sponsors phase-labelled trials")}
     return None
 
 
@@ -255,7 +352,15 @@ def main():
     # only the CIKs that have a public ticker are worth checking
     candidates = [(cik, sic, tickers[cik]) for cik, sic in cik_sic.items()
                   if cik in tickers]
-    print(f"{len(candidates)} have a ticker, checking trials + financials "
+    print(f"{len(candidates)} have a ticker.")
+
+    # then the ones no SIC code would have found
+    extra = sponsors_from_registry(tickers, {c for c, _, _ in candidates})
+    if extra:
+        print(f"{len(extra)} more sponsor {MIN_PHASED_TRIALS}+ phase-labelled "
+              f"trials but file under another code.")
+        candidates += [(cik, None, tickers[cik]) for cik in extra]
+    print(f"checking trials + financials on {len(candidates)} "
           f"({WORKERS} at a time)...\n")
 
     # the trials and financials checks are just independent network calls, so run
