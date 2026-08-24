@@ -793,6 +793,40 @@ def test_latest_balance_searches_every_tag():
     assert best["tag"] == "NewTag"
 
 
+def test_securities_are_read_under_the_renamed_us_gaap_element():
+    # us-gaap renamed these, and only the deprecated AvailableForSale* spellings
+    # were listed. Geron reported $238m at 2026-06-30 under the new name while
+    # the old name's last appearance was $422m at 2024-12-31, so the newest
+    # balance found was two years stale, and available_liquidity then dropped it
+    # for disagreeing with the cash date: seven months of runway against thirty-two
+    payload = facts(
+        AvailableForSaleSecuritiesDebtSecurities=[balance(422_069_000, "2024-12-31")],
+        DebtSecuritiesAvailableForSaleExcludingAccruedInterestCurrent=[
+            balance(238_206_000, "2026-06-30")],
+    )
+
+    best = data_sources._latest_balance(payload, data_sources.SECURITIES_TAGS)
+
+    assert best["value"] == 238_206_000
+    assert best["period_end"] == "2026-06-30"
+
+
+def test_the_current_portion_wins_a_tie_on_the_same_balance_date():
+    # a company reports the total and the within-a-year portion at the same date.
+    # runway is about money available to spend, so the smaller current figure is
+    # the honest one, and tag order is what decides it
+    payload = facts(
+        DebtSecuritiesAvailableForSaleExcludingAccruedInterest=[
+            balance(262_328_000, "2026-06-30")],
+        DebtSecuritiesAvailableForSaleExcludingAccruedInterestCurrent=[
+            balance(238_206_000, "2026-06-30")],
+    )
+
+    best = data_sources._latest_balance(payload, data_sources.SECURITIES_TAGS)
+
+    assert best["value"] == 238_206_000
+
+
 def test_latest_balance_skips_tags_the_company_does_not_report():
     payload = facts(Present=[balance(300, "2026-06-30")])
 

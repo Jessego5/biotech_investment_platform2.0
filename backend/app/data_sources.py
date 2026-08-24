@@ -182,6 +182,18 @@ SECURITIES_TAGS = [
     "AvailableForSaleSecurities",
     "MarketableSecuritiesCurrent",
     "ShortTermInvestments",
+    # us-gaap renamed these elements, and the AvailableForSale* names above are
+    # the deprecated spelling. A company that has moved on still reports the
+    # figure, under a name this list did not know, so the newest balance found
+    # came from whichever old filing last used the old name. Geron's securities
+    # then read as $422m at 2024-12-31 while it was reporting $238m at
+    # 2026-06-30, and being older than the cash figure they were dropped from
+    # the runway entirely: seven months of cash for a company holding thirty-two.
+    # The current portion comes first, so a tie on the same balance date takes
+    # the money available within the year rather than the larger total.
+    "DebtSecuritiesAvailableForSaleExcludingAccruedInterestCurrent",
+    "DebtSecuritiesAvailableForSaleExcludingAccruedInterest",
+    "OtherShortTermInvestments",
 ]
 # what has to be paid back. runway says nothing about this, so it is reported
 # beside the runway rather than folded into it.
