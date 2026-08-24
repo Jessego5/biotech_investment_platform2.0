@@ -793,6 +793,62 @@ def test_latest_balance_searches_every_tag():
     assert best["tag"] == "NewTag"
 
 
+def registry(monkeypatch, *names):
+    """Pin what the registry table holds, without touching a database."""
+    monkeypatch.setattr(data_sources._registry_names, "cache", set(names))
+
+
+# - the name a company registers trials under
+
+def test_a_shorter_registry_name_is_found(monkeypatch):
+    # Abbott Laboratories registers as "Abbott". The search matches whole terms,
+    # so asking for the filing name returned three studies, none of them Abbott's,
+    # and the company ingested an empty pipeline while running 170 trials
+    registry(monkeypatch, "Abbott", "Pfizer")
+
+    assert data_sources.sponsor_names_for("ABBOTT LABORATORIES") == ["Abbott"]
+
+
+def test_a_registry_name_keeps_its_punctuation(monkeypatch):
+    # "Ascendis Pharma A/S" matches 31 studies and "Ascendis Pharma AS" matches
+    # none, so the name is compared with the slash folded and used with it intact
+    registry(monkeypatch, "Ascendis Pharma A/S")
+
+    assert data_sources.sponsor_names_for("Ascendis Pharma A/S") == ["Ascendis Pharma A/S"]
+
+
+def test_a_different_company_sharing_a_prefix_is_not_matched(monkeypatch):
+    # "Merckle GmbH" begins with "Merck" as characters and is a different company.
+    # Whole words are what count
+    registry(monkeypatch, "Merckle GmbH")
+
+    assert data_sources.sponsor_names_for("Merck & Co., Inc.") == []
+
+
+def test_a_far_longer_name_is_not_the_same_company(monkeypatch):
+    # Merck & Co is not Merck KGaA of Darmstadt, and one of Pfizer's sponsor
+    # names is a sentence about a merger. A prefix alone is not identity
+    registry(monkeypatch,
+             "Merck Healthcare KGaA, Darmstadt, Germany",
+             "Pfizer's Upjohn has merged with Mylan to form Viatris Inc.",
+             "Pfizer")
+
+    assert data_sources.sponsor_names_for("Merck & Co., Inc.") == []
+    assert data_sources.sponsor_names_for("PFIZER INC") == ["Pfizer"]
+
+
+def test_the_exact_spelling_is_preferred(monkeypatch):
+    registry(monkeypatch, "Genmab A/S", "Genmab")
+
+    assert data_sources.sponsor_names_for("GENMAB A/S")[0] == "Genmab A/S"
+
+
+def test_no_registry_means_no_opinion(monkeypatch):
+    registry(monkeypatch)
+
+    assert data_sources.sponsor_names_for("ABBOTT LABORATORIES") == []
+
+
 def test_securities_are_read_under_the_renamed_us_gaap_element():
     # us-gaap renamed these, and only the deprecated AvailableForSale* spellings
     # were listed. Geron reported $238m at 2026-06-30 under the new name while

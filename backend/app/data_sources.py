@@ -6,6 +6,7 @@ companies since those are the ones with real filings.
 
 import os
 import re
+import unicodedata
 import threading
 import time
 from datetime import date
@@ -241,6 +242,79 @@ def _trial_text(ps):
 MAX_STUDIES_PER_SPONSOR = 1000
 
 
+def _fold(text):
+    """
+    Lowercase, drop accents, and strip punctuation the same way _core_name does.
+
+    Word by word, because the two have to agree: replacing punctuation with a
+    space turns "A/S" into "a s" while _core_name turns it into "as", and
+    Ascendis Pharma A/S then fails to match its own name in the registry.
+    """
+    text = unicodedata.normalize("NFKD", text or "")
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    words = [re.sub(r"[^a-z0-9]", "", w.lower()) for w in text.split()]
+    return " ".join(w for w in words if w)
+
+
+def _registry_names():
+    """Every sponsor name the registry table holds, or an empty set."""
+    if _registry_names.cache is None:
+        try:
+            from .database import SessionLocal
+            from .models import RegistryTrial
+            db = SessionLocal()
+            try:
+                _registry_names.cache = {n for (n,) in db.query(RegistryTrial.sponsor)
+                                         .filter(RegistryTrial.sponsor.isnot(None))
+                                         .distinct()}
+            finally:
+                db.close()
+        except Exception:
+            _registry_names.cache = set()
+    return _registry_names.cache
+
+
+_registry_names.cache = None
+
+
+def sponsor_names_for(company_name):
+    """
+    What this company is actually called in the registry.
+
+    A company does not register trials under the name it files under. Abbott
+    Laboratories appears as "Abbott", "Abbott Medical Devices" and "Abbott
+    Nutrition"; Genmab A/S as "Genmab"; argenx SE as "argenx". The search matches
+    whole terms, so asking for the filing name returns nothing at all and the
+    company ingests an empty pipeline while plainly running trials.
+
+    Returns the registry spellings, longest first so the most specific is tried
+    before the barest, and an empty list when the registry has nothing to say.
+    """
+    core = _fold(_core_name(company_name))
+    if len(core) < 4:
+        return []
+    words = len(core.split())
+    hits = []
+    for name in _registry_names():
+        folded = _fold(name)
+        mine, theirs = core.split(), folded.split()
+        # one name starting the other, compared word by word. as characters
+        # "Merckle GmbH" starts with "Merck", and Merckle is a different company
+        short, long_ = sorted((mine, theirs), key=len)
+        if long_[:len(short)] != short:
+            continue
+        # and no more than a word apart, because a prefix alone is not identity.
+        # "Merck" starts "Merck Healthcare KGaA, Darmstadt, Germany", which is a
+        # different company on another continent, and one of Pfizer's sponsor
+        # names is the sentence "Pfizer's Upjohn has merged with Mylan to form
+        # Viatris Inc."
+        if abs(len(theirs) - words) > 1:
+            continue
+        hits.append(name)
+    # the closest name first: an exact spelling, then the fewest words
+    return sorted(hits, key=lambda n: (_fold(n) != core, len(_fold(n).split()), len(n)))
+
+
 def fetch_trials_raw(sponsor_name, page_size=100,
                      max_studies=MAX_STUDIES_PER_SPONSOR):
     """
@@ -253,7 +327,15 @@ def fetch_trials_raw(sponsor_name, page_size=100,
     silently truncated every large sponsor: Pfizer registers 6,061 studies and
     only 100 were stored, and a wrong trial count feeds a wrong pipeline label.
     """
-    search_term = _search_term(sponsor_name)
+    # search by what the registry calls this company, not what it files under.
+    # the API matches whole terms, so "ABBOTT LABORATORIES" finds three studies
+    # and none of them Abbott's, while "Abbott" finds 293
+    # a registry name is used exactly as it is. it is already the string the API
+    # indexes, so cleaning it can only break it: _search_term turns "Ascendis
+    # Pharma A/S" into "Ascendis Pharma AS", which matches nothing, while the
+    # name as written matches all 31
+    known = sponsor_names_for(sponsor_name)
+    search_term = known[0] if known else _search_term(sponsor_name)
     studies = []
     total = None
     page_token = None
@@ -298,6 +380,22 @@ def fetch_trials_raw(sponsor_name, page_size=100,
     }
 
 
+def _leads(sponsor_name, lead):
+    """
+    Whether this trial is led by the company we asked about.
+
+    The filing name inside the lead name is the usual case and is what stops the
+    search's over-matching. It is not the only case: a company registers under a
+    shorter or differently-spelled name than it files under, and requiring the
+    filing name to appear inside "Abbott" or "Genmab" throws away every trial
+    they lead. The registry spellings are accepted as well.
+    """
+    if _core_name(sponsor_name) in _core_name(lead):
+        return True
+    folded = _fold(lead)
+    return any(_fold(name) == folded for name in sponsor_names_for(sponsor_name))
+
+
 def parse_trials(payload, sponsor_name):
     """
     The parsing half: flatten a ClinicalTrials.gov response into trial dicts,
@@ -322,7 +420,7 @@ def parse_trials(payload, sponsor_name):
         # compare on the "core" name (suffixes stripped) so "Recursion" matches
         # "Recursion Pharmaceuticals Inc." and "FATE THERAPEUTICS INC" matches
         # "Fate Therapeutics", while still dropping trials led by a different org.
-        if _core_name(sponsor_name) not in _core_name(lead):
+        if not _leads(sponsor_name, lead):
             continue
 
         # flatten the fields we care about into a simple trial dict
