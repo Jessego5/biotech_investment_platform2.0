@@ -187,11 +187,24 @@ docker compose up api             # http://localhost:8000, against Postgres
 docker compose run --rm ingest    # same image, runs ingest.py, then exits
 ```
 
-`docker-compose.yml` also brings up Postgres, which is the real point of it. The
-app has only ever run on SQLite, so this is what proves the Postgres path works
-before anything gets deployed. `database.py` reads `DATABASE_URL` and falls back to
-the local SQLite file when it isn't set, so running without Docker is unchanged and
-still needs no configuration.
+`docker-compose.yml` also brings up Postgres, which is the real point of it. Local
+work runs on SQLite, and Postgres is the path that would fail quietly rather than
+loudly: embeddings are stored through a type that resolves to `vector` on Postgres
+and to a blob everywhere else, and only the blob half runs day to day.
+
+Running the stack is what settles it. All six tables create, the `vector` extension
+loads, `trials.embedding` and `filing_chunks.embedding` come back as `vector` rather
+than `bytea`, and `<=>` returns 0.2857 for `[1,2,3]` against `[3,2,1]` — the cosine
+distance the retrieval code assumes it is getting. Building it also turned up a real
+bug: `WORKDIR` creates `/app` as root and `COPY --chown` only owns the files it
+copies, so the image could read its own code but not create the SQLite file beside
+it.
+
+Both services take a `PIP_INDEX_URL` build argument, defaulting to PyPI. Point it at
+a mirror where PyPI is slow; installing the dependencies is nearly all of the build.
+
+`database.py` reads `DATABASE_URL` and falls back to the local SQLite file when it
+isn't set, so running without Docker is unchanged and still needs no configuration.
 
 The reason ingestion is a separate command rather than a background thread in the
 API is that it is a long batch job: a few hundred companies, paced politely against
@@ -219,8 +232,8 @@ re-parsing an old snapshot.
 A run can also do part of the universe:
 
 ```bash
-python ingest.py                    # all 480 companies
-python ingest.py --shard 2 --of 8   # just this slice (60 companies)
+python ingest.py                    # all 552 companies
+python ingest.py --shard 2 --of 8   # just this slice (69 companies)
 ```
 
 Slices are dealt round-robin over a ticker-sorted universe, so they are the same no
@@ -246,7 +259,7 @@ well past what a Lambda is allowed to run, so the functions only do the parts th
 take milliseconds (deciding the slices, starting the tasks) and the actual fetching
 happens somewhere with no time limit. Slicing is also what makes the run finish in
 a reasonable time without going faster against SEC than its rate limit allows: eight
-tasks each doing sixty companies, rather than one doing all 480.
+tasks each doing sixty-nine companies, rather than one doing all 552.
 
 Both functions are tested without AWS. Their real work is plain data (the queue
 messages, the RunTask call), so the tests check that data directly and never need
@@ -361,11 +374,14 @@ The methodology and the results, including where it does poorly, are in
 
 ## Some notes
 
-- Around 480 companies, from a full sweep of the three biotech SIC codes filtered
+- Around 550 companies, from a full sweep of the three biotech SIC codes filtered
   to the ones with a real pipeline and real financials. It is broad but not every
   public biotech.
-- US-GAAP filers only for financials. Foreign issuers filing under IFRS (like
-  BioNTech, which files a 20-F) come back as "unavailable", not made up.
+- US-GAAP and IFRS filers both. A foreign private issuer files a 20-F and reports
+  under `ifrs-full`, so a us-gaap-only lookup read BioNTech and GlaxoSmithKline as
+  having no financials at all rather than as unreadable. IFRS tag names come last
+  in each list, so a company reporting under both is never given a us-gaap
+  numerator over an IFRS denominator. "Unavailable" now means genuinely absent.
 - Financials come from one request per company (SEC's `companyfacts`), not one
   request per figure. That is a correctness decision rather than a speed one:
   companies report the same real-world figure under different XBRL tag names, and
