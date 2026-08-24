@@ -1,8 +1,10 @@
 # AI-Assisted Biotech Investment Platform
 
-This is a small full-stack web app I built to browse and filter public biotech
-companies by their pipeline stage and financials. Everything comes from real
-primary-source data :) The data comes from two places:
+A full-stack web app for browsing public biotech companies by pipeline stage and
+financials, where every figure traces back to a primary source. It holds 554
+companies, 16,139 trials, 112,812 industry-sponsored interventional studies from
+the wider registry, and 542 annual reports split into 55,959 embedded passages,
+behind 351 tests. The data comes from two places:
 
 - Clinical trials from the [ClinicalTrials.gov v2 API](https://clinicaltrials.gov/data-api/api)
 - Financials from [SEC EDGAR](https://www.sec.gov/edgar/sec-api-documentation):
@@ -325,10 +327,10 @@ names neither stack.
 ## Grounded chat
 
 The "Ask the data" box lets you ask questions in plain English. It is a grounded
-chatbot: the LLM never answers from its own memory. It turns your
-question into a query plan, runs that plan against the real database, and phrases
-an answer using only the rows that came back, with the companies it used shown as
-clickable receipts. It picks the right lookup for each question:
+chatbot: the LLM never answers from its own memory. It turns your question into a
+query plan, runs that plan against the real database, and phrases an answer using
+only the rows that came back, with the companies it used shown as clickable
+receipts. It picks the right lookup for each question:
 
 - Structured questions (phase, financials, filtering, counts, one company) become
   a real database query, exact and complete.
@@ -336,8 +338,33 @@ clickable receipts. It picks the right lookup for each question:
   search over the trial text. A similarity floor means an off-topic question gets
   an honest "I don't have data on that" instead of the nearest wrong trial.
 
+- Questions about what a company says (risks, competition, how it explains its
+  own results) search the narrative of its annual report, so the answer is the
+  filing's own words rather than a summary of the structured fields.
+
 Predictions and buy/sell questions are refused. The filterable universe is still
 the front door, the chat sits on top of it.
+
+"Never from its own memory" is easy to state and easy to breach. The planner used
+to be asked for the company's ticker, which is a fact about the world rather than
+a reading of the question, and the model answered it from memory. Asked eight
+times for Recursion's it returned RCKT three times, RCRN three times, RECUR and
+RNLX once each, and never RXRX. RCKT is Rocket Pharmaceuticals, a real and
+different company. The others are not tickers at all.
+
+Nothing retrieved is reported as "I don't have data on that", so the chat denied
+holding Recursion's risk factors while storing three hundred thousand characters
+of them. That is worse than an error, because it reads as an honest answer about
+coverage. Had Rocket been in the universe it would have been worse still: a
+confident answer about the wrong company, receipts and all.
+
+The model now copies the name out of the question and the ticker is resolved
+against the companies actually held, which cannot invent one. The general rule is
+the one the rest of this project keeps arriving at: the model reads the question,
+the database owns the facts, and anything the database already knows must never
+be routed through the model. The variance is also the tell. A model that knows a
+fact returns it consistently; four different answers in eight tries means there
+was no fact there to return.
 
 ## Tests
 
