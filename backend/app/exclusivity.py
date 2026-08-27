@@ -17,7 +17,8 @@ same investment.
 
 from sqlalchemy import func
 
-from .models import ApprovedProduct, ProductPatent, ProductExclusivity
+from .models import (ApprovedProduct, ProductPatent, ProductExclusivity,
+                     BiologicProduct)
 
 # what the state means, in the app's own words
 NO_PRODUCT = "no approved product"
@@ -42,6 +43,12 @@ def _rows(db, ticker):
     return products, patents, exclusivity
 
 
+def _biologics(db, ticker):
+    """This company's licensed biologics, from the Purple Book."""
+    return (db.query(BiologicProduct)
+              .filter(BiologicProduct.company_ticker == ticker).all())
+
+
 def protection_for(db, ticker, as_of):
     """
     What protects this company's approved products, and until when.
@@ -51,8 +58,9 @@ def protection_for(db, ticker, as_of):
     that quietly reads the clock cannot be asked that.
     """
     products, patents, exclusivity = _rows(db, ticker)
+    biologics = _biologics(db, ticker)
 
-    if not products:
+    if not products and not biologics:
         return {
             "state": NO_PRODUCT,
             "evidence": [
@@ -61,23 +69,41 @@ def protection_for(db, ticker, as_of):
                 "patents: a clinical-stage company holds its protection outside "
                 "this source, and an approved biologic is licensed under a BLA "
                 "and appears in the Purple Book instead."],
-            "products": 0, "next_expiry": None, "last_expiry": None,
+            "products": 0, "biologics": 0,
+            "next_expiry": None, "last_expiry": None,
             "composition_of_matter": 0,
         }
 
     live_patents = [p for p in patents if p.expire_date and p.expire_date > as_of]
     live_excl = [e for e in exclusivity if e.expire_date and e.expire_date > as_of]
+    # a biologic carries exclusivity dates and never a patent list, so its
+    # protection is whichever of the three exclusivity columns is still running
+    bio_dates = [d for b in biologics
+                 for d in (b.orphan_exclusivity, b.ref_product_exclusivity,
+                           b.interchangeable_exclusivity)
+                 if d and d > as_of]
     dates = ([p.expire_date for p in live_patents]
-             + [e.expire_date for e in live_excl])
+             + [e.expire_date for e in live_excl] + bio_dates)
 
     if not dates:
+        # what the silence means depends on which book the product is in. For a
+        # small molecule the patent file is complete, so nothing running really
+        # does mean generic entry is open. For a biologic no patent listing
+        # exists anywhere public, so this is an absent source and not a finding.
+        if biologics and not products:
+            note = (f"{len(biologics)} licensed biologic(s), and no exclusivity "
+                    f"still running as of {as_of}. Biologic patents are not "
+                    f"published anywhere: the disputes run through the "
+                    f"confidential BPCIA exchange, so this is a gap in the "
+                    f"source rather than an absence of protection.")
+        else:
+            note = (f"{len(products)} approved product(s), and no patent or "
+                    f"exclusivity still running as of {as_of}. Generic entry is "
+                    f"open, or the protection was never listed here.")
         return {
-            "state": NOT_LISTED,
-            "evidence": [
-                f"{len(products)} approved product(s), and no patent or "
-                f"exclusivity still running as of {as_of}. Generic entry is "
-                f"open, or the protection was never listed here."],
-            "products": len(products), "next_expiry": None, "last_expiry": None,
+            "state": NOT_LISTED, "evidence": [note],
+            "products": len(products), "biologics": len(biologics),
+            "next_expiry": None, "last_expiry": None,
             "composition_of_matter": 0,
         }
 
@@ -86,14 +112,21 @@ def protection_for(db, ticker, as_of):
     # so counting all listed patents as equal overstates the protection.
     substance = [p for p in live_patents if p.drug_substance]
 
-    notes = [
-        f"{len(products)} approved product(s); protection runs to "
-        f"{max(dates)}, with the nearest expiry {min(dates)}.",
-    ]
+    held = []
+    if products:
+        held.append(f"{len(products)} approved small-molecule product(s)")
+    if biologics:
+        held.append(f"{len(biologics)} licensed biologic(s)")
+    notes = [f"{' and '.join(held)}; protection runs to {max(dates)}, with the "
+             f"nearest expiry {min(dates)}."]
+    if biologics and not products:
+        notes.append("Protection here is regulatory exclusivity only. Biologic "
+                     "patents are not published, so the patent position is "
+                     "unknown rather than absent.")
     if substance:
         notes.append(f"{len(substance)} composition-of-matter patent(s) still "
                      f"in force, the strongest form of claim listed here.")
-    else:
+    elif products:
         notes.append("No composition-of-matter patent still in force; what "
                      "remains claims the formulation or an approved use, which "
                      "is narrower.")
@@ -106,6 +139,7 @@ def protection_for(db, ticker, as_of):
         "state": PROTECTED,
         "evidence": notes,
         "products": len(products),
+        "biologics": len(biologics),
         "next_expiry": min(dates),
         "last_expiry": max(dates),
         "composition_of_matter": len(substance),

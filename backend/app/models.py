@@ -331,3 +331,39 @@ class ProductExclusivity(Base):
     code = Column(String)                   # ODE, NCE, RTO, ...
     expire_date = Column(String)
     fetched_at = Column(DateTime, default=_now)
+
+
+class BiologicProduct(Base):
+    """
+    One licensed biologic from the FDA Purple Book.
+
+    This exists because the Orange Book's silence about biologics was being read
+    as a finding. Regeneron holds 22 licensed products and the Orange Book has no
+    row for any of them, so a company with a large approved portfolio came out
+    indistinguishable from one that has never had anything approved.
+
+    What this source does NOT carry is a patent list. Biologic patent disputes
+    run through the confidential BPCIA exchange rather than a public listing, so
+    protection here is regulatory exclusivity only. Orphan exclusivity is the
+    column that is actually populated, and it is seven years of complete market
+    protection, so it is worth having on its own.
+    """
+    __tablename__ = "biologic_products"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    bla_number = Column(String, index=True)
+    product_number = Column(String)
+    # 351(a) is an original licence, 351(k) a biosimilar. A biosimilar is the
+    # thing that arrives when somebody else's protection ends, so it should
+    # never be counted as protection for the company filing it.
+    bla_type = Column(String)
+    proprietary_name = Column(String)
+    proper_name = Column(String)
+    applicant = Column(String)
+    approval_date = Column(String)
+    # the exclusivity columns, all independent of any patent
+    ref_product_exclusivity = Column(String)
+    orphan_exclusivity = Column(String)
+    interchangeable_exclusivity = Column(String)
+    company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    fetched_at = Column(DateTime, default=_now)

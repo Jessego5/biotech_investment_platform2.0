@@ -7,7 +7,7 @@ import pytest
 
 from app.exclusivity import protection_for, NO_PRODUCT, NOT_LISTED, PROTECTED
 from app.models import (Company, ApprovedProduct, ProductPatent,
-                        ProductExclusivity)
+                        ProductExclusivity, BiologicProduct)
 
 TODAY = "2026-08-27"
 
@@ -120,3 +120,66 @@ def test_the_question_can_be_asked_of_a_past_date(db):
     db.commit()
     assert protection_for(db, ticker, "2020-01-01")["state"] == PROTECTED
     assert protection_for(db, ticker, TODAY)["state"] == NOT_LISTED
+
+
+def _biologic(db, ticker, **over):
+    row = dict(bla_number="761093", product_number="001", bla_type="351(a)",
+               proprietary_name="Testmab", proper_name="testolimab",
+               applicant="TEST PHARMA INC", approval_date="2019-04-01",
+               company_ticker=ticker)
+    row.update(over)
+    db.add(BiologicProduct(**row))
+    db.commit()
+
+
+def test_a_licensed_biologic_is_an_approved_product(db):
+    # the Orange Book carries no biologics at all, so Regeneron's 22 licensed
+    # products made it indistinguishable from a company that never had anything
+    # approved
+    ticker = _company(db)
+    _biologic(db, ticker)
+    r = protection_for(db, ticker, TODAY)
+    assert r["state"] != NO_PRODUCT
+    assert r["biologics"] == 1
+
+
+def test_a_biologic_without_exclusivity_is_unlisted_not_unprotected(db):
+    # for a small molecule the patent file is complete, so nothing running means
+    # generic entry is open. For a biologic no public patent listing exists at
+    # all, and the two must not read the same way
+    ticker = _company(db)
+    _biologic(db, ticker)
+    said = " ".join(protection_for(db, ticker, TODAY)["evidence"]).lower()
+    assert "gap in the source rather than an absence of protection" in said
+    assert "generic entry is open" not in said
+
+
+def test_orphan_exclusivity_protects_a_biologic(db):
+    # seven years of complete market protection, and independent of any patent
+    ticker = _company(db)
+    _biologic(db, ticker, orphan_exclusivity="2031-04-01")
+    r = protection_for(db, ticker, TODAY)
+    assert r["state"] == PROTECTED
+    assert r["next_expiry"] == "2031-04-01"
+    assert "exclusivity only" in " ".join(r["evidence"]).lower()
+
+
+def test_a_company_holding_both_reports_both(db):
+    ticker = _company(db)
+    appl = _product(db, ticker)
+    db.add(ProductPatent(appl_no=appl, product_no="001", patent_no="1",
+                         expire_date="2035-01-01", drug_substance=True))
+    _biologic(db, ticker, orphan_exclusivity="2029-01-01")
+    r = protection_for(db, ticker, TODAY)
+    said = " ".join(r["evidence"])
+    assert "approved small-molecule product" in said and "licensed biologic" in said
+    # the nearest expiry is the cliff whichever book it came from
+    assert r["next_expiry"] == "2029-01-01"
+    assert r["last_expiry"] == "2035-01-01"
+
+
+def test_no_product_in_either_book_still_says_so_plainly(db):
+    ticker = _company(db)
+    r = protection_for(db, ticker, TODAY)
+    assert r["state"] == NO_PRODUCT
+    assert r["biologics"] == 0
