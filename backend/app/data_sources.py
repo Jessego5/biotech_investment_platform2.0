@@ -412,25 +412,177 @@ def _squash(name):
     return _core_name(name).replace(" ", "")
 
 
+_alias_index_cache = None
+def _alias_index():
+    """
+    Normalised company name -> the normalised names of its subsidiaries.
+
+    Built from the alias table, which is mostly Exhibit 21 to the 10-K: the
+    company's own annual statement of what it owns. Empty when that table has
+    not been built, which makes the sponsor test stricter rather than broken.
+    """
+    global _alias_index_cache
+    if _alias_index_cache is None:
+        index = {}
+        try:
+            from .database import SessionLocal
+            from .models import Alias, Company
+            db = SessionLocal()
+            try:
+                rows = (db.query(Company.name, Alias.alias_key)
+                          .join(Alias, Alias.company_ticker == Company.ticker).all())
+            finally:
+                db.close()
+            for name, key in rows:
+                if name and key:
+                    index.setdefault(_norm(name), set()).add(key)
+        except Exception:
+            index = {}
+        _alias_index_cache = index
+    return _alias_index_cache
+
+
 def _leads(sponsor_name, lead):
     """
     Whether this trial is led by the company we asked about.
 
-    The filing name inside the lead name is the usual case and is what stops the
-    search's over-matching. It is not the only case: a company registers under a
-    shorter or differently-spelled name than it files under, and requiring the
-    filing name to appear inside "Abbott" or "Genmab" throws away every trial
-    they lead. The registry spellings are accepted as well.
+    This used to ask whether the filing name appeared anywhere inside the lead
+    sponsor's name, and containment is not identity. "Merck" sits inside "Merck
+    KGaA, Darmstadt, Germany", which is a different company on another
+    continent, and it took 61 of its trials into Merck & Co's pipeline. "Nova"
+    sits inside "Nova Scotia Health Authority", and Nova Ltd, which makes
+    semiconductor metrology equipment, ended up holding 355 studies run by a
+    Canadian health service, an American university and a Portuguese one.
+
+    So a lead sponsor now has to be the company by one of four routes, each of
+    which is an identity rather than a resemblance:
+
+    1. the same name, compared word by word
+    2. a sponsor that names its parent in plain text: "Cubist Pharmaceuticals
+       LLC, a subsidiary of Merck & Co., Inc."
+    3. a spelling the registry itself uses for this company, which is what
+       reaches "Abbott" from "Abbott Laboratories"
+    4. a subsidiary the company listed in its own Exhibit 21
     """
-    if _core_name(sponsor_name) in _core_name(lead):
+    if identity(sponsor_name, lead) == "exact":
         return True
-    # a hyphen and a space are the same gap: the registry writes "CEL-SCI
-    # Corporation" and the filing says "CEL SCI CORP", so one reads as "celsci"
-    # and the other as "cel sci" and neither contains the other
-    if _squash(sponsor_name) and _squash(sponsor_name) in _squash(lead):
+
+    named = parent_named_in(lead)
+    if named and identity(sponsor_name, named) == "exact":
         return True
+
     folded = _fold(lead)
-    return any(_fold(name) == folded for name in sponsor_names_for(sponsor_name))
+    if any(_fold(name) == folded for name in sponsor_names_for(sponsor_name)):
+        return True
+
+    return _norm(lead) in _alias_index().get(_norm(sponsor_name), ())
+
+
+
+def _norm(name):
+    """
+    A name reduced to comparable words: accents folded away first, then
+    punctuation and trailing corporate suffixes.
+
+    The order matters twice over. _core_name strips anything that is not a letter
+    or digit from each word, so on its own it turns the registry's "Daré
+    Bioscience" into "dar bioscience" while EDGAR's "Dare Bioscience" becomes
+    "dare bioscience", and the company matches nothing. _fold normalises the
+    accent away first.
+
+    But folding cannot come first either, because it flattens the slashes in
+    "HERON THERAPEUTICS, INC. /DE/" to "de" before the state marker can be
+    recognised as one. That silently undid the earlier fix and cost Heron,
+    Windtree and Dianthus their pipelines a second time. So the marker goes
+    first, then the fold, then the suffixes.
+    """
+    name = _STATE_MARKER.sub("", (name or "").strip())
+    return _core_name(_fold(name))
+
+
+def _squashed(name):
+    """_norm with every gap removed, so "CEL-SCI" and "CEL SCI" agree."""
+    return _norm(name).replace(" ", "")
+
+
+# The registry often names the parent in plain text rather than leaving it to be
+# guessed: "K-Group Alpha, Inc., a wholly owned subsidiary of Zentalis
+# Pharmaceuticals, Inc.", "Stiefel, a GSK Company", "Cubist Pharmaceuticals LLC,
+# a subsidiary of Merck & Co., Inc. (Rahway, New Jersey USA)". Reading it is
+# better than any string-distance rule, because it is the registry stating the
+# relationship rather than us inferring one from a spelling.
+_PARENT = re.compile(
+    r"(?:wholly[-\s]owned\s+)?subsidiar(?:y|ies)\s+of\s+(?P<sub>.+)$"
+    r"|[,\-\u2013]\s*an?\s+(?P<brand>[^,]+?)\s+company\s*$",
+    re.I)
+
+
+def parent_named_in(sponsor):
+    """The parent a sponsor name spells out, or None."""
+    m = _PARENT.search(sponsor or "")
+    if not m:
+        return None
+    parent = m.group("sub") or m.group("brand") or ""
+    # "Merck & Co., Inc. (Rahway, New Jersey USA)" carries an address
+    parent = re.sub(r"\(.*?\)", " ", parent).strip(" .,;-")
+    return parent or None
+
+
+def identity(filing_name, candidate, authoritative=False):
+    """
+    How confidently `candidate` names the same company as `filing_name`:
+    "exact", "near", or None.
+
+    This is deliberately stricter than what the SIC sweep needed. Inside a dozen
+    medical codes a loose match is usually right; over eight thousand filers it
+    is the dominant source of error. Matching the first word as a substring, the
+    rule this replaces, admitted Tesla, Boeing, Shell, Vale and Rocky Mountain
+    Chocolate Factory, at a rate of 5.7% of a random sample.
+    """
+    mine = _norm(filing_name).split()
+    theirs = _norm(candidate).split()
+    if not mine or not theirs:
+        return None
+    if mine == theirs:
+        # a short name is not an identity even when it matches exactly. "ATI"
+        # is ATI Inc, which makes steel pipe, and it is also ATI Holdings, which
+        # runs physical therapy clinics. Three letters collide with anything, so
+        # a short name goes to the corroborated tier rather than standing alone.
+        return "exact" if len("".join(mine)) >= 5 else "near"
+    # the registry naming its own parent, which is stronger than any spelling
+    # comparison but weaker than identity, because the name it states can itself
+    # be ambiguous: "Alpine Immune Sciences, a Vertex Company" means Vertex
+    # Pharmaceuticals, and matched Vertex, Inc., which sells tax software. So
+    # this is corroborated by the filing code like any other near match.
+    named = parent_named_in(candidate)
+    if named and _norm(named).split() == mine:
+        return "near"
+    # the same name with the gaps moved. EDGAR files Novo Nordisk as "NOVO
+    # NORDISK A S" and the registry writes "Novo Nordisk A/S", which come out
+    # three words against four; Bristol-Myers is the same story with a hyphen.
+    # This compares the whole name with every gap removed, so it is an equality
+    # and not a containment: "nova" sits inside "novascotiahealthauthority",
+    # and containment is what put 260 Nova Scotia Health Authority studies in a
+    # semiconductor company's pipeline.
+    if (_squashed(filing_name) and _squashed(filing_name) == _squashed(candidate)):
+        return "exact" if len(_squashed(filing_name)) >= 5 else "near"
+    # too short to be an identity on its own: two or three letters collide with
+    # anything
+    if len("".join(mine)) < 5:
+        return None
+    # one name starting the other, compared word by word. as characters
+    # "Merckle GmbH" starts with "Merck", and Merckle is a different company
+    short, long_ = sorted((mine, theirs), key=len)
+    if long_[:len(short)] != short:
+        return None
+    # and no more than a word apart, because a prefix alone is not identity.
+    # A recorded alias is exempt: it is a hand-made judgement that these are one
+    # company, so the registry piling extra words on top of it does not weaken
+    # the claim. "TheRas" leads "TheRas, Inc., d/b/a BBOT (BridgeBio Oncology
+    # Therapeutics)", which is seven words further on and still the same company.
+    if not authoritative and abs(len(theirs) - len(mine)) > 1:
+        return None
+    return "exact" if authoritative else "near"
 
 
 def _date_struct(struct):

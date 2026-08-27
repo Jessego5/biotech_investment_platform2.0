@@ -32,6 +32,7 @@ that Pfizer does not file one.
 """
 
 import argparse
+import html
 import os
 import re
 import threading
@@ -142,16 +143,29 @@ def _get(url, attempts=5):
     raise FetchFailed(str(last))
 
 
-def latest_annual(cik):
-    """(accession, form) for the most recent 10-K or 20-F, or None."""
+def annual_filings(cik, years):
+    """
+    [(accession, fiscal_year)] for this company's annual reports, newest first.
+
+    Every year within the window, not just the latest. Exhibit 21 is a snapshot
+    of what the company owned when it filed, so a subsidiary acquired and then
+    dissolved appears only in the filings between those two dates. Reading the
+    latest alone silently drops exactly the acquisitions this table exists for.
+    """
     r = _get(SUBMISSIONS.format(cik=cik))
     if r.status_code != 200:
-        return None
+        return []
     recent = r.json().get("filings", {}).get("recent", {})
+    dates = recent.get("filingDate") or []
+    out = []
     for i, form in enumerate(recent.get("form", [])):
         if form in ("10-K", "20-F"):
-            return recent["accessionNumber"][i], form
-    return None
+            filed = dates[i] if i < len(dates) else ""
+            out.append((recent["accessionNumber"][i],
+                        int(filed[:4]) if filed[:4].isdigit() else None))
+            if len(out) >= years:
+                break
+    return out
 
 
 def exhibit_21_document(cik, accession):
@@ -187,7 +201,14 @@ def parse_subsidiaries(text):
     from "Delaware".
     """
     text = re.sub(r"<[^>]+>", "\n", text)
-    text = re.sub(r"&(nbsp|#160|amp|#38);", " ", text)
+    # decode entities into real characters rather than blanking them. Replacing
+    # "&amp;" with a space put THREE spaces in the middle of "Merck Sharp &amp;
+    # Dohme LLC", and the run-of-spaces split below then cut it into "Merck
+    # Sharp" and "Dohme LLC". Merck's own flagship subsidiary was unreachable
+    # that way, and with it the 401 trials it leads.
+    text = html.unescape(text)
+    # a non-breaking space is a space, not a separator
+    text = text.replace("\xa0", " ")
     # Splitting on newlines alone is not enough. AbbVie files its exhibit as
     # scanned images with the text hidden behind them in white one-point type,
     # so a whole page arrives as one run: "AbbVie Finance Corporation Delaware
@@ -224,37 +245,49 @@ def parse_subsidiaries(text):
     return out
 
 
-def for_company(company):
+def for_company(company, years):
     """
-    (ticker, cik, accession, [names]) on success, "failed" when the check could
-    not be made, or None when the company genuinely files no readable exhibit.
+    [(ticker, cik, accession, fiscal_year, [names])] — one entry per annual
+    filing that carried a readable exhibit — or "failed" when the company's
+    filing list could not be fetched at all.
 
-    The three outcomes are kept apart deliberately. Folding a failed request into
+    Those two outcomes are kept apart deliberately. Folding a failed request into
     "no exhibit" is what made the first run look complete while missing Johnson &
     Johnson, AbbVie, Pfizer and Merck.
     """
     try:
-        found = latest_annual(company.cik)
-        if not found:
-            return None
-        accession, _ = found
-        doc = exhibit_21_document(company.cik, accession)
-        if not doc:
-            return None
-        base = ARCHIVE.format(cik=int(company.cik), acc=accession.replace("-", ""))
-        r = _get(f"{base}/{doc}")
-        if r.status_code != 200:
-            return None
-        return company.ticker, company.cik, accession, parse_subsidiaries(r.text)
+        filings = annual_filings(company.cik, years)
     except FetchFailed:
         return "failed"
     except Exception:
-        return None
+        return []
+    out = []
+    for accession, year in filings:
+        try:
+            doc = exhibit_21_document(company.cik, accession)
+            if not doc:
+                continue
+            base = ARCHIVE.format(cik=int(company.cik),
+                                  acc=accession.replace("-", ""))
+            r = _get(f"{base}/{doc}")
+            if r.status_code != 200:
+                continue
+            names = parse_subsidiaries(r.text)
+            if names:
+                out.append((company.ticker, company.cik, accession, year, names))
+        except FetchFailed:
+            # one unreachable year must not cost the other nine
+            continue
+        except Exception:
+            continue
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, help="only this many companies")
+    ap.add_argument("--years", type=int, default=10,
+                    help="how many annual filings back to read (default 10)")
     args = ap.parse_args()
 
     init_db()
@@ -263,56 +296,72 @@ def main():
         companies = db.query(Company).all()
         if args.limit:
             companies = companies[:args.limit]
-        print(f"reading Exhibit 21 for {len(companies)} companies "
-              f"({WORKERS} at a time)...\n")
+        print(f"reading up to {args.years} years of Exhibit 21 for "
+              f"{len(companies)} companies ({WORKERS} at a time)...\n")
 
-        results, done, without, failed = [], 0, 0, 0
+        # written as we go, not banked to the end. A run that is killed part way
+        # through used to lose everything it had done, which is how the first
+        # multi-hour crawl produced nothing at all.
+        db.query(Alias).filter(Alias.source == "ex21").delete()
+        db.commit()
+
+        done = failed = without = written = 0
         with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-            futures = [pool.submit(for_company, c) for c in companies]
+            futures = [pool.submit(for_company, c, args.years) for c in companies]
             for fut in as_completed(futures):
                 done += 1
                 got = fut.result()
                 if got == "failed":
                     failed += 1
-                elif got and got[3]:
-                    results.append(got)
-                else:
-                    without += 1
-                if done % 100 == 0:
-                    print(f"  ...{done}/{len(companies)}, "
-                          f"{sum(len(r[3]) for r in results)} names so far")
-
-        # an alias claimed by two companies is not usable: it would attach an
-        # approved drug to whichever happened to be written last. Historical
-        # ownership makes this real, since a subsidiary sold between two filers
-        # appears in both their exhibits.
-        owners = {}
-        for ticker, cik, accession, names in results:
-            for name in names:
-                owners.setdefault(_norm(name), set()).add(ticker)
-        ambiguous = {k for k, v in owners.items() if len(v) > 1}
-
-        db.query(Alias).filter(Alias.source == "ex21").delete()
-        written = 0
-        for ticker, cik, accession, names in results:
-            seen = set()
-            for name in names:
-                key = _norm(name)
-                if not key or key in ambiguous or key in seen:
                     continue
-                seen.add(key)
-                db.add(Alias(cik=cik, company_ticker=ticker, alias=name,
-                             alias_key=key, source="ex21", accession=accession))
-                written += 1
+                if not got:
+                    without += 1
+                    continue
+                # one row per (company, name, year). The same subsidiary in ten
+                # filings is ten rows, which is what carries the year range that
+                # an as-of-date view needs.
+                seen = set()
+                for ticker, cik, accession, year, names in got:
+                    for name in names:
+                        key = _norm(name)
+                        if not key or (key, year) in seen:
+                            continue
+                        seen.add((key, year))
+                        db.add(Alias(cik=cik, company_ticker=ticker, alias=name,
+                                     alias_key=key, source="ex21",
+                                     accession=accession, fiscal_year=year))
+                        written += 1
+                if done % 25 == 0:
+                    db.commit()
+                    print(f"  ...{done}/{len(companies)}, {written} rows")
         db.commit()
 
-        print(f"\n{len(results)} companies filed an exhibit we could read, "
+        # an alias claimed by two companies is not usable: it would attach an
+        # approved drug to whichever happened to be written last. Reading many
+        # years makes this more likely, not less, since a subsidiary sold between
+        # two filers legitimately appears in both their histories.
+        rows = db.query(Alias.alias_key, Alias.company_ticker).filter(
+            Alias.source == "ex21").distinct().all()
+        owners = {}
+        for key, ticker in rows:
+            owners.setdefault(key, set()).add(ticker)
+        ambiguous = [k for k, v in owners.items() if len(v) > 1]
+        for chunk in (ambiguous[i:i + 400] for i in range(0, len(ambiguous), 400)):
+            db.query(Alias).filter(Alias.source == "ex21",
+                                   Alias.alias_key.in_(chunk)).delete(
+                                       synchronize_session=False)
+        db.commit()
+
+        kept = db.query(Alias).filter(Alias.source == "ex21").count()
+        firms = db.query(Alias.company_ticker).filter(
+            Alias.source == "ex21").distinct().count()
+        print(f"\n{done - without - failed} companies filed a readable exhibit, "
               f"{without} did not")
         if failed:
             print(f"{failed} could not be checked at all — these say nothing "
                   f"about the company and should be re-run")
-        print(f"{written} aliases written; {len(ambiguous)} names dropped as "
-              f"claimed by more than one company")
+        print(f"{kept} alias rows over {firms} companies; "
+              f"{len(ambiguous)} names dropped as claimed by more than one")
     finally:
         db.close()
 

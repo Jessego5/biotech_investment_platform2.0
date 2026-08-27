@@ -409,4 +409,10 @@ class Alias(Base):
     source = Column(String, index=True)      # ex21, registry, manual
     # the filing an ex21 alias came from, so a row can be checked against it
     accession = Column(String)
+    # the year of that filing. Exhibit 21 is a snapshot, and a subsidiary that
+    # was acquired and then dissolved appears only in the years between, so the
+    # union across years is what catches it. Carrying the year is also what
+    # makes an as-of-date view of ownership possible, which a backtest needs and
+    # the as-of-today default cannot give it.
+    fiscal_year = Column(Integer, index=True)
     fetched_at = Column(DateTime, default=_now)

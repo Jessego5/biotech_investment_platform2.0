@@ -31,7 +31,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # That is why BioNTech and GlaxoSmithKline were never candidates at all, despite
 # filing full accounts.
 from app.data_sources import (fetch_company_facts, RD_TAGS as APP_RD_TAGS,
-                              _core_name, _fold, _search_term, _STATE_MARKER)
+                              _search_term,
+                              # the naming rules sit with _core_name and _fold
+                              # rather than here. The ingestion path needs the
+                              # same comparison, and it cannot import upward
+                              # from app/ into this script to get it.
+                              _norm, _squashed, identity, parent_named_in)
 
 # load backend/.env so SEC_USER_AGENT is picked up when running this directly
 try:
@@ -175,110 +180,6 @@ def fetch_sic(cik):
         return None, None
 
 
-def _norm(name):
-    """
-    A name reduced to comparable words: accents folded away first, then
-    punctuation and trailing corporate suffixes.
-
-    The order matters twice over. _core_name strips anything that is not a letter
-    or digit from each word, so on its own it turns the registry's "Daré
-    Bioscience" into "dar bioscience" while EDGAR's "Dare Bioscience" becomes
-    "dare bioscience", and the company matches nothing. _fold normalises the
-    accent away first.
-
-    But folding cannot come first either, because it flattens the slashes in
-    "HERON THERAPEUTICS, INC. /DE/" to "de" before the state marker can be
-    recognised as one. That silently undid the earlier fix and cost Heron,
-    Windtree and Dianthus their pipelines a second time. So the marker goes
-    first, then the fold, then the suffixes.
-    """
-    name = _STATE_MARKER.sub("", (name or "").strip())
-    return _core_name(_fold(name))
-
-
-def _squashed(name):
-    """_norm with every gap removed, so "CEL-SCI" and "CEL SCI" agree."""
-    return _norm(name).replace(" ", "")
-
-
-# The registry often names the parent in plain text rather than leaving it to be
-# guessed: "K-Group Alpha, Inc., a wholly owned subsidiary of Zentalis
-# Pharmaceuticals, Inc.", "Stiefel, a GSK Company", "Cubist Pharmaceuticals LLC,
-# a subsidiary of Merck & Co., Inc. (Rahway, New Jersey USA)". Reading it is
-# better than any string-distance rule, because it is the registry stating the
-# relationship rather than us inferring one from a spelling.
-_PARENT = re.compile(
-    r"(?:wholly[-\s]owned\s+)?subsidiar(?:y|ies)\s+of\s+(?P<sub>.+)$"
-    r"|[,\-\u2013]\s*an?\s+(?P<brand>[^,]+?)\s+company\s*$",
-    re.I)
-
-
-def parent_named_in(sponsor):
-    """The parent a sponsor name spells out, or None."""
-    m = _PARENT.search(sponsor or "")
-    if not m:
-        return None
-    parent = m.group("sub") or m.group("brand") or ""
-    # "Merck & Co., Inc. (Rahway, New Jersey USA)" carries an address
-    parent = re.sub(r"\(.*?\)", " ", parent).strip(" .,;-")
-    return parent or None
-
-
-def identity(filing_name, candidate, authoritative=False):
-    """
-    How confidently `candidate` names the same company as `filing_name`:
-    "exact", "near", or None.
-
-    This is deliberately stricter than what the SIC sweep needed. Inside a dozen
-    medical codes a loose match is usually right; over eight thousand filers it
-    is the dominant source of error. Matching the first word as a substring, the
-    rule this replaces, admitted Tesla, Boeing, Shell, Vale and Rocky Mountain
-    Chocolate Factory, at a rate of 5.7% of a random sample.
-    """
-    mine = _norm(filing_name).split()
-    theirs = _norm(candidate).split()
-    if not mine or not theirs:
-        return None
-    if mine == theirs:
-        # a short name is not an identity even when it matches exactly. "ATI"
-        # is ATI Inc, which makes steel pipe, and it is also ATI Holdings, which
-        # runs physical therapy clinics. Three letters collide with anything, so
-        # a short name goes to the corroborated tier rather than standing alone.
-        return "exact" if len("".join(mine)) >= 5 else "near"
-    # the registry naming its own parent, which is stronger than any spelling
-    # comparison but weaker than identity, because the name it states can itself
-    # be ambiguous: "Alpine Immune Sciences, a Vertex Company" means Vertex
-    # Pharmaceuticals, and matched Vertex, Inc., which sells tax software. So
-    # this is corroborated by the filing code like any other near match.
-    named = parent_named_in(candidate)
-    if named and _norm(named).split() == mine:
-        return "near"
-    # the same name with the gaps moved. EDGAR files Novo Nordisk as "NOVO
-    # NORDISK A S" and the registry writes "Novo Nordisk A/S", which come out
-    # three words against four; Bristol-Myers is the same story with a hyphen.
-    # This compares the whole name with every gap removed, so it is an equality
-    # and not a containment: "nova" sits inside "novascotiahealthauthority",
-    # and containment is what put 260 Nova Scotia Health Authority studies in a
-    # semiconductor company's pipeline.
-    if (_squashed(filing_name) and _squashed(filing_name) == _squashed(candidate)):
-        return "exact" if len(_squashed(filing_name)) >= 5 else "near"
-    # too short to be an identity on its own: two or three letters collide with
-    # anything
-    if len("".join(mine)) < 5:
-        return None
-    # one name starting the other, compared word by word. as characters
-    # "Merckle GmbH" starts with "Merck", and Merckle is a different company
-    short, long_ = sorted((mine, theirs), key=len)
-    if long_[:len(short)] != short:
-        return None
-    # and no more than a word apart, because a prefix alone is not identity.
-    # A recorded alias is exempt: it is a hand-made judgement that these are one
-    # company, so the registry piling extra words on top of it does not weaken
-    # the claim. "TheRas" leads "TheRas, Inc., d/b/a BBOT (BridgeBio Oncology
-    # Therapeutics)", which is seven words further on and still the same company.
-    if not authoritative and abs(len(theirs) - len(mine)) > 1:
-        return None
-    return "exact" if authoritative else "near"
 
 
 _registry_index = None
