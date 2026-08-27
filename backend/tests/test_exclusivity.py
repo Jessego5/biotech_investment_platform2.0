@@ -172,7 +172,7 @@ def test_a_company_holding_both_reports_both(db):
     _biologic(db, ticker, orphan_exclusivity="2029-01-01")
     r = protection_for(db, ticker, TODAY)
     said = " ".join(r["evidence"])
-    assert "approved small-molecule product" in said and "licensed biologic" in said
+    assert "approved small-molecule drug" in said and "licensed biologic" in said
     # the nearest expiry is the cliff whichever book it came from
     assert r["next_expiry"] == "2029-01-01"
     assert r["last_expiry"] == "2035-01-01"
@@ -201,3 +201,24 @@ def test_the_claim_is_softened_not_dropped_when_no_list_exists(db):
     said = " ".join(protection_for(db, ticker, TODAY)["evidence"]).lower()
     assert "largely unpublished" in said
     assert "patent list for" not in said
+
+
+def test_one_patent_across_many_strengths_is_counted_once(db):
+    # the file carries one row per product a patent is listed against, so a
+    # patent covering eight strengths appears eight times. Counted as rows,
+    # AbbVie's composition-of-matter total read 472 against an answer of 46
+    ticker = _company(db)
+    appl = _product(db, ticker)
+    for product_no in ("001", "002", "003"):
+        db.add(ApprovedProduct(appl_no=appl, product_no=product_no, appl_type="N",
+                               ingredient="TESTOLOL", trade_name="Testol",
+                               applicant="TEST PHARMA INC",
+                               approval_date="2015-01-01", company_ticker=ticker))
+        db.add(ProductPatent(appl_no=appl, product_no=product_no,
+                             patent_no="7625884", expire_date="2035-01-01",
+                             drug_substance=True))
+    db.commit()
+    r = protection_for(db, ticker, TODAY)
+    assert r["composition_of_matter"] == 1        # one patent, three listings
+    assert r["products"] == 1                     # one drug, four product rows
+    assert r["product_rows"] == 4

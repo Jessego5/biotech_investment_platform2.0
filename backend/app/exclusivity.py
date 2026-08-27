@@ -115,11 +115,19 @@ def protection_for(db, ticker, as_of):
     # the composition-of-matter claim is the one that actually forms a moat. A
     # product or method-of-use patent is narrower and easier to design around,
     # so counting all listed patents as equal overstates the protection.
-    substance = [p for p in live_patents if p.drug_substance]
+    #
+    # Counted as distinct patent numbers, not as rows. The file carries one row
+    # per product a patent is listed against, so a single patent covering eight
+    # strengths appears eight times: 22,205 rows are 7,043 patents, and AbbVie's
+    # composition-of-matter count read 472 when the answer is 46.
+    substance = {p.patent_no for p in live_patents if p.drug_substance}
 
+    # likewise an application is one approved drug, while a product row is one
+    # strength or presentation of it. AbbVie holds 35 approved drugs, not 264.
+    applications = {p.appl_no for p in products}
     held = []
     if products:
-        held.append(f"{len(products)} approved small-molecule product(s)")
+        held.append(f"{len(applications)} approved small-molecule drug(s)")
     if biologics:
         held.append(f"{len(biologics)} licensed biologic(s)")
     notes = [f"{' and '.join(held)}; protection runs to {max(dates)}, with the "
@@ -149,7 +157,8 @@ def protection_for(db, ticker, as_of):
     return {
         "state": PROTECTED,
         "evidence": notes,
-        "products": len(products),
+        "products": len(applications),
+        "product_rows": len(products),
         "biologics": len(biologics),
         "next_expiry": min(dates),
         "last_expiry": max(dates),
