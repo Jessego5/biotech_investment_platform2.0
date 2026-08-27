@@ -1,14 +1,20 @@
 """
-This script builds the company list instead of me typing one by hand. It asks
-SEC EDGAR which companies file under the biotech SIC codes, maps each one to a
-ticker and name from SEC's ticker file, and keeps only the ones that really have
-both a trial pipeline on ClinicalTrials.gov and real financials on EDGAR. That
-drops the shells, holding companies, and firms with no clinical pipeline. The
-survivors get written to companies.json for the app to load. It does a full
-sweep, paging through every company in each SIC code, then checks trials and
-financials for every candidate in parallel since those are independent network
-calls. Run it with python build_company_universe.py, and set SEC_USER_AGENT to
-your own email first.
+This script builds the company list instead of me typing one by hand.
+
+It used to start from a dozen SIC codes and keep whatever they returned. That
+drew the universe's edge with a list of filing codes, which is not where the
+edge actually is: Alcon files under 3851, "Ophthalmic Goods", and runs 579
+studies, so no length of code list was ever going to reach it without also
+reaching whatever else 3851 contains.
+
+So the candidate pool is now every SEC filer with a ticker, about eight
+thousand, and the two questions asked of each are the ones that actually matter:
+does it lead clinical trials, and does it file real financials. SIC is still
+fetched, but it labels the sector and corroborates a doubtful name rather than
+deciding membership.
+
+Run it with python build_company_universe.py, and set SEC_USER_AGENT to your own
+email first.
 """
 
 import os
@@ -16,15 +22,16 @@ import requests
 import json
 import re
 import time
-import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# the financials check comes from the app rather than being written again here.
-# it used to be a second implementation, and the two drifted: the app learned to
-# read ifrs-full tags and to fetch everything a company filed in one request,
-# while this file kept probing us-gaap tag by tag. That is why BioNTech and
-# GlaxoSmithKline were never candidates at all, despite filing full accounts.
-from app.data_sources import fetch_company_facts, RD_TAGS as APP_RD_TAGS
+# the financials check and the name handling both come from the app rather than
+# being written again here. They used to be second implementations and the two
+# drifted: the app learned to read ifrs-full tags and to fetch everything a
+# company filed in one request, while this file kept probing us-gaap tag by tag.
+# That is why BioNTech and GlaxoSmithKline were never candidates at all, despite
+# filing full accounts.
+from app.data_sources import (fetch_company_facts, RD_TAGS as APP_RD_TAGS,
+                              _core_name, _fold, _search_term, _STATE_MARKER)
 
 # load backend/.env so SEC_USER_AGENT is picked up when running this directly
 try:
@@ -40,42 +47,39 @@ SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "biotech-agent your-real-email
 # second, and each candidate makes a couple, so keep this modest.
 WORKERS = 8
 
-# The SIC codes a medical company files under. The labels double as the "sector"
-# we store, so the frontend can filter by it.
-#
-# Three of these were the whole universe for a long time, which quietly excluded
-# every device and diagnostics company: Boston Scientific runs 373 trials and
-# Edwards Lifesciences 83, and neither files under a pharma code.
-SIC_CODES = ["2836", "2834", "8731", "2835", "2833",
-             "3841", "3845", "3842", "3844", "3826", "3827", "8071"]
-SIC_LABELS = {
-    "2836": "Biologics",
-    "2834": "Pharma preparations",
-    "8731": "Bio research",
-    "2835": "Diagnostics",
+# SIC codes that say "this is a medical company". These no longer decide who is
+# in the universe; they label the sector, and they corroborate a name match that
+# is close but not exact. 3851 is here because Alcon is, and 8000-series codes
+# because a hospital operator running trials is a real sponsor.
+MEDICAL_SIC = {
     "2833": "Medicinal chemicals",
-    "3841": "Medical devices",
-    "3845": "Medical devices",
-    "3842": "Medical devices",
-    "3844": "Medical devices",
+    "2834": "Pharma preparations",
+    "2835": "Diagnostics",
+    "2836": "Biologics",
+    "3821": "Lab instruments",
     "3826": "Lab instruments",
     "3827": "Lab instruments",
+    "3841": "Medical devices",
+    "3842": "Medical devices",
+    "3843": "Medical devices",
+    "3844": "Medical devices",
+    "3845": "Medical devices",
+    "3851": "Medical devices",
+    "5047": "Medical distribution",
+    "5122": "Medical distribution",
+    "8000": "Health services",
+    "8011": "Health services",
+    "8050": "Health services",
+    "8051": "Health services",
+    "8060": "Health services",
+    "8062": "Health services",
     "8071": "Medical labs",
+    "8090": "Health services",
+    "8093": "Health services",
+    "8731": "Bio research",
 }
 
-# A SIC code is not enough on its own. A foreign company listing as an ADR gets a
-# generic code whatever it does, so Shionogi (97 trials) and CSL file under
-# "American Depositary Receipts", and argenx sat outside the three original codes
-# entirely. Any SEC filer sponsoring at least this many phase-labelled
-# interventional trials is a candidate too, whatever it files under.
-#
-# This cannot be the only rule either. Colgate-Palmolive runs 105 trials and 100
-# of them are phased, because toothpaste efficacy is real clinical research, and
-# Polaris has 20. So the two rules are a candidate pool rather than an answer,
-# and why each company qualified is recorded on its row.
-MIN_PHASED_TRIALS = 3
-
-# Companies the sponsor rule lets in whose value does not depend on what the
+# Companies the trials rule lets in whose value does not depend on what those
 # trials find, so a pipeline signal and a cash runway say nothing useful about
 # them. Listed by name, with the reason, because this is a judgement and a
 # judgement should be arguable rather than buried in a threshold.
@@ -88,14 +92,25 @@ NOT_A_PIPELINE = {
     "ACCENTURE": "IT consulting; its studies are client work, not a pipeline",
 }
 
-BROWSE = "https://www.sec.gov/cgi-bin/browse-edgar"
+# Spellings no string rule reaches, because the company registers its trials
+# under a name that is not a variation of its filing name at all. Keyed by CIK,
+# which is the stable identifier: a ticker moves and a name changes.
+#
+# This is a seed, and deliberately small. Every entry is a judgement that two
+# names are one company, which is the same judgement the FDA and patent joins
+# will need in bulk for applicants and assignees, so it should grow into a table
+# with a source column rather than stay a literal here.
+ALIASES = {
+    "0001682852": ["ModernaTX"],                     # Moderna, Inc.
+    "0001080014": ["Innoviva Specialty Therapeutics"],  # Innoviva, Inc.
+    "0000920148": ["Labcorp Corporation of America Holdings"],  # LABCORP HOLDINGS
+    "0001869105": ["TheRas"],                        # BridgeBio Oncology Therapeutics
+}
+
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
+SEC_SUBMISSIONS = "https://data.sec.gov/submissions/CIK{cik}.json"
 CT_BASE = "https://clinicaltrials.gov/api/v2/studies"
 HEADERS = {"User-Agent": SEC_USER_AGENT}
-
-# corporate suffixes we strip when matching a company name to a trial's sponsor
-SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
-            "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings"}
 
 
 def _get(url, params=None, attempts=4):
@@ -103,11 +118,8 @@ def _get(url, params=None, attempts=4):
     GET, retrying while the failure looks temporary.
 
     Throttling is the expected one, but a read timeout is just as temporary and
-    used to propagate. Paging through a SIC code is a single call covering
-    hundreds of companies, so one timeout removed the whole code from the sweep:
-    3841 dropped out that way and took the sector label off Boston Scientific,
-    Glaukos, Integra and eighteen more, which then qualified only under the
-    weaker sponsor rule and came out labelled "Other".
+    used to propagate, which silently removed real companies from a committed
+    file.
     """
     last = None
     for attempt in range(attempts):
@@ -125,49 +137,13 @@ def _get(url, params=None, attempts=4):
     raise last
 
 
-def ciks_in_sic(sic):
-    """
-    Pull ALL CIKs for a SIC code, paging through EDGAR's browse endpoint. It only
-    returns 100 per request, so we bump the `start` offset until a page comes back
-    short (that's the end).
-    Heads up: the atom feed's company-name fields come back as broken
-    'ARRAY(0x...)' strings (a bug on SEC's side), so we grab only the CIKs here
-    and get the real names from the ticker file instead.
-    """
-    ciks = []
-    start = 0
-    # keep paging until a short page tells us we've reached the end
-    while True:
-        # ask for the next 100 companies under this SIC, starting at the offset
-        params = {
-            "action": "getcompany", "SIC": sic, "type": "10-K",
-            "dateb": "", "owner": "include", "count": 100, "start": start,
-            "output": "atom",
-        }
-        r = _get(BROWSE, params)
-        r.raise_for_status()
-        # pull the zero-padded CIKs straight out of the atom feed
-        page = [f"{int(c):010d}" for c in re.findall(r"<cik>(\d+)</cik>", r.text)]
-        ciks += page
-        # a page shorter than 100 means there are no more, so stop
-        if len(page) < 100:
-            break
-        # move the offset to the next page
-        start += 100
-        # be polite and pause briefly between pages
-        time.sleep(0.2)
-    return ciks
-
-
 _ticker_file = None
 def load_ticker_file():
     """CIK -> {ticker, name} from SEC's ticker file (loaded once)."""
     global _ticker_file
-    # load and build the map only once
     if _ticker_file is None:
-        r = requests.get(SEC_TICKERS, headers=HEADERS, timeout=30)
+        r = _get(SEC_TICKERS)
         r.raise_for_status()
-        # key each entry by its zero-padded CIK, keeping the ticker and name
         _ticker_file = {
             f"{int(v['cik_str']):010d}": {"ticker": v["ticker"].upper(),
                                           "name": v["title"]}
@@ -176,121 +152,252 @@ def load_ticker_file():
     return _ticker_file
 
 
-def _first_core_word(name):
-    """First meaningful word of a name, lowercased and stripped of punctuation."""
-    # walk the words and return the first real one that isn't a corporate suffix
-    for word in name.split():
-        w = re.sub(r"[^a-z0-9]", "", word.lower())
-        if w and w not in SUFFIXES:
-            return w
-    return ""
-
-
-def _search_term(name):
-    """
-    Clean a name into a good ClinicalTrials.gov sponsor query, keep the words,
-    drop punctuation and trailing corporate suffixes. Without this, searching the
-    full SEC legal name ("Fate Therapeutics, Inc.") misses trials that a clean
-    "Fate Therapeutics" finds.
-    """
-    # strip punctuation from each word, keep the ones that survive
-    words = [re.sub(r"[^A-Za-z0-9]", "", w) for w in name.split()]
-    words = [w for w in words if w]
-    # peel off trailing corporate suffixes
-    while words and words[-1].lower() in SUFFIXES:
-        words.pop()
-    # fall back to the original name if nothing is left
-    return " ".join(words) or name
-
-
 class TrialCheckFailed(Exception):
     """The trials check could not be completed, which is not the same as no trials."""
 
 
-def _fold(text):
+def fetch_sic(cik):
     """
-    Lowercase, strip accents and punctuation. ClinicalTrials.gov writes
-    "Schrodinger, Inc." with an umlaut and SEC writes it without, and comparing
-    them as typed drops the company.
-    """
-    text = unicodedata.normalize("NFKD", text or "")
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    return " ".join(re.sub(r"[^a-z0-9 ]", " ", text.lower()).split())
+    (sic, description) for a filer, from the submissions endpoint.
 
-
-def _registry_sponsors():
+    The SIC sweep this replaced could only report codes it had already decided to
+    ask for. Asking per company instead means a filer outside every code on the
+    list still arrives labelled, which is how Alcon comes back "Ophthalmic Goods"
+    rather than "Other".
     """
-    Every sponsor name in the registry table, folded, or None when that table
-    has not been ingested. Cached, since this is asked once per candidate.
-    """
-    if _registry_sponsors.cache is not None:
-        return _registry_sponsors.cache or None
     try:
-        from app.database import SessionLocal
-        from app.models import RegistryTrial
-        db = SessionLocal()
-        try:
-            names = {_fold(n) for (n,) in db.query(RegistryTrial.sponsor)
-                     .filter(RegistryTrial.sponsor.isnot(None)).distinct()}
-        finally:
-            db.close()
+        r = _get(SEC_SUBMISSIONS.format(cik=cik))
+        if r.status_code != 200:
+            return None, None
+        payload = r.json()
+        return (payload.get("sic") or None), (payload.get("sicDescription") or None)
     except Exception:
-        names = set()
-    _registry_sponsors.cache = names
-    return names or None
+        return None, None
 
 
-_registry_sponsors.cache = None
-
-
-def _leads_a_registry_trial(name):
+def _norm(name):
     """
-    Whether the registry we already hold lists this company as a sponsor.
+    A name reduced to comparable words: accents folded away first, then
+    punctuation and trailing corporate suffixes.
 
-    The API is asked for an exact term, and its sponsor search does not match on
-    prefixes: "Moderna" returns one study, led by Vertex, while "ModernaTX"
-    returns 140. Every company whose registry name extends its SEC name was
-    therefore read as having no trials at all. Checking the names we hold
-    compares them properly, and costs no request.
+    The order matters twice over. _core_name strips anything that is not a letter
+    or digit from each word, so on its own it turns the registry's "Daré
+    Bioscience" into "dar bioscience" while EDGAR's "Dare Bioscience" becomes
+    "dare bioscience", and the company matches nothing. _fold normalises the
+    accent away first.
+
+    But folding cannot come first either, because it flattens the slashes in
+    "HERON THERAPEUTICS, INC. /DE/" to "de" before the state marker can be
+    recognised as one. That silently undid the earlier fix and cost Heron,
+    Windtree and Dianthus their pipelines a second time. So the marker goes
+    first, then the fold, then the suffixes.
     """
-    sponsors = _registry_sponsors()
-    if not sponsors:
-        return None                      # nothing ingested, so no opinion
-    core = _fold(" ".join(w for w in _fold(name).split() if w not in SUFFIXES))
-    if len(core) < 4:
-        return None                      # too short to match on safely
-    for sponsor in sponsors:
-        if sponsor.startswith(core) or core.startswith(sponsor):
-            return True
-    return False
+    name = _STATE_MARKER.sub("", (name or "").strip())
+    return _core_name(_fold(name))
 
 
-def has_trials(name):
-    """True if this company actually leads at least one registered trial."""
-    # the registry we hold answers this without a request, and matches names the
-    # API's exact-term sponsor search cannot
-    local = _leads_a_registry_trial(name)
-    if local:
-        return True
+def _squashed(name):
+    """_norm with every gap removed, so "CEL-SCI" and "CEL SCI" agree."""
+    return _norm(name).replace(" ", "")
+
+
+# The registry often names the parent in plain text rather than leaving it to be
+# guessed: "K-Group Alpha, Inc., a wholly owned subsidiary of Zentalis
+# Pharmaceuticals, Inc.", "Stiefel, a GSK Company", "Cubist Pharmaceuticals LLC,
+# a subsidiary of Merck & Co., Inc. (Rahway, New Jersey USA)". Reading it is
+# better than any string-distance rule, because it is the registry stating the
+# relationship rather than us inferring one from a spelling.
+_PARENT = re.compile(
+    r"(?:wholly[-\s]owned\s+)?subsidiar(?:y|ies)\s+of\s+(?P<sub>.+)$"
+    r"|[,\-\u2013]\s*an?\s+(?P<brand>[^,]+?)\s+company\s*$",
+    re.I)
+
+
+def parent_named_in(sponsor):
+    """The parent a sponsor name spells out, or None."""
+    m = _PARENT.search(sponsor or "")
+    if not m:
+        return None
+    parent = m.group("sub") or m.group("brand") or ""
+    # "Merck & Co., Inc. (Rahway, New Jersey USA)" carries an address
+    parent = re.sub(r"\(.*?\)", " ", parent).strip(" .,;-")
+    return parent or None
+
+
+def identity(filing_name, candidate, authoritative=False):
+    """
+    How confidently `candidate` names the same company as `filing_name`:
+    "exact", "near", or None.
+
+    This is deliberately stricter than what the SIC sweep needed. Inside a dozen
+    medical codes a loose match is usually right; over eight thousand filers it
+    is the dominant source of error. Matching the first word as a substring, the
+    rule this replaces, admitted Tesla, Boeing, Shell, Vale and Rocky Mountain
+    Chocolate Factory, at a rate of 5.7% of a random sample.
+    """
+    mine = _norm(filing_name).split()
+    theirs = _norm(candidate).split()
+    if not mine or not theirs:
+        return None
+    if mine == theirs:
+        return "exact"
+    # the registry naming its own parent outranks any spelling comparison
+    named = parent_named_in(candidate)
+    if named and _norm(named).split() == mine:
+        return "exact"
+    # the same name with the gaps moved. EDGAR files Novo Nordisk as "NOVO
+    # NORDISK A S" and the registry writes "Novo Nordisk A/S", which come out
+    # three words against four; Bristol-Myers is the same story with a hyphen.
+    # This compares the whole name with every gap removed, so it is an equality
+    # and not a containment: "nova" sits inside "novascotiahealthauthority",
+    # and containment is what put 260 Nova Scotia Health Authority studies in a
+    # semiconductor company's pipeline.
+    if _squashed(filing_name) and _squashed(filing_name) == _squashed(candidate):
+        return "exact"
+    # too short to be an identity on its own: two or three letters collide with
+    # anything
+    if len("".join(mine)) < 5:
+        return None
+    # one name starting the other, compared word by word. as characters
+    # "Merckle GmbH" starts with "Merck", and Merckle is a different company
+    short, long_ = sorted((mine, theirs), key=len)
+    if long_[:len(short)] != short:
+        return None
+    # and no more than a word apart, because a prefix alone is not identity.
+    # A recorded alias is exempt: it is a hand-made judgement that these are one
+    # company, so the registry piling extra words on top of it does not weaken
+    # the claim. "TheRas" leads "TheRas, Inc., d/b/a BBOT (BridgeBio Oncology
+    # Therapeutics)", which is seven words further on and still the same company.
+    if not authoritative and abs(len(theirs) - len(mine)) > 1:
+        return None
+    return "exact" if authoritative else "near"
+
+
+_registry_index = None
+def registry_index():
+    """
+    Registry sponsor names grouped by their first folded word, or {} when the
+    registry table has not been ingested.
+
+    Grouping matters: this is asked once per filer and there are fourteen
+    thousand distinct sponsors, so comparing every pair is a hundred million
+    comparisons for an answer that only ever shares a first word.
+    """
+    global _registry_index
+    if _registry_index is None:
+        index, squashed = {}, {}
+        try:
+            from app.database import SessionLocal
+            from app.models import RegistryTrial
+            db = SessionLocal()
+            try:
+                names = {n for (n,) in db.query(RegistryTrial.sponsor)
+                         .filter(RegistryTrial.sponsor.isnot(None)).distinct()}
+            finally:
+                db.close()
+        except Exception:
+            names = set()
+        for name in names:
+            folded = _norm(name)
+            if folded:
+                index.setdefault(folded.split()[0], []).append(name)
+            # a sponsor that names its parent is filed under the parent's
+            # leading word too, since that is the word a filer will look up
+            named = parent_named_in(name)
+            if named and _norm(named):
+                index.setdefault(_norm(named).split()[0], []).append(name)
+            # a second index on the whole name with its gaps removed. The first
+            # index cannot serve the squashed comparison: "Bristol-Myers Squibb"
+            # reduces to a leading word of "bristolmyers" while the filing name
+            # leads with "bristol", so the two never meet in the same bucket
+            key = _squashed(name)
+            if key:
+                squashed.setdefault(key, name)
+        _registry_index = index, squashed
+    return _registry_index
+
+
+def registry_identity(filing_name):
+    """
+    (sponsor name, confidence) from the registry we already hold, or None.
+
+    Free, and it matches names the API's sponsor search cannot: that search wants
+    whole terms, so "Moderna" returns one study led by Vertex while "ModernaTX"
+    returns 140.
+    """
+    by_first, by_squash = registry_index()
+    key = _squashed(filing_name)
+    if key and key in by_squash:
+        return by_squash[key], "exact"
+    mine = _norm(filing_name).split()
+    if not mine:
+        return None
+    best = None
+    for candidate in by_first.get(mine[0], ()):
+        how = identity(filing_name, candidate)
+        if how == "exact":
+            return candidate, "exact"
+        if how == "near" and best is None:
+            best = (candidate, "near")
+    return best
+
+
+def alias_identity(cik):
+    """
+    (sponsor name, "exact") for a spelling recorded by hand, or None.
+
+    Asked only after the registry has failed on the filing name, so an alias
+    never overrides a match the rules could make for themselves.
+    """
+    by_first, _ = registry_index()
+    for alias in ALIASES.get(cik, ()):
+        mine = _norm(alias)
+        if not mine:
+            continue
+        for candidate in by_first.get(mine.split()[0], ()):
+            if identity(alias, candidate, authoritative=True):
+                return candidate, "exact"
+    return None
+
+
+def alias_api_identity(cik):
+    """The same recorded spellings, asked of the API when the registry is silent."""
+    for alias in ALIASES.get(cik, ()):
+        try:
+            found = api_identity(alias, authoritative=True)
+        except TrialCheckFailed:
+            continue
+        if found:
+            return found
+    return None
+
+
+def api_identity(filing_name, authoritative=False):
+    """
+    (lead sponsor, confidence) from ClinicalTrials.gov, or None.
+
+    Only asked when the registry has nothing to say, which is the case for a
+    sponsor whose studies are observational or device work: registry_trials holds
+    industry-sponsored interventional studies alone, so 115 companies already in
+    the universe have no row in it at all.
+    """
     try:
-        # search ClinicalTrials.gov by the cleaned sponsor name
-        r = _get(CT_BASE, {"query.spons": _search_term(name), "pageSize": 20})
+        r = _get(CT_BASE, {"query.spons": _search_term(filing_name), "pageSize": 20})
         r.raise_for_status()
-        # match on the first meaningful word so "MODERNA, INC." lines up with a
-        # lead sponsor like "ModernaTX, Inc." without the comma or suffix tripping us up
-        first = _first_core_word(name)
-        # return True as soon as any returned trial is actually led by this company
+        best = None
         for s in r.json().get("studies", []):
             lead = (s.get("protocolSection", {})
                      .get("sponsorCollaboratorsModule", {})
                      .get("leadSponsor", {}).get("name", ""))
-            if first and first in lead.lower():
-                return True
-        return False
-    # a failed request is not an answer. letting it read as "no trials" silently
-    # removes a real company from a committed file, and across 781 candidates
-    # that happens several times a run: IQVIA, Phathom and PMV Pharma all
-    # vanished that way, each of them plainly running trials.
+            how = identity(filing_name, lead, authoritative)
+            if how == "exact":
+                return lead, "exact"
+            if how == "near" and best is None:
+                best = (lead, "near")
+        return best
+    # a failed request is not an answer. Letting it read as "no trials" silently
+    # removes a real company from a committed file, and across thousands of
+    # candidates that happens several times a run.
     except Exception as e:
         raise TrialCheckFailed(str(e)) from e
 
@@ -316,76 +423,61 @@ def has_financials(cik):
     return False
 
 
-def sponsors_from_registry(tickers, already):
+def check_company(cik, info):
     """
-    Candidates the SIC sweep cannot see: SEC filers that sponsor phase-labelled
-    interventional trials but file under some other code.
-
-    Reads the registry table ingest_registry.py fills. Without it this returns
-    nothing and the universe is the SIC sweep alone, which is a smaller universe
-    rather than a broken one.
-    """
-    try:
-        from app.database import SessionLocal
-        from app.models import RegistryTrial
-        from sqlalchemy import func
-    except Exception:
-        return {}
-
-    def key(name):
-        n = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper())
-        n = " ".join(w for w in n.split() if w.lower() not in SUFFIXES)
-        return n
-
-    # a filer is findable by its normalised name; collisions are rare enough that
-    # the first one wins and a wrong match would have to share a whole name
-    by_name = {}
-    for cik, info in tickers.items():
-        k = key(info["name"])
-        if k:
-            by_name.setdefault(k, (cik, info))
-
-    db = SessionLocal()
-    try:
-        rows = (db.query(RegistryTrial.sponsor, func.count(RegistryTrial.id))
-                .filter(RegistryTrial.phase.isnot(None),
-                        RegistryTrial.phase.like("PHASE%"))
-                .group_by(RegistryTrial.sponsor).all())
-    except Exception:
-        return {}
-    finally:
-        db.close()
-
-    phased = {}
-    for sponsor, n in rows:
-        hit = by_name.get(key(sponsor))
-        if hit:
-            phased[hit[0]] = phased.get(hit[0], 0) + n
-
-    return {cik: n for cik, n in phased.items()
-            if n >= MIN_PHASED_TRIALS and cik not in already}
-
-
-def check_company(cik, sic, info):
-    """
-    Return a universe row if this company has BOTH trials and financials, else
+    A universe row if this company leads trials and files real financials, else
     None. Raises TrialCheckFailed if the trials check could not be made, so the
     caller can keep what it already knew rather than dropping the company.
+
+    An exact name identity stands on its own. A near one needs a medical SIC
+    behind it, because "Asana, Inc." and "Asana BioSciences" are the same shape
+    as "Alcon Inc" and "Alcon Research", and nothing about the trials themselves
+    separates them: Asana BioSciences' studies are phase-labelled too. What
+    separates them is that one of the two filers makes project-management
+    software.
+
+    An exact match is deliberately allowed through without that corroboration,
+    since requiring it would throw away the foreign issuers the sweep already
+    could not see: an ADR gets a generic filing code whatever the company does,
+    which is why Shionogi and CSL file under "American Depositary Receipts".
     """
-    ticker, name = info["ticker"], info["name"]
+    name = info["name"]
     # a company whose trials are incidental to what it does
-    key = re.sub(r"[^A-Z ]", " ", name.upper()).split()
-    if key and key[0] in NOT_A_PIPELINE:
+    first = re.sub(r"[^A-Z ]", " ", name.upper()).split()
+    if first and first[0] in NOT_A_PIPELINE:
         return None
-    # keep the company only if it has both a real pipeline and real financials
-    if has_trials(name) and has_financials(cik):
-        return {"ticker": ticker, "name": name, "cik": cik,
-                "sector": SIC_LABELS.get(sic, "Other"),
-                # why this company is here, so a reader can disagree with the
-                # judgement rather than having to reverse-engineer it
-                "included_because": (f"SIC {sic}" if sic in SIC_LABELS
-                                     else "sponsors phase-labelled trials")}
-    return None
+
+    # the registry answers for free and matches names the API cannot
+    found = registry_identity(name)
+    source = "registry"
+    if not found:
+        found = alias_identity(cik)
+        source = "registry via a recorded alias"
+    if not found:
+        found = api_identity(name)
+        source = "ClinicalTrials.gov"
+    if not found:
+        found = alias_api_identity(cik)
+        source = "ClinicalTrials.gov via a recorded alias"
+    if not found:
+        return None
+    sponsor, how = found
+
+    sic, sic_desc = fetch_sic(cik)
+    if how == "near" and sic not in MEDICAL_SIC:
+        return None
+    if not has_financials(cik):
+        return None
+
+    return {
+        "ticker": info["ticker"], "name": name, "cik": cik,
+        "sector": MEDICAL_SIC.get(sic) or sic_desc or "Other",
+        "sic": sic,
+        # why this company is here, and under what spelling, so a reader can
+        # disagree with the judgement rather than reverse-engineer it
+        "included_because": (f"{how} name match to {sponsor!r} in {source}"
+                             + ("" if how == "exact" else f", SIC {sic}")),
+    }
 
 
 def load_previous():
@@ -415,45 +507,19 @@ def main():
     previous = load_previous()
     if previous:
         print(f"{len(previous)} companies from the previous run, kept unless this "
-              f"run finds they no longer qualify.\n")
+              f"run finds they no longer qualify.")
+    known = len(registry_index()[0])
+    print(f"registry holds sponsors under {known} distinct leading words"
+          if known else "registry not ingested; every filer falls back to the API")
+    print(f"\nchecking trials + financials on all {len(tickers)} SEC filers with a "
+          f"ticker ({WORKERS} at a time)...\n")
 
-    # full sweep: page through every SIC, remembering the FIRST SIC each CIK
-    # showed up under (that's the sector label we keep).
-    cik_sic = {}
-    for sic in SIC_CODES:
-        print(f"Paging through SIC {sic}...")
-        try:
-            # record each CIK under the first SIC it appears in
-            for cik in ciks_in_sic(sic):
-                cik_sic.setdefault(cik, sic)
-        except Exception as e:
-            print(f"  error on SIC {sic}: {e}")
-    print(f"\n{len(cik_sic)} unique biotech CIKs from SIC codes.")
-
-    # only the CIKs that have a public ticker are worth checking
-    candidates = [(cik, sic, tickers[cik]) for cik, sic in cik_sic.items()
-                  if cik in tickers]
-    print(f"{len(candidates)} have a ticker.")
-
-    # then the ones no SIC code would have found
-    extra = sponsors_from_registry(tickers, {c for c, _, _ in candidates})
-    if extra:
-        print(f"{len(extra)} more sponsor {MIN_PHASED_TRIALS}+ phase-labelled "
-              f"trials but file under another code.")
-        candidates += [(cik, None, tickers[cik]) for cik in extra]
-    print(f"checking trials + financials on {len(candidates)} "
-          f"({WORKERS} at a time)...\n")
-
-    # the trials and financials checks are just independent network calls, so run
-    # a pool of them at once instead of waiting on each one serially.
     universe = []
     done = failed = 0
     checked_ciks = set()
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        # kick off a check for every candidate at once
-        futures = {pool.submit(check_company, cik, sic, info): cik
-                   for cik, sic, info in candidates}
-        # collect the results as each one finishes
+        futures = {pool.submit(check_company, cik, info): cik
+                   for cik, info in tickers.items()}
         for fut in as_completed(futures):
             done += 1
             cik = futures[fut]
@@ -461,26 +527,24 @@ def main():
                 row = fut.result()
             except TrialCheckFailed:
                 # the check never completed, so this says nothing about the
-                # company. fall back to whatever the last run concluded.
+                # company. Fall back to whatever the last run concluded.
                 failed += 1
                 if cik in previous:
                     universe.append(previous[cik])
                 continue
             checked_ciks.add(cik)
-            # keep the row only if the company survived both checks
             if row:
                 universe.append(row)
-            # print a progress line every 50 companies
-            if done % 50 == 0:
-                print(f"  ...checked {done}/{len(candidates)}, kept {len(universe)}")
+            if done % 250 == 0:
+                print(f"  ...checked {done}/{len(tickers)}, kept {len(universe)}")
 
-    # a company that qualified before and was not checked this time is kept. it
+    # a company that qualified before and was not checked this time is kept. It
     # usually means it dropped out of SEC's ticker file, which is a fact about
     # the file rather than about the company: Catalyst Pharmaceuticals is listed
     # and filing, and simply is not listed there any more.
-    known = {c["cik"] for c in universe if c.get("cik")}
+    have = {c["cik"] for c in universe if c.get("cik")}
     carried = [row for cik, row in previous.items()
-               if cik not in known and cik not in checked_ciks]
+               if cik not in have and cik not in checked_ciks]
     universe.extend(carried)
     if carried:
         print(f"\n  carried over {len(carried)} companies that qualified before "
@@ -489,13 +553,15 @@ def main():
         print(f"  {failed} checks could not be completed and did not count "
               f"against the company")
 
-    # sort by ticker and write the surviving universe out to companies.json
     universe.sort(key=lambda c: c["ticker"])
     with open("companies.json", "w") as f:
         json.dump(universe, f, indent=2)
+
+    exact = sum(1 for c in universe if str(c.get("included_because", "")).startswith("exact"))
     print(f"\nDONE: {len(universe)} companies with real trials + financials.")
+    print(f"  {exact} on an exact name match, {len(universe) - exact} on a near "
+          f"match corroborated by a medical SIC or carried over.")
     print("  written to companies.json. main.py loads this.")
-    print("  eyeball it and drop any obvious junk.")
 
 
 if __name__ == "__main__":

@@ -91,8 +91,18 @@ def _sec_get(url, params=None):
 # ie same company may have slightly different names (suffixes mostly)
 # this lets "FATE THERAPEUTICS INC" (the SEC legal name) match a lead sponsor of
 # "Fate Therapeutics" without the "INC" throwing off the substring check.
+# the corporate form is not part of what a company is called. The non-English
+# ones matter as much as "inc": the registry writes uniQure as "UniQure Biopharma
+# B.V." and Pharvaris as "Pharvaris Netherlands B.V.", and with "bv" left in
+# place both sit two words from their filing name rather than one, which is
+# outside what the identity rule will accept.
+#
+# "kgaa" is deliberately absent. Stripping it turns "Merck KGaA, Darmstadt,
+# Germany" into "merck", which is a different company on another continent from
+# "Merck & Co., Inc." and exactly the collision the rule exists to prevent.
 _SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
-             "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings"}
+             "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings",
+             "gmbh", "bv", "pty", "ab", "oy", "srl", "spa", "aps", "sas"}
 
 
 # the state a company incorporated in, which EDGAR appends to some names:
