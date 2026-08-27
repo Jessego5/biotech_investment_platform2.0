@@ -122,6 +122,43 @@ _TENK_BOUNDS = {
         [r"Item\s*7A[.:\s\-–—]*Quantitative",
          r"Item\s*8[.:\s\-–—]*Financial\s*Statements"],
     ),
+    # Where a company states what IP it owns and, crucially, what it licenses
+    # in. For most of this universe that is the only patent information that
+    # exists anywhere: the Orange Book covers approved small molecules, and 85%
+    # of these companies have nothing approved. It is also the only place the
+    # licensed-in question is answerable at all — a patent assigned to a
+    # university and exclusively licensed to the company shows the university as
+    # assignee everywhere else.
+    #
+    # Unlike the others this is a subsection of Item 1 rather than a numbered
+    # item, so it has no "Item N" heading and the thing that follows it varies by
+    # company. The end patterns are the subsections that usually come next, and
+    # Item 1A closes it for anyone who orders them differently, since IP always
+    # sits inside Item 1 and Item 1A always follows.
+    "intellectual_property": (
+        # Case-sensitive, which nothing else here needs to be. Every other
+        # section is found by an "Item N" heading that cannot appear in running
+        # prose; this one is an ordinary noun phrase, and a case-insensitive
+        # search finds it far more often in the risk factors than in the
+        # business section: "the intellectual property landscape around gene
+        # editing is highly dynamic" outranked the real heading for CRISPR
+        # Therapeutics, Beam, Alnylam and Sarepta alike. A heading is title case
+        # or upper case; the prose is not.
+        #
+        # The word boundary matters too: inline XBRL writes
+        # "IntellectualPropertyMember2025-01-01..." and without it CRISPR
+        # extracted three thousand characters of tag soup.
+        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property)\b",
+        [r"Government(?:al)?\s*Regulation", r"Competition",
+         r"Manufacturing", r"Human\s*Capital", r"Employees",
+         r"Sales\s*and\s*Marketing", r"Commerciali[sz]ation",
+         r"Item\s*1A[.:\s\-–—]*Risk\s*Factors"],
+        # and it has to sit inside Item 1. The phrase appears far more often in
+        # the risk factors than in the business section — "the intellectual
+        # property landscape around gene editing is highly dynamic" — and the
+        # search is case-insensitive, so prose matches as readily as a heading.
+        r"Item\s*1A[.:\s\-–—]*Risk\s*Factors",
+    ),
 }
 
 # a 20-F is numbered differently: risk factors sit inside Item 3 (Key
@@ -266,7 +303,7 @@ def _real_headings(text, pattern):
             and not _is_contents_entry(text, p)]
 
 
-def _find_section(text, start_pattern, end_patterns):
+def _find_section(text, start_pattern, end_patterns, limit=None):
     """
     Locate one section by its heading and the heading of whatever follows it.
 
@@ -276,6 +313,8 @@ def _find_section(text, start_pattern, end_patterns):
     is the first one left, so the earliest surviving start wins.
     """
     starts = _real_headings(text, start_pattern)
+    if limit is not None:
+        starts = [p for p in starts if p < limit]
     ends = sorted(set(p for pattern in end_patterns
                       for p in _real_headings(text, pattern)))
     every_end = sorted(set(p for pattern in end_patterns
@@ -304,8 +343,18 @@ def extract_sections(text, form="10-K"):
     this doesn't recognise, and a missing section is better than a wrong one.
     """
     sections = {}
-    for name, (start_pattern, end_patterns) in bounds_for(form).items():
-        found = _find_section(text, start_pattern, end_patterns)
+    for name, spec in bounds_for(form).items():
+        # a section may declare a heading it must appear before, which is how a
+        # subsection of Item 1 says so: it has no item number of its own, and
+        # its name reads as ordinary prose everywhere else in the filing
+        start_pattern, end_patterns = spec[0], spec[1]
+        must_precede = spec[2] if len(spec) > 2 else None
+        limit = None
+        if must_precede:
+            after = _real_headings(text, must_precede)
+            if after:
+                limit = after[0]
+        found = _find_section(text, start_pattern, end_patterns, limit)
         if found is None:
             continue
         body = text[found[0]:found[1]].strip()

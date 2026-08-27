@@ -404,3 +404,56 @@ def test_a_missing_section_records_zero_length_not_null(db):
     filing = db.query(Filing).one()
     assert filing.risk_factors_chars == 0
     assert filing.mdna_chars == 20000
+
+
+def _tenk(body):
+    """A 10-K skeleton with enough bulk that a real section clears the floor."""
+    return ("Item 1. Business " + "The company develops therapies. " * 40
+            + body
+            + "Item 1A. Risk Factors " + "Our business faces risks. " * 400)
+
+
+def test_the_intellectual_property_section_is_found_by_its_heading():
+    body = ("Intellectual Property We own issued patents covering our lead "
+            "candidate and license further rights from a university. " * 40
+            + "Competition The market is competitive. " * 80)
+    got = extract_sections(_tenk(body), "10-K")
+    assert got["intellectual_property"].startswith("Intellectual Property")
+    assert "license further rights" in got["intellectual_property"]
+
+
+def test_the_phrase_in_running_prose_is_not_the_section():
+    # this is the failure that mattered: the phrase appears far more often in
+    # the risk factors than the business section, and a case-insensitive search
+    # took "the intellectual property landscape is highly dynamic" for a heading
+    # at CRISPR Therapeutics, Beam, Alnylam and Sarepta alike
+    body = ("We note that the intellectual property landscape around gene "
+            "editing is highly dynamic and third parties may hold rights. " * 60)
+    assert "intellectual_property" not in extract_sections(_tenk(body), "10-K")
+
+
+def test_inline_xbrl_is_not_the_section():
+    # "IntellectualPropertyMember2025-01-01..." is tag soup, and without a word
+    # boundary CRISPR extracted three thousand characters of it
+    body = ("IntellectualPropertyMember2025-01-012025-12-310001674416us-gaap:"
+            "AccumulatedOtherComprehensiveIncomeMember " * 60)
+    assert "intellectual_property" not in extract_sections(_tenk(body), "10-K")
+
+
+def test_an_upper_case_heading_is_still_a_heading():
+    body = ("INTELLECTUAL PROPERTY We rely on a combination of patents and "
+            "trade secrets to protect our candidates. " * 40
+            + "Competition The market is competitive. " * 80)
+    got = extract_sections(_tenk(body), "10-K")
+    assert got["intellectual_property"].startswith("INTELLECTUAL PROPERTY")
+
+
+def test_a_heading_after_item_1a_is_not_the_business_section():
+    # "Intellectual Property and Market Exclusivity Risks" is a risk-factors
+    # heading. IP sits inside Item 1, and Item 1A always follows it
+    text = ("Item 1. Business " + "We develop therapies. " * 200
+            + "Item 1A. Risk Factors " + "Risks abound. " * 100
+            + "Intellectual Property and Market Exclusivity Risks We may not "
+              "be able to protect our rights. " * 60
+            + "Competition is fierce. " * 80)
+    assert "intellectual_property" not in extract_sections(text, "10-K")
