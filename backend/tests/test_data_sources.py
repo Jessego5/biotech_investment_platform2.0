@@ -1007,3 +1007,72 @@ def test_fetch_financials_reconstructs_a_past_date(monkeypatch):
     # and half present
     assert seen["annual"] == "2021-12-31"
     assert seen["balance"] == "2021-12-31"
+
+
+def _study(**over):
+    """One ClinicalTrials.gov study, shaped the way the API returns them."""
+    study = {
+        "hasResults": True,
+        "protocolSection": {
+            "identificationModule": {"nctId": "NCT01", "briefTitle": "A trial"},
+            "statusModule": {
+                "overallStatus": "COMPLETED",
+                "startDateStruct": {"date": "2024-01", "type": "ACTUAL"},
+                "primaryCompletionDateStruct": {"date": "2026-09", "type": "ESTIMATED"},
+            },
+            "sponsorCollaboratorsModule": {"leadSponsor": {"name": "Fate Therapeutics"}},
+            "conditionsModule": {"conditions": ["Atopic Dermatitis", "Eczema"]},
+            "designModule": {
+                "phases": ["PHASE3"],
+                "enrollmentInfo": {"count": 715, "type": "ACTUAL"},
+                "designInfo": {"allocation": "RANDOMIZED",
+                               "maskingInfo": {"masking": "DOUBLE"}},
+            },
+        },
+    }
+    study["protocolSection"].update(over)
+    return study
+
+
+def test_parse_trials_keeps_the_indication_and_the_readout_date():
+    # both were fetched and thrown away, which left a pipeline able to say
+    # "Phase 3, recruiting" but not what for, nor when it reports
+    t = data_sources.parse_trials({"studies": [_study()]}, "Fate Therapeutics")[0]
+    assert t["conditions"] == "Atopic Dermatitis; Eczema"
+    assert t["completion_date"] == "2026-09"
+    assert t["enrollment"] == 715
+
+
+def test_parse_trials_records_whether_a_date_happened_or_is_forecast():
+    # an estimated completion is when a readout is expected and an actual one is
+    # when it arrived. Storing the date without the type would let a forecast be
+    # read as history
+    t = data_sources.parse_trials({"studies": [_study()]}, "Fate Therapeutics")[0]
+    assert t["start_date_type"] == "ACTUAL"
+    assert t["completion_date_type"] == "ESTIMATED"
+    assert t["enrollment_type"] == "ACTUAL"
+
+
+def test_parse_trials_keeps_what_the_evidence_rests_on():
+    # "robust data" is a judgement, but the things it is made of are recorded
+    t = data_sources.parse_trials({"studies": [_study()]}, "Fate Therapeutics")[0]
+    assert t["has_results"] is True
+    assert t["allocation"] == "RANDOMIZED"
+    assert t["masking"] == "DOUBLE"
+
+
+def test_parse_trials_leaves_absent_fields_absent():
+    # a trial with no dates or design recorded must come back null, never
+    # defaulted to something that reads as a finding
+    bare = {"protocolSection": {
+        "identificationModule": {"nctId": "NCT02", "briefTitle": "Bare"},
+        "statusModule": {"overallStatus": "RECRUITING"},
+        "sponsorCollaboratorsModule": {"leadSponsor": {"name": "Fate Therapeutics"}},
+        "designModule": {"phases": ["PHASE1"]},
+    }}
+    t = data_sources.parse_trials({"studies": [bare]}, "Fate Therapeutics")[0]
+    assert t["conditions"] is None
+    assert t["completion_date"] is None and t["completion_date_type"] is None
+    assert t["enrollment"] is None
+    assert t["allocation"] is None and t["masking"] is None
+    assert t["has_results"] is None

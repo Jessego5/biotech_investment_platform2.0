@@ -163,6 +163,16 @@ def write_company(db, row, trials, financials, trial_totals=None):
             nct_id=t["nct_id"], title=t["title"], phase=t["phase"],
             status=t["status"], lead_sponsor=t["lead_sponsor"],
             summary=t.get("summary", ""),
+            conditions=t.get("conditions"),
+            start_date=t.get("start_date"),
+            start_date_type=t.get("start_date_type"),
+            completion_date=t.get("completion_date"),
+            completion_date_type=t.get("completion_date_type"),
+            enrollment=t.get("enrollment"),
+            enrollment_type=t.get("enrollment_type"),
+            has_results=t.get("has_results"),
+            allocation=t.get("allocation"),
+            masking=t.get("masking"),
         ))
 
     # add the financial rows, but only the metrics that actually came back

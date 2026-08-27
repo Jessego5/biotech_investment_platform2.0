@@ -433,6 +433,20 @@ def _leads(sponsor_name, lead):
     return any(_fold(name) == folded for name in sponsor_names_for(sponsor_name))
 
 
+def _date_struct(struct):
+    """
+    A date and whether it happened.
+
+    The registry marks a date ACTUAL or ESTIMATED, and the difference is the
+    whole point: an estimated completion is when a readout is expected, an actual
+    one is when it arrived. Treating a forecast as history would manufacture
+    exactly the kind of fact this project exists not to manufacture.
+    """
+    if not struct:
+        return None, None
+    return struct.get("date"), struct.get("type")
+
+
 def parse_trials(payload, sponsor_name):
     """
     The parsing half: flatten a ClinicalTrials.gov response into trial dicts,
@@ -460,6 +474,11 @@ def parse_trials(payload, sponsor_name):
         if not _leads(sponsor_name, lead):
             continue
 
+        start, start_type = _date_struct(stm.get("startDateStruct"))
+        done, done_type = _date_struct(stm.get("primaryCompletionDateStruct"))
+        enrollment = dsm.get("enrollmentInfo") or {}
+        design = dsm.get("designInfo") or {}
+
         # flatten the fields we care about into a simple trial dict
         trials.append({
             "nct_id": idm.get("nctId"),
@@ -469,6 +488,20 @@ def parse_trials(payload, sponsor_name):
             "lead_sponsor": lead,
             # the free-text blob used later for semantic search
             "summary": _trial_text(ps),
+            # what it treats, joined the same way the registry table does it so a
+            # condition means the same thing in both
+            "conditions": "; ".join(ps.get("conditionsModule", {})
+                                      .get("conditions") or []) or None,
+            "start_date": start,
+            "start_date_type": start_type,
+            "completion_date": done,
+            "completion_date_type": done_type,
+            "enrollment": enrollment.get("count"),
+            "enrollment_type": enrollment.get("type"),
+            # hasResults sits at the top of the study, not inside protocolSection
+            "has_results": s.get("hasResults"),
+            "allocation": design.get("allocation"),
+            "masking": (design.get("maskingInfo") or {}).get("masking"),
         })
     return trials
 

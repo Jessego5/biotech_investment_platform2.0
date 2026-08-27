@@ -132,6 +132,31 @@ class Trial(Base):
     # a real vector column on Postgres, raw float32 bytes on SQLite; either way
     # Python reads and writes it as a plain sequence of numbers
     embedding = Column(Embedding)
+
+    # What the trial is for, and when it reports. Both were being fetched and
+    # thrown away, which left the pipeline able to say "Phase 3, recruiting" and
+    # not "Phase 3, atopic dermatitis, reading out in Q2 2026" — the second being
+    # the fact anyone actually wants.
+    conditions = Column(Text, index=True)
+    # a date carries whether it happened. An estimated completion is when a
+    # readout is expected, an actual one is when it arrived, and reporting the
+    # first as the second would invent the history this project exists to avoid.
+    start_date = Column(String)
+    start_date_type = Column(String)            # ACTUAL or ESTIMATED
+    completion_date = Column(String, index=True)
+    completion_date_type = Column(String)       # ACTUAL or ESTIMATED
+    enrollment = Column(Integer)
+    enrollment_type = Column(String)            # ACTUAL or ESTIMATED
+
+    # How much weight the trial's evidence can carry. "Robust data" is a
+    # judgement nobody can store, but the things it is made of are all recorded:
+    # whether patients were randomised, whether anyone was blinded, and whether
+    # results were ever posted. These are null on rows written before they were
+    # collected, which is a real gap and not a claim that the trial lacked them.
+    has_results = Column(Boolean)
+    allocation = Column(String)                 # RANDOMIZED or NON_RANDOMIZED
+    masking = Column(String)                    # NONE, SINGLE ... QUADRUPLE
+
     fetched_at = Column(DateTime, default=_now)
 
     company = relationship("Company", back_populates="trials")
