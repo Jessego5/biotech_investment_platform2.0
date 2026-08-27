@@ -146,3 +146,21 @@ def test_an_alias_is_only_consulted_after_the_rules_fail(monkeypatch):
     monkeypatch.setattr(universe, "has_financials", lambda c: True)
     universe.check_company("1", {"ticker": "ALC", "name": "ALCON INC"})
     assert asked == []
+
+
+def test_a_short_name_is_not_an_identity_on_its_own():
+    # "ATI" is ATI Inc, which makes steel pipe, and ATI Holdings, which runs
+    # physical therapy clinics. An exact match on three letters says nothing
+    assert universe.identity("ATI INC", "ATI Holdings, LLC") == "near"
+    # long enough to mean something
+    assert universe.identity("Apple Inc.", "Apple Inc.") == "exact"
+
+
+def test_a_parent_named_in_free_text_still_needs_corroborating():
+    # "Alpine Immune Sciences, a Vertex Company" means Vertex Pharmaceuticals.
+    # Read as an identity it admitted Vertex, Inc., which sells tax software
+    assert universe.identity(
+        "Vertex, Inc.", "Alpine Immune Sciences, a Vertex Company") == "near"
+    assert universe.identity(
+        "Zentalis Pharmaceuticals, Inc.",
+        "K-Group Alpha, Inc., a wholly owned subsidiary of Zentalis Pharmaceuticals, Inc.") == "near"

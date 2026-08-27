@@ -240,11 +240,19 @@ def identity(filing_name, candidate, authoritative=False):
     if not mine or not theirs:
         return None
     if mine == theirs:
-        return "exact"
-    # the registry naming its own parent outranks any spelling comparison
+        # a short name is not an identity even when it matches exactly. "ATI"
+        # is ATI Inc, which makes steel pipe, and it is also ATI Holdings, which
+        # runs physical therapy clinics. Three letters collide with anything, so
+        # a short name goes to the corroborated tier rather than standing alone.
+        return "exact" if len("".join(mine)) >= 5 else "near"
+    # the registry naming its own parent, which is stronger than any spelling
+    # comparison but weaker than identity, because the name it states can itself
+    # be ambiguous: "Alpine Immune Sciences, a Vertex Company" means Vertex
+    # Pharmaceuticals, and matched Vertex, Inc., which sells tax software. So
+    # this is corroborated by the filing code like any other near match.
     named = parent_named_in(candidate)
     if named and _norm(named).split() == mine:
-        return "exact"
+        return "near"
     # the same name with the gaps moved. EDGAR files Novo Nordisk as "NOVO
     # NORDISK A S" and the registry writes "Novo Nordisk A/S", which come out
     # three words against four; Bristol-Myers is the same story with a hyphen.
@@ -252,8 +260,8 @@ def identity(filing_name, candidate, authoritative=False):
     # and not a containment: "nova" sits inside "novascotiahealthauthority",
     # and containment is what put 260 Nova Scotia Health Authority studies in a
     # semiconductor company's pipeline.
-    if _squashed(filing_name) and _squashed(filing_name) == _squashed(candidate):
-        return "exact"
+    if (_squashed(filing_name) and _squashed(filing_name) == _squashed(candidate)):
+        return "exact" if len(_squashed(filing_name)) >= 5 else "near"
     # too short to be an identity on its own: two or three letters collide with
     # anything
     if len("".join(mine)) < 5:
