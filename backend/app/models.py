@@ -261,3 +261,73 @@ class RegistryTrial(Base):
     enrollment = Column(Integer)
     enrollment_type = Column(String)
     fetched_at = Column(DateTime, default=_now)
+
+
+class ApprovedProduct(Base):
+    """
+    One approved drug product from the FDA Orange Book.
+
+    The Orange Book is not a patent database. It lists approved drug products
+    and the patents a sponsor chose to list against a specific application, so
+    generic filers know what they must challenge. Two consequences shape every
+    column here: a company with no approved small molecule has no row at all,
+    and biologics are absent entirely because they are licensed under a BLA and
+    live in the Purple Book. Neither absence says anything about whether the
+    company holds patents. Regeneron holds thousands and appears nowhere.
+    """
+    __tablename__ = "approved_products"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # the application number is the join. It is an exact key, which is what lets
+    # products, patents and exclusivity meet without any name matching at all.
+    appl_no = Column(String, index=True)
+    product_no = Column(String)
+    appl_type = Column(String)              # N for a brand NDA, A for a generic
+    ingredient = Column(String, index=True)
+    trade_name = Column(String)
+    # the applicant is a subsidiary as often as not: Genentech under Roche,
+    # Janssen under J&J. This is the name as filed; company_ticker is our
+    # judgement about who it belongs to, and is null when we could not tell.
+    applicant = Column(String)
+    approval_date = Column(String)
+    company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    fetched_at = Column(DateTime, default=_now)
+
+
+class ProductPatent(Base):
+    """A patent listed against an approved product, and when it expires."""
+    __tablename__ = "product_patents"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    appl_no = Column(String, index=True)
+    product_no = Column(String)
+    patent_no = Column(String)
+    expire_date = Column(String, index=True)
+    # what the patent claims. A substance patent is the composition-of-matter
+    # claim that actually forms the moat; a product or use patent is narrower
+    # and easier to design around, so they should not be counted as equals.
+    drug_substance = Column(Boolean)
+    drug_product = Column(Boolean)
+    use_code = Column(String)
+    # a delisted patent is no longer asserted and must not count toward
+    # protection, or a company reads as covered by something it gave up
+    delisted = Column(Boolean)
+    fetched_at = Column(DateTime, default=_now)
+
+
+class ProductExclusivity(Base):
+    """
+    Regulatory exclusivity, which runs independently of any patent.
+
+    It matters on its own: a drug whose patents have lapsed can still be
+    protected by an exclusivity period, and orphan exclusivity in particular is
+    seven years of complete market protection.
+    """
+    __tablename__ = "product_exclusivity"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    appl_no = Column(String, index=True)
+    product_no = Column(String)
+    code = Column(String)                   # ODE, NCE, RTO, ...
+    expire_date = Column(String)
+    fetched_at = Column(DateTime, default=_now)
