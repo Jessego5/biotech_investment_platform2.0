@@ -15,6 +15,17 @@ def trials_from_db(company):
     return [{
         "nct_id": t.nct_id, "title": t.title, "phase": t.phase,
         "status": t.status, "lead_sponsor": t.lead_sponsor,
+        # lead or collaborator. Carried through so a reader can ask whether this
+        # is the company's own trial or one it partners on, rather than having
+        # the two silently added together
+        "role": t.role,
+        # what it treats and when it reports, which is what turns "Phase 3,
+        # recruiting" into "Phase 3, atopic dermatitis, reading out Q2 2026"
+        "conditions": t.conditions,
+        "completion_date": t.completion_date,
+        "completion_date_type": t.completion_date_type,
+        "enrollment": t.enrollment,
+        "has_results": t.has_results,
     } for t in company.trials]
 
 

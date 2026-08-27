@@ -126,6 +126,11 @@ class Trial(Base):
     phase = Column(String)
     status = Column(String)
     lead_sponsor = Column(String)
+    # "lead" or "collaborator". An industry-funded trial run by a university
+    # lists the institution as lead and the company as a collaborator; that is
+    # real involvement at a different level of control, and the two must not be
+    # added together. Pipeline counts and every grounded signal use lead alone.
+    role = Column(String, index=True)
     # free text (summary, conditions, interventions, eligibility) that the
     # structured fields can't answer over, plus its embedding for semantic search.
     summary = Column(Text)

@@ -442,7 +442,8 @@ def test_terminated_count_is_separate_from_inactive():
 def test_summarize_pipeline_handles_an_empty_pipeline():
     summary = summarize_pipeline([])
     assert summary == {"total_trials": 0, "by_phase": {}, "by_status": {},
-                       "active_trials": 0, "terminated_trials": 0}
+                       "active_trials": 0, "terminated_trials": 0,
+                       "collaborator_trials": 0}
 
 
 # - SEC EDGAR
@@ -1076,3 +1077,57 @@ def test_parse_trials_leaves_absent_fields_absent():
     assert t["enrollment"] is None
     assert t["allocation"] is None and t["masking"] is None
     assert t["has_results"] is None
+
+
+def _collab_study(company_is_lead):
+    lead = "Fate Therapeutics" if company_is_lead else "Memorial Sloan Kettering Cancer Center"
+    return {"protocolSection": {
+        "identificationModule": {"nctId": "NCT09", "briefTitle": "T"},
+        "statusModule": {"overallStatus": "RECRUITING"},
+        "sponsorCollaboratorsModule": {
+            "leadSponsor": {"name": lead},
+            "collaborators": [{"name": "Fate Therapeutics"}] if not company_is_lead else [],
+        },
+        "designModule": {"phases": ["PHASE2"]},
+    }}
+
+
+def test_a_collaborator_trial_is_kept_and_labelled():
+    # an industry-funded trial run by a cancer centre lists the centre as lead
+    # and the company as a collaborator. Dropping it loses real involvement, and
+    # loses it unevenly, penalising the companies that partner
+    t = data_sources.parse_trials(
+        {"studies": [_collab_study(False)]}, "Fate Therapeutics")
+    assert len(t) == 1 and t[0]["role"] == "collaborator"
+
+
+def test_a_led_trial_is_labelled_lead():
+    t = data_sources.parse_trials(
+        {"studies": [_collab_study(True)]}, "Fate Therapeutics")
+    assert t[0]["role"] == "lead"
+
+
+def test_a_trial_with_no_connection_is_still_dropped():
+    study = _collab_study(False)
+    study["protocolSection"]["sponsorCollaboratorsModule"]["collaborators"] = [
+        {"name": "Some Other Biotech, Inc."}]
+    assert data_sources.parse_trials({"studies": [study]}, "Fate Therapeutics") == []
+
+
+def test_the_pipeline_counts_only_what_the_company_leads():
+    # a large pharma partnering on academic studies would otherwise show a
+    # pipeline it does not run
+    trials = [{"phase": "PHASE3", "status": "RECRUITING", "role": "lead"},
+              {"phase": "PHASE1", "status": "RECRUITING", "role": "collaborator"},
+              {"phase": "PHASE1", "status": "RECRUITING", "role": "collaborator"}]
+    got = data_sources.summarize_pipeline(trials)
+    assert got["total_trials"] == 1
+    assert got["active_trials"] == 1
+    assert got["by_phase"] == {"PHASE3": 1}
+    # reported, never added in
+    assert got["collaborator_trials"] == 2
+
+
+def test_rows_written_before_the_role_existed_count_as_lead():
+    trials = [{"phase": "PHASE2", "status": "RECRUITING"}]
+    assert data_sources.summarize_pipeline(trials)["total_trials"] == 1

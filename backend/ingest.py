@@ -162,6 +162,7 @@ def write_company(db, row, trials, financials, trial_totals=None):
         company.trials.append(Trial(
             nct_id=t["nct_id"], title=t["title"], phase=t["phase"],
             status=t["status"], lead_sponsor=t["lead_sponsor"],
+            role=t.get("role", "lead"),
             summary=t.get("summary", ""),
             conditions=t.get("conditions"),
             start_date=t.get("start_date"),

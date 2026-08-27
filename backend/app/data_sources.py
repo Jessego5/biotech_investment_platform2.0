@@ -619,11 +619,21 @@ def parse_trials(payload, sponsor_name):
         spm = ps.get("sponsorCollaboratorsModule", {})
         lead = spm.get("leadSponsor", {}).get("name", "")
 
-        # sponsor filter: keep only the trials this company actually leads.
-        # compare on the "core" name (suffixes stripped) so "Recursion" matches
-        # "Recursion Pharmaceuticals Inc." and "FATE THERAPEUTICS INC" matches
-        # "Fate Therapeutics", while still dropping trials led by a different org.
-        if not _leads(sponsor_name, lead):
+        # Lead or collaborator, and which one is recorded rather than flattened.
+        #
+        # An industry-funded trial run by a university or a cooperative group
+        # lists the institution as lead and the company as a collaborator. It is
+        # still the company's asset and its readout, so dropping it loses real
+        # involvement — and loses it unevenly, penalising exactly the companies
+        # that partner. But it is not a trial the company controls: it cannot set
+        # the timeline and does not own the data. So the role is stored and
+        # pipeline counts keep using lead alone.
+        if _leads(sponsor_name, lead):
+            role = "lead"
+        elif any(_leads(sponsor_name, (c or {}).get("name", ""))
+                 for c in spm.get("collaborators") or []):
+            role = "collaborator"
+        else:
             continue
 
         start, start_type = _date_struct(stm.get("startDateStruct"))
@@ -638,6 +648,7 @@ def parse_trials(payload, sponsor_name):
             "status": stm.get("overallStatus"),
             "phase": ", ".join(dsm.get("phases", []) or []) or "N/A",
             "lead_sponsor": lead,
+            "role": role,
             # the free-text blob used later for semantic search
             "summary": _trial_text(ps),
             # what it treats, joined the same way the registry table does it so a
@@ -664,24 +675,42 @@ def fetch_trials(sponsor_name, page_size=100):
 
 
 def summarize_pipeline(trials):
-    """Turn a trial list into pipeline signal: counts by phase and status."""
+    """
+    Turn a trial list into pipeline signal: counts by phase and status.
+
+    Counts the trials the company LEADS. A collaborator trial is real
+    involvement but not a programme the company runs — it cannot set the
+    timeline or own the data — and a large pharma partnering on academic studies
+    would otherwise show a pipeline it does not control. The collaborator count
+    is reported alongside rather than folded in, so nothing is hidden and
+    nothing is double-counted.
+
+    Rows written before the role was recorded have none, and are treated as
+    lead, which is what they were filtered to at the time.
+    """
+    led = [t for t in trials if (t.get("role") or "lead") == "lead"]
+    collaborating = len(trials) - len(led)
     by_phase, by_status = {}, {}
     # tally up how many trials fall under each phase and each status
-    for t in trials:
+    for t in led:
         by_phase[t["phase"]] = by_phase.get(t["phase"], 0) + 1
         by_status[t["status"]] = by_status.get(t["status"], 0) + 1
     # a trial counts as active if it is recruiting or otherwise still running
-    active = sum(1 for t in trials
+    active = sum(1 for t in led
                  if t["status"] in ("RECRUITING", "ACTIVE_NOT_RECRUITING",
                                      "ENROLLING_BY_INVITATION"))
     # terminated trials are the ones marked TERMINATED
     terminated = by_status.get("TERMINATED", 0)
     return {
-        "total_trials": len(trials),
+        # the trials this company runs. assess_pipeline reads this, so it must
+        # not include trials somebody else runs with the company alongside.
+        "total_trials": len(led),
         "by_phase": by_phase,
         "by_status": by_status,
         "active_trials": active,
         "terminated_trials": terminated,
+        # reported, never added in
+        "collaborator_trials": collaborating,
     }
 
 

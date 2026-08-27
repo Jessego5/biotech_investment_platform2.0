@@ -27,9 +27,14 @@ def test_trials_from_db_flattens_the_stored_rows(db):
 
     trials = trials_from_db(company)
 
+    # the row carries what it treats and when it reports as well, and null is
+    # what an un-ingested field looks like rather than an absent one
     assert trials == [{"nct_id": "NCTAAA0000", "title": "Alpha trial 0",
                        "phase": "PHASE3", "status": "RECRUITING",
-                       "lead_sponsor": "Alpha"}]
+                       "lead_sponsor": "Alpha", "role": None,
+                       "conditions": None, "completion_date": None,
+                       "completion_date_type": None, "enrollment": None,
+                       "has_results": None}]
 
 
 def test_financials_from_db_rebuilds_the_shape_analysis_expects(db):
