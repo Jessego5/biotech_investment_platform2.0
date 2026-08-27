@@ -9,7 +9,7 @@ and two of those are not tickers at all. Resolution happens here instead, agains
 the companies actually held. Run them with pytest.
 """
 
-from app.chat import _resolve_company
+from app.chat import _resolve_company, _sector_labels
 
 from conftest import add_company
 
@@ -74,3 +74,19 @@ def test_an_invented_ticker_does_not_resolve(db):
 
     assert _resolve_company("RCRN", db) is None
     assert _resolve_company("RECUR", db) is None
+
+
+def test_the_sector_labels_come_from_the_data(db):
+    # hardcoded in the prompt this went stale as soon as the universe widened:
+    # it named three labels while the database held ten, so 124 medical-device
+    # companies could not be reached by any filter question
+    from app.models import Company
+    for i, sector in enumerate(["Biologics", "Medical devices", "Diagnostics"]):
+        db.add(Company(ticker=f"T{i}", cik=f"000000000{i}", name=f"N{i}",
+                       sector=sector))
+    db.commit()
+    assert _sector_labels(db) == ["Biologics", "Diagnostics", "Medical devices"]
+
+
+def test_no_sectors_is_not_an_error(db):
+    assert _sector_labels(db) == []

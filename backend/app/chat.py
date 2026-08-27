@@ -36,7 +36,7 @@ PLAN_SYSTEM = (
     '     "min_cash": number|null,     // minimum cash in DOLLARS\n'
     '     "min_active_trials": integer|null,\n'
     '     "has_phase3": boolean|null,  // true = has a Phase 3+ program\n'
-    '     "sector": string|null,       // one of: Biologics, Pharma preparations, Bio research\n'
+    '     "sector": string|null,       // one of the labels listed below\n'
     '     "min_runway": number|null    // minimum years of runway: liquidity\n'
     '                                  // (cash + marketable securities) divided\n'
     '                                  // by a year of cash burn\n'
@@ -55,8 +55,7 @@ PLAN_SYSTEM = (
     "what trials study or test something, use intent=search and put a concise "
     "search phrase in search_query. There is no structured field for those, so "
     "they are answered by semantic search over trial descriptions. Do NOT map "
-    "them to sector: sector is only one of exactly Biologics, Pharma "
-    "preparations, or Bio research. "
+    "them to sector: the sector labels are listed at the end of this prompt. "
     "If the question asks what a company SAYS about its risks, challenges, "
     "competition, regulatory exposure or how it explains its own results, use "
     "intent=risks and put the topic in search_query. Those answers come from "
@@ -64,7 +63,7 @@ PLAN_SYSTEM = (
     "If the question asks to predict the future, give buy/sell or investment "
     "advice, or asks anything neither the structured data nor the trial text can "
     "answer, use intent=refuse. "
-    "Data available per company: name, sector (those three labels only), trial "
+    "Data available per company: name, sector, trial "
     "counts by phase and status, active and terminated counts, and these SEC "
     "figures: R&D expense, cash, marketable securities, debt, operating cash "
     "flow, net income, revenue, and shares outstanding. The Risk Factors and "
@@ -105,12 +104,36 @@ def _money(entry):
     return f"${round(entry['value'] / 1e6)}M (FY{entry['fiscal_year']})"
 
 
-def _plan(question):
+def _sector_labels(db):
+    """
+    The sector labels actually in the database, cheapest query there is.
+
+    Hardcoded in the prompt, this list went stale the moment the universe
+    widened past its original filing codes. It named three labels while the
+    database held ten, so 124 medical-device companies could not be reached by
+    any filter question at all — the model had no label to ask for. Reading it
+    from the data means adding a sector cannot silently make companies
+    invisible.
+    """
+    try:
+        rows = db.query(Company.sector).distinct().all()
+    except Exception:
+        return []
+    return sorted({s for (s,) in rows if s})
+
+
+def _plan(question, db=None):
     # ask the model to translate the question into a JSON query plan
+    system = PLAN_SYSTEM
+    labels = _sector_labels(db) if db is not None else []
+    if labels:
+        system += ("\n\nThe sector labels in this database are exactly: "
+                   + "; ".join(labels)
+                   + ". Use one of these verbatim or null. Never invent one.")
     resp = _client().chat.completions.create(
         model=CHAT_MODEL,
         response_format={"type": "json_object"},
-        messages=[{"role": "system", "content": PLAN_SYSTEM},
+        messages=[{"role": "system", "content": system},
                   {"role": "user", "content": question}],
     )
     # parse the JSON it returned back into a dict
@@ -288,7 +311,7 @@ def answer_question(question, db):
 
     # step 1: turn the question into a query plan, bailing out if that fails
     try:
-        plan = _plan(question)
+        plan = _plan(question, db)
     except Exception as e:
         return {"answer": f"Sorry, I couldn't process that question ({e}).",
                 "sources": []}
