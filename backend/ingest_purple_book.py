@@ -47,7 +47,15 @@ def _iso(text):
     text = (text or "").strip()
     if not text or text == "-":
         return None
-    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%b %d, %Y"):
+    # The file mixes formats. Most dates are "February 13, 1936", but roughly
+    # half are "15-Jan-74", and a loader carrying only one of the two silently
+    # drops the other half rather than failing: 45 of 2,230 approval dates
+    # survived before both were handled.
+    #
+    # The two-digit year resolves through Python's pivot, so 69-99 reads as
+    # 1900s and 00-68 as 2000s. That is right for every value here: approvals
+    # run back to the 1930s and no exclusivity extends past 2068.
+    for fmt in ("%B %d, %Y", "%b %d, %Y", "%d-%b-%y", "%m/%d/%Y", "%Y-%m-%d"):
         try:
             return datetime.datetime.strptime(text, fmt).date().isoformat()
         except ValueError:
@@ -145,7 +153,9 @@ def main():
             db.add(BiologicProduct(
                 bla_number=d.get("BLA Number"),
                 product_number=d.get("Product Number"),
-                bla_type=d.get("BLA Type"),
+                # "BLA Type" in older releases, "License Type" now. Reading the
+                # old name gives a column of nulls and no error.
+                bla_type=d.get("License Type") or d.get("BLA Type"),
                 proprietary_name=d.get("Proprietary Name"),
                 proper_name=d.get("Proper Name"),
                 applicant=d.get("Applicant"),
@@ -154,6 +164,8 @@ def main():
                 orphan_exclusivity=_iso(d.get("Orphan Exclusivity Exp. Date")),
                 interchangeable_exclusivity=_iso(
                     d.get("First Interchangeable Exclusivity Exp. Date")),
+                patent_list_provided=(d.get("Patent List Provided", "")
+                                      .strip().upper() == "YES"),
                 company_ticker=resolved.get(d["Applicant"])))
         db.commit()
 

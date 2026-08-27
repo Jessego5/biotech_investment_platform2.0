@@ -183,3 +183,21 @@ def test_no_product_in_either_book_still_says_so_plainly(db):
     r = protection_for(db, ticker, TODAY)
     assert r["state"] == NO_PRODUCT
     assert r["biologics"] == 0
+
+
+def test_a_recorded_patent_list_is_reported_when_there_is_one(db):
+    # the Purple Book Continuity Act made FDA publish whether a patent list was
+    # provided. It is not the list, but it means a patent position is on the
+    # record, which "biologic patents are not published" flatly denied
+    ticker = _company(db)
+    _biologic(db, ticker, patent_list_provided=True)
+    said = " ".join(protection_for(db, ticker, TODAY)["evidence"])
+    assert "patent list for 1 of them" in said
+
+
+def test_the_claim_is_softened_not_dropped_when_no_list_exists(db):
+    ticker = _company(db)
+    _biologic(db, ticker, patent_list_provided=False)
+    said = " ".join(protection_for(db, ticker, TODAY)["evidence"]).lower()
+    assert "largely unpublished" in said
+    assert "patent list for" not in said

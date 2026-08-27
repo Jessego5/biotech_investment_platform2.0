@@ -365,5 +365,10 @@ class BiologicProduct(Base):
     ref_product_exclusivity = Column(String)
     orphan_exclusivity = Column(String)
     interchangeable_exclusivity = Column(String)
+    # the Purple Book Continuity Act made FDA publish whether a patent list was
+    # provided for a product. It is a flag and not the list itself, but it marks
+    # the products where a patent position exists on the record at all, which is
+    # more than "biologic patents are never published" allowed for.
+    patent_list_provided = Column(Boolean)
     company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
     fetched_at = Column(DateTime, default=_now)

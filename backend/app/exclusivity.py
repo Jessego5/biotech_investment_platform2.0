@@ -91,11 +91,16 @@ def protection_for(db, ticker, as_of):
         # does mean generic entry is open. For a biologic no patent listing
         # exists anywhere public, so this is an absent source and not a finding.
         if biologics and not products:
+            listed = sum(1 for b in biologics if b.patent_list_provided)
             note = (f"{len(biologics)} licensed biologic(s), and no exclusivity "
-                    f"still running as of {as_of}. Biologic patents are not "
-                    f"published anywhere: the disputes run through the "
-                    f"confidential BPCIA exchange, so this is a gap in the "
-                    f"source rather than an absence of protection.")
+                    f"still running as of {as_of}. Biologic patents are largely "
+                    f"unpublished — the disputes run through the confidential "
+                    f"BPCIA exchange — so this is a gap in the source rather "
+                    f"than an absence of protection.")
+            if listed:
+                note += (f" FDA does record a patent list for {listed} of them, "
+                         f"so a patent position exists on the record even though "
+                         f"the patents themselves are not enumerated here.")
         else:
             note = (f"{len(products)} approved product(s), and no patent or "
                     f"exclusivity still running as of {as_of}. Generic entry is "
@@ -120,9 +125,15 @@ def protection_for(db, ticker, as_of):
     notes = [f"{' and '.join(held)}; protection runs to {max(dates)}, with the "
              f"nearest expiry {min(dates)}."]
     if biologics and not products:
-        notes.append("Protection here is regulatory exclusivity only. Biologic "
-                     "patents are not published, so the patent position is "
-                     "unknown rather than absent.")
+        listed = sum(1 for b in biologics if b.patent_list_provided)
+        note = ("Protection here is regulatory exclusivity only. Biologic "
+                "patents are largely unpublished, so the patent position is "
+                "unknown rather than absent.")
+        if listed:
+            note += (f" FDA records a patent list for {listed} of these "
+                     f"products, which is where a patent position would be "
+                     f"confirmed if it were enumerated.")
+        notes.append(note)
     if substance:
         notes.append(f"{len(substance)} composition-of-matter patent(s) still "
                      f"in force, the strongest form of claim listed here.")
