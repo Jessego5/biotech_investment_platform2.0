@@ -34,6 +34,7 @@ that Pfizer does not file one.
 import argparse
 import os
 import re
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -53,7 +54,28 @@ SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "biotech-agent you@example.com
 HEADERS = {"User-Agent": SEC_USER_AGENT}
 SUBMISSIONS = "https://data.sec.gov/submissions/CIK{cik}.json"
 ARCHIVE = "https://www.sec.gov/Archives/edgar/data/{cik}/{acc}"
-WORKERS = 6
+WORKERS = 3
+
+# SEC asks for ten requests a second or fewer, and each company costs three, so
+# a pool of workers hitting it flat out goes over. The first run did, and the
+# throttled responses were read as "this company files no exhibit": 638 of 746
+# companies came back empty, including Johnson & Johnson, whose exhibit I had
+# already read by hand.
+#
+# Two things follow. Requests are spaced globally rather than per worker, well
+# under the stated limit. And when SEC does push back it blocks the address for
+# minutes, not for one request, so the pause has to be shared too: a worker that
+# sees a 429 stands the whole pool down instead of each retrying into the same
+# wall and deepening the block.
+MIN_INTERVAL = 0.25
+COOLDOWN = 120.0
+_last_request = [0.0]
+_resume_after = [0.0]
+_throttle = threading.Lock()
+
+
+class FetchFailed(Exception):
+    """The request never completed, which is not the same as an empty answer."""
 
 # corporate forms that mark a line as naming an entity rather than describing
 # one. An Exhibit 21 is a two-column table of name and jurisdiction, and the
@@ -79,20 +101,41 @@ NOISE = re.compile(
     r"table of|item \d)", re.I)
 
 
-def _get(url, attempts=4):
+def _get(url, attempts=5):
+    """
+    GET, spaced against SEC's rate limit and raising when it never succeeded.
+
+    Returning the throttled response was the bug: a 429 has a body and a status
+    and reads as an answer at every call site, so 638 companies were recorded as
+    filing no Exhibit 21 when the truth was that we never asked successfully.
+    """
     last = None
     for attempt in range(attempts):
+        with _throttle:
+            now = time.monotonic()
+            wait = max(_resume_after[0] - now,
+                       MIN_INTERVAL - (now - _last_request[0]))
+            if wait > 0:
+                time.sleep(wait)
+            _last_request[0] = time.monotonic()
         try:
             r = requests.get(url, headers=HEADERS, timeout=45)
         except requests.exceptions.RequestException as e:
             last = e
-            time.sleep(1.2 * (attempt + 1))
-            continue
-        if r.status_code in (403, 429) and attempt < attempts - 1:
             time.sleep(1.5 * (attempt + 1))
             continue
+        if r.status_code in (403, 429) or r.status_code >= 500:
+            last = FetchFailed(f"{r.status_code} for {url}")
+            if r.status_code in (403, 429):
+                # stand the whole pool down, not just this worker
+                with _throttle:
+                    _resume_after[0] = max(_resume_after[0],
+                                           time.monotonic() + COOLDOWN)
+            else:
+                time.sleep(2.0 * (attempt + 1))
+            continue
         return r
-    raise last
+    raise FetchFailed(str(last))
 
 
 def latest_annual(cik):
@@ -163,7 +206,14 @@ def parse_subsidiaries(text):
 
 
 def for_company(company):
-    """(ticker, cik, accession, [names]) or None."""
+    """
+    (ticker, cik, accession, [names]) on success, "failed" when the check could
+    not be made, or None when the company genuinely files no readable exhibit.
+
+    The three outcomes are kept apart deliberately. Folding a failed request into
+    "no exhibit" is what made the first run look complete while missing Johnson &
+    Johnson, AbbVie, Pfizer and Merck.
+    """
     try:
         found = latest_annual(company.cik)
         if not found:
@@ -177,6 +227,8 @@ def for_company(company):
         if r.status_code != 200:
             return None
         return company.ticker, company.cik, accession, parse_subsidiaries(r.text)
+    except FetchFailed:
+        return "failed"
     except Exception:
         return None
 
@@ -195,13 +247,15 @@ def main():
         print(f"reading Exhibit 21 for {len(companies)} companies "
               f"({WORKERS} at a time)...\n")
 
-        results, done, without = [], 0, 0
+        results, done, without, failed = [], 0, 0, 0
         with ThreadPoolExecutor(max_workers=WORKERS) as pool:
             futures = [pool.submit(for_company, c) for c in companies]
             for fut in as_completed(futures):
                 done += 1
                 got = fut.result()
-                if got and got[3]:
+                if got == "failed":
+                    failed += 1
+                elif got and got[3]:
                     results.append(got)
                 else:
                     without += 1
@@ -235,6 +289,9 @@ def main():
 
         print(f"\n{len(results)} companies filed an exhibit we could read, "
               f"{without} did not")
+        if failed:
+            print(f"{failed} could not be checked at all — these say nothing "
+                  f"about the company and should be re-run")
         print(f"{written} aliases written; {len(ambiguous)} names dropped as "
               f"claimed by more than one company")
     finally:
