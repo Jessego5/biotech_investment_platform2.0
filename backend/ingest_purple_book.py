@@ -36,7 +36,7 @@ import requests
 
 from app.database import SessionLocal, init_db
 from app.models import BiologicProduct, Company
-from build_company_universe import identity, _norm
+from applicant_resolution import resolve_all
 
 DOWNLOADS = "https://purplebooksearch.fda.gov/downloads"
 USER_AGENT = os.environ.get("SEC_USER_AGENT", "biotech-agent contact@example.com")
@@ -105,23 +105,6 @@ def read_full_section(path):
             if len(r) == len(header) and r[2].strip()]
 
 
-def resolve(applicants, companies):
-    """applicant -> ticker, on an exact identity only, as the Orange Book does."""
-    by_first = {}
-    for c in companies:
-        key = _norm(c.name)
-        if key:
-            by_first.setdefault(key.split()[0], []).append(c)
-    out = {}
-    for name in applicants:
-        key = _norm(name)
-        if not key:
-            continue
-        for c in by_first.get(key.split()[0], ()):
-            if identity(c.name, name) == "exact":
-                out[name] = c.ticker
-                break
-    return out
 
 
 def main():
@@ -146,7 +129,7 @@ def main():
     db = SessionLocal()
     try:
         companies = db.query(Company).all()
-        resolved = resolve({d["Applicant"] for d in data}, companies)
+        resolved = resolve_all(db, {d["Applicant"] for d in data}, companies)
         db.query(BiologicProduct).delete()
 
         for d in data:
@@ -166,7 +149,8 @@ def main():
                     d.get("First Interchangeable Exclusivity Exp. Date")),
                 patent_list_provided=(d.get("Patent List Provided", "")
                                       .strip().upper() == "YES"),
-                company_ticker=resolved.get(d["Applicant"])))
+                company_ticker=(resolved.get(d["Applicant"]) or (None, None))[0],
+                resolved_by=(resolved.get(d["Applicant"]) or (None, None))[1]))
         db.commit()
 
         linked = {t for t in resolved.values()}

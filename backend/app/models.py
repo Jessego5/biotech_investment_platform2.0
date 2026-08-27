@@ -291,6 +291,10 @@ class ApprovedProduct(Base):
     applicant = Column(String)
     approval_date = Column(String)
     company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    # how the attribution was made: the company's own filing name, or a
+    # subsidiary it named in Exhibit 21. Worth keeping, because the second is a
+    # judgement resting on a document and the first is not.
+    resolved_by = Column(String)
     fetched_at = Column(DateTime, default=_now)
 
 
@@ -371,4 +375,38 @@ class BiologicProduct(Base):
     # more than "biologic patents are never published" allowed for.
     patent_list_provided = Column(Boolean)
     company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    # how the attribution was made: the company's own filing name, or a
+    # subsidiary it named in Exhibit 21. Worth keeping, because the second is a
+    # judgement resting on a document and the first is not.
+    resolved_by = Column(String)
+    fetched_at = Column(DateTime, default=_now)
+
+
+class Alias(Base):
+    """
+    Another name one of our companies is known by.
+
+    Corporate identity is the join every external source needs and none of them
+    supply. A company registers trials as "ModernaTX", files accounts as
+    "Moderna, Inc.", and holds approved drugs under "Janssen Pharmaceuticals" or
+    "Pharmacyclics LLC". Matching on spelling reaches some of that and cannot
+    reach the rest, because the names have nothing in common.
+
+    So the mapping is stored rather than inferred, with the source recorded
+    against each row, because the sources differ in how far they should be
+    trusted. An Exhibit 21 subsidiary is the company's own statement in a 10-K.
+    A registry spelling is a match our own rule made. Keeping them apart means a
+    bad row can be traced back to the thing that produced it.
+    """
+    __tablename__ = "aliases"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cik = Column(String, index=True)
+    company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
+    alias = Column(String)
+    # the normalised form, which is what lookups actually compare
+    alias_key = Column(String, index=True)
+    source = Column(String, index=True)      # ex21, registry, manual
+    # the filing an ex21 alias came from, so a row can be checked against it
+    accession = Column(String)
     fetched_at = Column(DateTime, default=_now)

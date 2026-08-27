@@ -33,7 +33,7 @@ import requests
 from app.database import SessionLocal, init_db
 from app.models import (ApprovedProduct, ProductPatent, ProductExclusivity,
                         Company)
-from build_company_universe import identity, MEDICAL_SIC, _norm
+from applicant_resolution import resolve_all
 
 # the Orange Book data files, published monthly
 ORANGE_BOOK = "https://www.fda.gov/media/76860/download?attachment"
@@ -82,30 +82,6 @@ def download(directory):
     print(f"  unzipped into {directory}")
 
 
-def resolve_applicants(applicants, companies):
-    """
-    applicant name -> ticker, using the trial sponsor matching rule.
-
-    Only an exact identity is accepted. A near match is a guess about which
-    company an approved drug belongs to, and attributing somebody else's
-    approved product is a worse error than leaving it unattributed.
-    """
-    by_first = {}
-    for c in companies:
-        key = _norm(c.name)
-        if key:
-            by_first.setdefault(key.split()[0], []).append(c)
-
-    resolved = {}
-    for name in applicants:
-        key = _norm(name)
-        if not key:
-            continue
-        for c in by_first.get(key.split()[0], ()):
-            if identity(c.name, name) == "exact":
-                resolved[name] = c.ticker
-                break
-    return resolved
 
 
 def main():
@@ -128,7 +104,7 @@ def main():
     try:
         companies = db.query(Company).all()
         applicants = {p["Applicant_Full_Name"] for p in files["products"]}
-        resolved = resolve_applicants(applicants, companies)
+        resolved = resolve_all(db, applicants, companies)
         print(f"{len(applicants)} distinct applicants; "
               f"{len(resolved)} resolve to a company we hold")
 
@@ -143,7 +119,8 @@ def main():
                 appl_type=p["Appl_Type"], ingredient=p["Ingredient"],
                 trade_name=p["Trade_Name"], applicant=p["Applicant_Full_Name"],
                 approval_date=_iso(p["Approval_Date"]),
-                company_ticker=resolved.get(p["Applicant_Full_Name"])))
+                company_ticker=(resolved.get(p["Applicant_Full_Name"]) or (None, None))[0],
+                resolved_by=(resolved.get(p["Applicant_Full_Name"]) or (None, None))[1]))
 
         for p in files["patent"]:
             db.add(ProductPatent(
