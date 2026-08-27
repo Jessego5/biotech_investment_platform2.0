@@ -95,6 +95,10 @@ JURISDICTION = re.compile(
 # a fragment left when a name is split across table cells
 TRUNCATED = re.compile(rf"^({FORMS})\b", re.I)
 
+# everything up to and including the LAST corporate form on the line, which
+# drops a trailing jurisdiction that was never separated from the name
+TRAILING_FORM = re.compile(rf"^(.*\b(?:{FORMS})\b\.?)", re.I)
+
 NOISE = re.compile(
     r"^(exhibit|subsidiar|name|jurisdiction|state|country|entity|list of|"
     r"the following|percent|ownership|organi[sz]ation|registrant|omitted|"
@@ -184,6 +188,13 @@ def parse_subsidiaries(text):
     """
     text = re.sub(r"<[^>]+>", "\n", text)
     text = re.sub(r"&(nbsp|#160|amp|#38);", " ", text)
+    # Splitting on newlines alone is not enough. AbbVie files its exhibit as
+    # scanned images with the text hidden behind them in white one-point type,
+    # so a whole page arrives as one run: "AbbVie Finance Corporation Delaware
+    # AbbVie Global Inc. Delaware AbbVie Holdco Inc. Delaware". The entries are
+    # separated by runs of spaces and nothing else, and a line-based reader sees
+    # one line that ends in a jurisdiction and keeps none of it.
+    text = re.sub(r"[ \t]{2,}", "\n", text)
     out = []
     for line in text.splitlines():
         line = " ".join(line.split()).strip(" .,;|")
@@ -194,7 +205,15 @@ def parse_subsidiaries(text):
         line = JURISDICTION.sub("", line).strip(" .,;|")
         if not (4 < len(line) < 120) or NOISE.match(line):
             continue
-        if not ENTITY.search(line):
+        # the jurisdiction usually trails the name with no punctuation between
+        # them, so keep everything up to and including the last corporate form.
+        # Greedy, not lazy: "Forest Laboratories Ireland Limited" must not be cut
+        # back to "Forest Laboratories" at the first form word it contains.
+        trimmed = TRAILING_FORM.match(line)
+        if not trimmed:
+            continue
+        line = trimmed.group(1).strip(" .,;|")
+        if not (4 < len(line) < 120):
             continue
         # a line that BEGINS with a corporate form is a name split across table
         # cells, not a name: "Corporation, a Delaware company" is the tail of
