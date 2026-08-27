@@ -799,6 +799,20 @@ def test_the_state_of_incorporation_is_not_part_of_the_name():
     # at all while running 26
     assert data_sources._core_name("HERON THERAPEUTICS, INC. /DE/") == "heron therapeutics"
     assert data_sources._core_name("TuHURA Biosciences, Inc./NV") == "tuhura biosciences"
+    # and EDGAR writes a space after the slash as well. Vertex is SIC 2834 with
+    # 233 studies in the registry, and was absent from the universe entirely
+    # because this spelling left the name as "vertex pharmaceuticals inc ma"
+    assert (data_sources._core_name("VERTEX PHARMACEUTICALS INC / MA")
+            == "vertex pharmaceuticals")
+
+
+def test_a_two_letter_suffix_after_a_slash_is_not_a_state():
+    # the Danish "A/S" carries one letter after the slash, so widening the rule
+    # to allow a space must not start eating it
+    # it survives as "as" rather than being deleted, which is what lets
+    # sponsor_names_for still match the registry's own "Ascendis Pharma A/S"
+    assert data_sources._core_name("Ascendis Pharma A/S") == "ascendis pharma as"
+    assert data_sources._core_name("Genmab A/S") == "genmab as"
 
 
 def test_a_hyphen_and_a_space_are_the_same_gap():

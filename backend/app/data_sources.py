@@ -100,8 +100,15 @@ _SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
 # leaving it in makes the search term "HERON THERAPEUTICS INC DE", which matches
 # nothing at all.
 # the closing slash is optional: EDGAR writes both "INC. /DE/" and "Inc./NV".
+# a space may follow the slash too, as in "VERTEX PHARMACEUTICALS INC / MA".
+# without that allowance the marker survived, "inc" stopped being the trailing
+# word so the suffix strip left it in place, and the name came out four words
+# long as "vertex pharmaceuticals inc ma". sponsor_names_for then rejected the
+# registry's own "Vertex Pharmaceuticals Incorporated" for being two words away,
+# the search fell back to asking for "VERTEX PHARMACEUTICALS INC MA", found
+# nothing, and a company with no trials is dropped from the universe outright.
 # two letters are required after the slash, so the Danish "A/S" is left alone
-_STATE_MARKER = re.compile(r"/[A-Za-z]{2}/?\s*$")
+_STATE_MARKER = re.compile(r"/\s*[A-Za-z]{2}/?\s*$")
 
 
 def _core_name(name):
