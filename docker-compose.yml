@@ -60,6 +60,11 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://biotech:biotech@db:5432/biotech
       SEC_USER_AGENT: ${SEC_USER_AGENT:-}
+      # fewer parallel fetches than the laptop default of eight. Each worker can
+      # hold a sponsor's whole response — up to a thousand studies — while it
+      # archives and parses it, and eight at once was killed by the OOM reaper at
+      # company 53 of 787 in a 3.8 GB VM that was also running Postgres.
+      INGEST_WORKERS: ${INGEST_WORKERS:-3}
       # write snapshots to the mounted volume below. without this they would go
       # to a path inside the container and be discarded when it exits, which is
       # the one thing here that cannot be rebuilt: re-running ingestion gets

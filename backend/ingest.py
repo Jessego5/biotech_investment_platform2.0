@@ -33,10 +33,18 @@ from app.raw_store import get_store, raw_key, snapshot_date
 
 COMPANIES_PATH = os.path.join(os.path.dirname(__file__), "companies.json")
 
-# how many companies to fetch at once. the DB writes still happen one at a time
+# How many companies to fetch at once. The DB writes still happen one at a time
 # on the main thread (SQLite has a single writer), only the network calls run
 # in parallel.
-WORKERS = 8
+#
+# Configurable because it is a memory setting as much as a speed one. Each
+# worker can hold a sponsor's whole response, up to a thousand studies, while it
+# archives and parses it, so eight of them at once needs several gigabytes. That
+# is fine on a laptop and is not fine in a container: the first containerised run
+# was killed by the OOM reaper at company 53 of 787, in a 3.8 GB VM that was also
+# running Postgres. A task definition sizes its own memory, so this has to be
+# something the environment can set rather than a constant.
+WORKERS = int(os.environ.get("INGEST_WORKERS", "8"))
 
 # the same overrides main.py uses. a couple of companies register trials under a
 # different name than their SEC legal name, so we search under the working name.
