@@ -34,6 +34,14 @@ RUN useradd --create-home --uid 1000 appuser
 # does when DATABASE_URL is unset. One directory, so no layer worth speaking of.
 RUN chown appuser:appuser /app
 
+# the snapshot archive, created here so the mount point exists in the image and
+# is owned by the user that writes to it. A named volume takes its ownership
+# from the image path it covers, and when that path does not exist Docker makes
+# it root-owned: every archive write then failed with "Permission denied:
+# /snapshots/raw" while ingestion carried on regardless, so a run looked healthy
+# and kept no history at all.
+RUN mkdir -p /snapshots && chown appuser:appuser /snapshots
+
 # copy with ownership already set. a chown -R afterwards would rewrite every file
 # into a second layer, roughly doubling the size the application contributes.
 COPY --chown=appuser:appuser . .
