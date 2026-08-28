@@ -69,11 +69,24 @@ el("clear").addEventListener("click", clearFilters);
 el("back").addEventListener("click", () => showBrowse());
 
 // fold or unfold the company list, the count stays visible either way
-el("toggle-list").addEventListener("click", () => {
-  const hidden = el("browse-results").classList.toggle("hidden");
+// the last result set, held so the table can be built when it is actually shown
+let LAST_ROWS = [];
+
+// Closed is the landing state. 787 rows is a wall rather than an answer, and
+// scrolling one is not how anyone finds a company — a filter or a question is.
+function setListOpen(open) {
+  const results = el("browse-results");
   const btn = el("toggle-list");
-  btn.textContent = hidden ? "Show list" : "Hide list";
-  btn.setAttribute("aria-expanded", String(!hidden));
+  results.classList.toggle("hidden", !open);
+  btn.textContent = open ? "Hide list" : `Show all`;
+  btn.setAttribute("aria-expanded", String(open));
+  results.innerHTML = "";
+  if (open) renderBrowse(LAST_ROWS);
+}
+
+el("toggle-list").addEventListener("click", () => {
+  const open = el("browse-results").classList.contains("hidden");
+  setListOpen(open);
 });
 el("lookup-btn").addEventListener("click", doLookup);
 el("ticker-box").addEventListener("keydown", (e) => { if (e.key === "Enter") doLookup(); });
@@ -276,6 +289,25 @@ async function askQuestion(preset, openWorkspace) {
   }
 }
 
+// the cover's own line, kept separate from the one inside the tool because it
+// says a different thing: the cover states what stands behind the tool, the
+// tool states what is currently in scope
+function fillCover(stats) {
+  const meta = el("cover-meta");
+  if (!meta || !stats) return;
+  const n = (v) => (v || 0).toLocaleString();
+  meta.textContent =
+    `${n(stats.companies)} companies · ${n(stats.trials)} trials · ` +
+    `${n(stats.filings)} annual reports · ${n(stats.registry_trials)} registry studies`;
+}
+
+const coverGo = el("cover-go");
+if (coverGo) {
+  coverGo.addEventListener("click", () =>
+    el("tool").scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+
 // Dark mode. Remembered, because a reader who chose it once did not choose it
 // for one page. The neutrals stay warm in both and the phase ramp keeps its
 // order, so a chart means the same thing either way.
@@ -427,6 +459,7 @@ async function loadSectors() {
     // become a claim the data no longer supports
     let stats = null;
     try { stats = await (await fetch(API + "/stats")).json(); } catch (e) { /* banner falls back */ }
+    fillCover(stats);
     const banner = el("stat-banner");
     if (banner) {
       const n = (v) => (v || 0).toLocaleString();
@@ -478,6 +511,13 @@ async function loadSectors() {
   }
 }
 
+function anyFilterSet() {
+  return ["f-minrd", "f-mincash", "f-minactive", "f-minrunway"]
+           .some((id) => (el(id).value || "").trim() !== "")
+         || el("f-sector").value !== "" || el("f-phase3").checked;
+}
+
+
 async function runFilters() {
   showBrowse();
   // the R&D and cash inputs are in $M for convenience, but the API wants raw dollars
@@ -501,7 +541,14 @@ async function runFilters() {
     const data = await (await fetch(API + "/companies?" + params.toString())).json();
     const of = TOTAL ? ` <span class="muted-cell">of ${TOTAL}</span>` : "";
     browseCount.innerHTML = `<strong>${data.count}</strong> companies${of}`;
-    renderBrowse(data.companies);
+    // Held rather than rendered. Hiding 787 rows still builds 787 rows, which
+    // is most of the work for none of the benefit — and it is not really
+    // declining to list them, only declining to show the list.
+    LAST_ROWS = data.companies;
+    const btn = el("toggle-list");
+    // a filter is a request to see the result, so the list opens itself once it
+    // has been narrowed to something worth reading. Unfiltered it stays closed.
+    setListOpen(anyFilterSet());
   } catch (e) {
     browseCount.textContent = "Couldn't reach the backend at " + API + ". Is it running?";
     browseResults.innerHTML = "";

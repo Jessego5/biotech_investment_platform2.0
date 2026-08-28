@@ -33,7 +33,26 @@
             aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
   </header>
 
-  <main>
+  <!-- The cover. The reference opens on a title page rather than dropping the
+       reader into the instrument, and it earns its space here for the same
+       reason: what this is and what stands behind it are the two things a
+       reader needs before any number means anything. -->
+  <section class="cover" id="cover">
+    <div class="cover-rule"></div>
+    <p class="cover-eyebrow">Grounded research tool · v2</p>
+    <h1 class="cover-title">Biotech research<br>platform</h1>
+    <p class="cover-lede">
+      Question answering over SEC filings, clinical trial records and FDA
+      approval and patent data. Every figure traces to a primary source, and an
+      absence is reported rather than filled.
+    </p>
+    <p class="cover-meta" id="cover-meta">Loading the universe…</p>
+    <button type="button" class="cover-go" id="cover-go">
+      Open the tool <i class="ti ti-arrow-down" aria-hidden="true"></i>
+    </button>
+  </section>
+
+  <main id="tool">
     <!-- what the database holds, as a line rather than a banner -->
     <p class="scope-line" id="stat-banner">Loading the universe…</p>
     <!-- somewhere to start. A reviewer landing cold has a filter bar and no
@@ -127,12 +146,12 @@
       <div class="browse-head">
         <div class="browse-head-left">
           <p id="browse-count" class="count" aria-live="polite">Loading the universe…</p>
-          <button type="button" id="toggle-list" class="ghost small" aria-expanded="true"
-                  aria-controls="browse-results">Hide list</button>
+          <button type="button" id="toggle-list" class="ghost small" aria-expanded="false"
+                  aria-controls="browse-results">Show all</button>
         </div>
         <p class="table-source">Pipeline &amp; financials per company. Click a row for the full analysis.</p>
       </div>
-      <div id="browse-results" class="table-scroll"></div>
+      <div id="browse-results" class="table-scroll hidden"></div>
 
       <p class="lookup">
         Not in the list? Analyze any ticker live:
