@@ -578,3 +578,25 @@ td.nct a:hover { text-decoration: underline; }
 
 /* numbers, ids and dates read as data, not prose */
 .num, .mn, .protect-dates strong, .kpi .v { font-variant-numeric: tabular-nums; }
+
+/* A blank cell means two different things and used to render as one.
+   "generates cash" is a finding — operations threw off cash, so there is no
+   burn to divide into. "no data" is a gap in what we hold. 175 companies are
+   the first and 21 are the second, and both read "n/a" before this: AbbVie,
+   with $61B of revenue, looked identical to a filer nothing could be parsed
+   from. A finding is stated plainly; a gap is muted and italic. */
+.cell-na {
+  color: var(--ink-2);
+  font-size: 11px;
+  cursor: help;
+  /* wrapping made these rows a line taller than their neighbours, which reads
+     as though something is wrong with them */
+  white-space: nowrap;
+  border-bottom: 1px dotted var(--line-hi, var(--line));
+}
+.cell-missing {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 11px;
+  cursor: help;
+}

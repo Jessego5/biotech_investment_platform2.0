@@ -338,8 +338,8 @@ function renderBrowse(companies) {
       <td>${c.has_phase3 ? '<span class="pill">Phase 3+</span>' : '<span class="pill none">early/mid</span>'}</td>
       <td class="num">${c.total_trials}</td>
       <td class="num">${c.active_trials}</td>
-      <td class="num">${money(c.rd_expense)}</td>
-      <td class="num">${money(c.cash)}</td>
+      <td class="num">${cell(money(c.rd_expense))}</td>
+      <td class="num">${cell(money(c.cash))}</td>
       <td class="num">${runwayCell(c)}</td>
     </tr>`).join("");
   browseResults.innerHTML = `
@@ -617,8 +617,21 @@ function period(entry) {
 
 // runway as the API computed it. the title says which burn figure it divided by,
 // because R&D expense is the weaker fallback and the two shouldn't look alike.
+//
+// A missing runway means two opposite things and used to render as one. 196
+// companies have none: 175 because operations generate cash, which is a
+// strength, and 21 because no financials could be parsed at all, which is a gap
+// in what we hold. AbbVie and Aurora Cannabis both read "n/a", so a profitable
+// company with $61B of revenue looked identical to one we know nothing about.
 function runwayCell(c) {
-  if (c.runway === null || c.runway === undefined) return "n/a";
+  if (c.runway === null || c.runway === undefined) {
+    // the burn figure exists and no runway was derived from it, which is what
+    // happens when operations throw off cash rather than consume it
+    if (c.burn_source) {
+      return `<span class="cell-na" title="Operations generated cash over the last full year, so there is no burn to divide into. Not a missing figure.">generates cash</span>`;
+    }
+    return `<span class="cell-missing" title="No financials could be parsed for this filer.">no data</span>`;
+  }
   const src = c.burn_source || "burn";
   const weak = src === "R&D expense" ? " *" : "";
   return `<span title="liquidity ÷ ${escapeHtml(src)}">${c.runway.toFixed(1)}y${weak}</span>`;
@@ -749,7 +762,20 @@ function numVal(id) {
   return v === "" ? null : Number(v);
 }
 
+// A table has to put something in every cell, where the detail card can leave a
+// figure out entirely. So absence is decorated here rather than inside money(),
+// and it is decorated as a gap in what we hold rather than as a small number.
+function cell(v) {
+  return v === "n/a"
+    ? '<span class="cell-missing" title="Not reported in the filings we hold.">no data</span>'
+    : v;
+}
+
+
 function money(entry) {
+  // the plain sentinel matters: figure() drops a figure that reads "n/a"
+  // instead of listing what the company never reported, so this must stay a
+  // value that can be compared and not markup
   if (!entry) return "n/a";
   const m = entry.value / 1e6;
   if (m >= 1000) return "$" + (m / 1000).toFixed(1) + "B";
