@@ -265,6 +265,11 @@ class RegistryTrial(Base):
     completion_date_type = Column(String)
     enrollment = Column(Integer)
     enrollment_type = Column(String)
+    # Which company in our universe sponsors this, when one does. Most of the
+    # registry is run by companies we do not track and stays null: the point is
+    # to answer "who else is developing for this indication" against companies
+    # we hold figures for, not to force every sponsor into the universe.
+    company_ticker = Column(String, ForeignKey("companies.ticker"), index=True)
     fetched_at = Column(DateTime, default=_now)
 
 
