@@ -949,3 +949,18 @@ html { scroll-behavior: smooth; }
   .tool-shell { grid-template-columns: 1fr; gap: 10px; }
   .tool-rail { flex-direction: row; overflow-x: auto; }
 }
+
+/* following a company: a ticker, not a holding */
+.watch-btn {
+  background: none; border: 1px solid var(--line-hi); border-radius: 20px;
+  color: var(--ink-2); font: inherit; font-size: 12px; padding: 4px 12px; cursor: pointer;
+}
+.watch-btn:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-tint); }
+.watch-btn.on { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-tint); }
+.watch-empty { font-size: 13px; line-height: 1.7; color: var(--ink-2); max-width: 64ch; }
+.unwatch {
+  background: none; border: 0; padding: 0; font: inherit; font-size: 11px;
+  color: var(--muted); cursor: pointer;
+}
+.unwatch:hover { color: var(--warn); background: none; }
+#watch-body td strong { font-weight: 500; font-family: var(--mono); font-size: 12px; }

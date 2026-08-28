@@ -43,6 +43,13 @@ window.addEventListener("DOMContentLoaded", () => {
   // company page is. It is also the only way to drive the chat from outside the
   // browser, which is how this surface gets checked.
   const params = new URLSearchParams(location.search);
+  // ?pane=watchlist opens a pane directly, so a section is linkable the way a
+  // company page is
+  const pane = params.get("pane");
+  if (pane && document.getElementById("pane-" + pane)) {
+    showPane(pane);
+    el("tool").scrollIntoView({ block: "start" });
+  }
   const asked = params.get("ask");
   // ?ws=1 lands the answer in the dense register rather than the conversational
   // one, so a workspace view is as shareable as a company page
@@ -69,6 +76,84 @@ el("clear").addEventListener("click", clearFilters);
 el("back").addEventListener("click", () => showBrowse());
 
 // fold or unfold the company list, the count stays visible either way
+// - WATCHLIST
+//
+// Held in the browser. There is no user concept in this app, so a server-side
+// watchlist would be one global list shared by everyone who opened the page.
+// It also keeps positions and prices out: what is watched is a ticker, not a
+// holding, so nothing here is a number that did not come from a filing.
+const WATCH_KEY = "bii-watchlist";
+
+function watchList() {
+  try { return JSON.parse(localStorage.getItem(WATCH_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+
+function isWatched(ticker) { return watchList().includes(ticker); }
+
+function toggleWatch(ticker) {
+  const list = watchList();
+  const next = list.includes(ticker)
+    ? list.filter((t) => t !== ticker)
+    : list.concat([ticker]);
+  try { localStorage.setItem(WATCH_KEY, JSON.stringify(next)); }
+  catch (e) { /* private window: the button still works for this page view */ }
+  return next.includes(ticker);
+}
+
+async function renderWatchlist() {
+  const body = el("watch-body");
+  const list = watchList();
+  if (!list.length) {
+    body.innerHTML = `<p class="watch-empty">Nothing watched yet. Open a company and
+      use <strong>Watch</strong> to follow it.<br><span class="muted-cell">A watchlist here is
+      tickers, not holdings: the next readout, the nearest loss of protection, and how long
+      the money lasts. No prices and no positions — those would be the first figures in this
+      tool that did not come from a filing.</span></p>`;
+    return;
+  }
+  body.innerHTML = `<p class="muted-cell">Loading ${list.length} watched…</p>`;
+  try {
+    const data = await (await fetch(API + "/watchlist?tickers=" + list.join(","))).json();
+    const rows = (data.companies || []).map((c) => {
+      const r = c.next_readout;
+      const readout = r
+        ? `<strong>${escapeHtml(r.completion_date)}</strong> · ${escapeHtml(r.phase || "")} · ${escapeHtml((r.conditions || "").split(";")[0] || "")}`
+        : `<span class="cell-missing">no readout expected</span>`;
+      const cliff = c.next_expiry
+        ? `<strong>${escapeHtml(c.next_expiry)}</strong>`
+        : `<span class="cell-missing">${escapeHtml(c.protection_state)}</span>`;
+      const runway = c.runway != null ? `${c.runway.toFixed(1)}y`
+        : (c.burn_source ? `<span class="cell-na">generates cash</span>`
+                         : `<span class="cell-missing">no data</span>`);
+      return `<tr data-ticker="${escapeHtml(c.ticker)}">
+        <td class="tk">${escapeHtml(c.ticker)}</td>
+        <td>${escapeHtml(c.name)}</td>
+        <td>${readout}</td>
+        <td>${cliff}</td>
+        <td class="num">${runway}</td>
+        <td><button type="button" class="unwatch" data-ticker="${escapeHtml(c.ticker)}">remove</button></td>
+      </tr>`;
+    }).join("");
+    body.innerHTML = `<p class="table-source">What each of these is watched for: the next
+      expected readout, the nearest loss of protection, and how long the money lasts.</p>
+      <div class="table-scroll"><table>
+      <thead><tr><th>Ticker</th><th>Name</th><th>Next readout</th><th>Protection until</th>
+        <th class="num">Runway</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+    body.querySelectorAll("tbody tr").forEach((tr) =>
+      tr.addEventListener("click", (e) => {
+        if (e.target.classList.contains("unwatch")) return;
+        showDetail(tr.dataset.ticker);
+      }));
+    body.querySelectorAll(".unwatch").forEach((b) =>
+      b.addEventListener("click", () => { toggleWatch(b.dataset.ticker); renderWatchlist(); }));
+  } catch (e) {
+    body.innerHTML = `<p class="watch-empty">Couldn't reach the backend at ${escapeHtml(API || location.origin)}.</p>`;
+  }
+}
+
+
 // the last result set, held so the table is built when the pane is opened
 let LAST_ROWS = [];
 
@@ -83,6 +168,7 @@ function showPane(name) {
   // built on open rather than held hidden: rendering 787 rows nobody asked for
   // is most of the work for none of the benefit
   if (name === "companies") renderBrowse(LAST_ROWS);
+  if (name === "watchlist") renderWatchlist();
 }
 
 document.querySelectorAll(".tool-rail button").forEach((b) =>
@@ -727,12 +813,21 @@ function renderDetail(data) {
   detailResults.innerHTML = "";
 
   // build the header card
-  detailResults.appendChild(card(`
+  const header = card(`
     <div class="detail-header">
       <h2>${escapeHtml(data.name)} <span class="ticker">${data.ticker}</span></h2>
+      <button type="button" class="watch-btn" id="watch-btn"></button>
     </div>
     <p class="meta">Grounded analysis · served from ${escapeHtml(data.source)}</p>
-  `));
+  `);
+  detailResults.appendChild(header);
+  const wb = header.querySelector("#watch-btn");
+  const paint = (on) => {
+    wb.textContent = on ? "★ Watching" : "☆ Watch";
+    wb.classList.toggle("on", on);
+  };
+  paint(isWatched(data.ticker));
+  wb.addEventListener("click", () => paint(toggleWatch(data.ticker)));
 
   // AI narrative, framed as a summary of the verified data and not an oracle
   if (data.narrative && data.narrative.text) {

@@ -101,6 +101,53 @@ def root():
             "hint": "run `python ingest.py` to populate the DB" if count == 0 else None}
 
 
+@app.get("/watchlist")
+def watchlist(tickers: str = ""):
+    """
+    A compact row per watched company: the things that actually change.
+
+    Deliberately not stored here. There is no user concept in this app, so a
+    server-side watchlist would be one global list shared by everyone who opened
+    the page. It lives in the browser, and this endpoint only answers for the
+    tickers it is handed.
+
+    What it returns is what a watcher is watching FOR: the next readout, the
+    nearest loss of protection, and how long the money lasts. Not a price, and
+    not a position — those would be the first figures here that are neither
+    computed from a filing nor traceable to one.
+    """
+    wanted = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+    if not wanted:
+        return {"companies": []}
+
+    db = SessionLocal()
+    try:
+        today = datetime.date.today().isoformat()
+        rows = []
+        for c in db.query(Company).filter(Company.ticker.in_(wanted[:50])).all():
+            readouts = upcoming_readouts(db, today, ticker=c.ticker, limit=1)
+            protection = protection_for(db, c.ticker, today)
+            fins = financials_from_db(c)
+            derived = derived_figures(fins)
+            rows.append({
+                "ticker": c.ticker,
+                "name": c.name,
+                "sector": c.sector,
+                "next_readout": readouts[0] if readouts else None,
+                "protection_state": protection["state"],
+                "next_expiry": protection.get("next_expiry"),
+                "runway": derived.get("runway"),
+                "burn_source": derived.get("burn_source"),
+            })
+        # returned in the order asked for, so the page does not reorder a list
+        # the reader arranged
+        order = {t: i for i, t in enumerate(wanted)}
+        rows.sort(key=lambda r: order.get(r["ticker"], 999))
+        return {"companies": rows}
+    finally:
+        db.close()
+
+
 @app.get("/stats")
 def stats():
     """
