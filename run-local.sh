@@ -68,7 +68,23 @@ if lsof -nP -iTCP:"$FRONTEND_PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "something is already serving port $FRONTEND_PORT; leaving it alone"
 else
   echo "serving the frontend..."
-  ( cd frontend && python3 devserve.py >/dev/null 2>&1 & echo $! > "../$PIDFILE" )
+  # fully detached: stdin closed and both streams redirected. A background job
+  # that keeps the script's stdout open holds the pipe open too, so anything
+  # reading this script's output — a terminal pipeline, a CI step — waits
+  # forever on a server that has already started fine.
+  #
+  # Backgrounded from here rather than inside a subshell: $! inside one refers to
+  # the subshell's own last job, so the pid file came out empty and `stop` could
+  # not stop the thing this had just started.
+  ( cd frontend && exec nohup python3 devserve.py >/dev/null 2>&1 </dev/null ) &
+  echo $! > "$PIDFILE"
+  # and wait for it to actually accept a connection. Returning before it binds
+  # leaves the URL printed below dead for a second or two, which reads as a
+  # broken app rather than a slow start.
+  for _ in $(seq 1 25); do
+    curl -sf -o /dev/null "http://127.0.0.1:$FRONTEND_PORT/index.html" && break
+    sleep 0.2
+  done
 fi
 
 STATS=$(curl -s --max-time 5 "http://localhost:$API_PORT/stats" || true)
