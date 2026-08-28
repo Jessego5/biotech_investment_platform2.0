@@ -14,7 +14,7 @@ import os
 import re
 
 from .models import Company
-from .exclusivity import protection_for
+from .exclusivity import protection_for, soonest_cliffs
 from .retrieval import query_companies, company_facts, upcoming_readouts
 from .semantic import semantic_search, search_filings
 
@@ -97,6 +97,13 @@ TOOLS = [
                        "whether it has any. Answers patents, exclusivity, patent cliffs.",
         "parameters": {"type": "object", "properties": {
             "company": {"type": "string"}}, "required": ["company"]}}},
+    {"type": "function", "function": {
+        "name": "soonest_patent_cliffs",
+        "description": "Companies whose approved products lose protection soonest, "
+                       "ranked. Use for 'which company has the nearest patent "
+                       "cliff' and any comparison of expiry across companies.",
+        "parameters": {"type": "object", "properties": {
+            "limit": {"type": "integer"}}}}},
     {"type": "function", "function": {
         "name": "upcoming_readouts",
         "description": "Trials with a readout still ahead of them, soonest first. "
@@ -303,6 +310,20 @@ def _run_tool(name, args, db, as_of):
             lines.append(f"  - nearest expiry {r['next_expiry']}, "
                          f"furthest {r['last_expiry']}")
         return "\n".join(lines), [ticker]
+
+    if name == "soonest_patent_cliffs":
+        rows = soonest_cliffs(db, as_of, limit=args.get("limit") or 10)
+        if not rows:
+            return "No company in the database has an approved product with "\
+                   "protection still running.", []
+        lines = ["Companies closest to losing protection on an approved product:",
+                 "", "Only companies with something approved appear: a company "
+                 "with nothing approved has no cliff.", ""]
+        for r in rows:
+            lines.append(f"{r['ticker']}: {r['name']} | nearest expiry "
+                         f"{r['next_expiry']} | protection runs to "
+                         f"{r['last_expiry']} | {r['patents']} patents in force")
+        return "\n".join(lines), [r["ticker"] for r in rows]
 
     if name == "upcoming_readouts":
         ticker = _resolve_company(args.get("company"), db) if args.get("company") else None

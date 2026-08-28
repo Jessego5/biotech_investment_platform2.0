@@ -164,3 +164,35 @@ def protection_for(db, ticker, as_of):
         "last_expiry": max(dates),
         "composition_of_matter": len(substance),
     }
+
+
+def soonest_cliffs(db, as_of, limit=10):
+    """
+    Companies whose approved products lose protection soonest.
+
+    protection_for answers for one company, which cannot answer "who is closest
+    to a cliff" — a question the data fully supports and which was reachable
+    only by asking about every company in turn. This ranks them in one query.
+
+    Only companies with something approved appear, which is the point rather
+    than a limitation: a company with nothing approved has no cliff, and putting
+    it at the far end of a ranking would invent a protection it does not have.
+    """
+    from sqlalchemy import func
+    from .models import Company
+
+    rows = (db.query(ApprovedProduct.company_ticker,
+                     Company.name,
+                     func.min(ProductPatent.expire_date).label("cliff"),
+                     func.max(ProductPatent.expire_date).label("reach"),
+                     func.count(func.distinct(ProductPatent.patent_no)).label("patents"))
+              .join(ProductPatent, ProductPatent.appl_no == ApprovedProduct.appl_no)
+              .join(Company, Company.ticker == ApprovedProduct.company_ticker)
+              .filter(ApprovedProduct.company_ticker.isnot(None),
+                      ProductPatent.delisted.isnot(True),
+                      ProductPatent.expire_date > as_of)
+              .group_by(ApprovedProduct.company_ticker, Company.name)
+              .order_by("cliff")
+              .limit(limit).all())
+    return [{"ticker": t, "name": n, "next_expiry": c, "last_expiry": r,
+             "patents": p} for t, n, c, r, p in rows]
