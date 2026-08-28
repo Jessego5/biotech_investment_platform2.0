@@ -9,7 +9,8 @@ and two of those are not tickers at all. Resolution happens here instead, agains
 the companies actually held. Run them with pytest.
 """
 
-from app.chat import _resolve_company, _sector_labels, _run_tool, TOOLS
+from app.chat import (_resolve_company, _sector_labels, _run_tool, TOOLS,
+                      strip_invalid_citations)
 
 from conftest import add_company
 
@@ -128,3 +129,20 @@ def test_there_is_no_tool_that_runs_arbitrary_queries(db):
     names = {t["function"]["name"] for t in TOOLS}
     for banned in ("sql", "query", "run_sql", "execute", "raw_query"):
         assert banned not in names
+
+
+def test_a_citation_the_model_invented_is_removed():
+    # the whole point of a marker here is that it can be followed. One pointing
+    # at a block that does not exist is worse than no marker: it looks like
+    # provenance and leads nowhere
+    assert strip_invalid_citations("Cash is $6.6B [1] and runway is n/a [4].", 2) \
+        == "Cash is $6.6B [1] and runway is n/a."
+
+
+def test_valid_citations_survive():
+    assert strip_invalid_citations("A [1] and B [2].", 2) == "A [1] and B [2]."
+
+
+def test_an_answer_with_no_evidence_keeps_no_citations():
+    assert strip_invalid_citations("I don't have data on that [1].", 0) \
+        == "I don't have data on that."

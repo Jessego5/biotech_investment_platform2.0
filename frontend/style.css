@@ -867,3 +867,19 @@ body { background: var(--plane); font-size: 13px; }
 }
 .ask .chat-form { padding: 14px 18px; border-top: 1px solid var(--line); margin: 0; }
 .ask .chat-answer { padding: 4px 22px 18px; }
+
+/* a citation marker: followable, and coloured as a source-backed thing rather
+   than as teal, which is reserved for chrome */
+.cite {
+  background: var(--cite-bg); color: var(--cite-fg);
+  font: 10px var(--mono); padding: 1px 4px; margin: 0 1px;
+  border: 0; border-radius: 3px; cursor: pointer; vertical-align: 1px;
+}
+.cite:hover { background: var(--cite-fg); color: var(--cite-bg); }
+.ws-ev.lit { background: var(--cite-bg); }
+.ws-icon { color: var(--accent); font-size: 14px; }
+.ws-rail i { font-size: 13px; vertical-align: -2px; margin-right: 5px; }
+.ws-acts i { font-size: 13px; vertical-align: -2px; margin-right: 4px; }
+.ask-mark i { font-size: 12px; }
+/* removed text in a diff, and anything adverse */
+.ws-ev .b .gone { color: var(--warn); text-decoration: line-through; }

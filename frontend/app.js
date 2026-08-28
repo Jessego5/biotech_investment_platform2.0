@@ -329,13 +329,27 @@ function showWorkspace(data) {
   const grounded = (data.retrieved || "").trim().length > 0;
   const ans = el("ws-answer");
   ans.className = grounded ? "ws-answer" : "ws-answer miss";
-  ans.textContent = data.answer || "";
+  // citation markers, rendered as chips that scroll the evidence pane to the
+  // block they name. The backend has already removed any pointing at a block
+  // that does not exist, because a marker that leads nowhere looks like
+  // provenance and is worse than none.
+  ans.innerHTML = escapeHtml(data.answer || "").replace(
+    /\[(\d+)\]/g,
+    (_, n) => `<button type="button" class="cite" data-cite="${n}">${n}</button>`);
+  ans.querySelectorAll(".cite").forEach((c) =>
+    c.addEventListener("click", () => {
+      const block = document.querySelector(`.ws-ev[data-n="${c.dataset.cite}"]`);
+      if (!block) return;
+      block.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      block.classList.add("lit");
+      setTimeout(() => block.classList.remove("lit"), 1400);
+    }));
 
   const acts = el("ws-acts");
   acts.innerHTML = "";
   const back = document.createElement("button");
   back.type = "button";
-  back.textContent = "Back to the conversational view";
+  back.innerHTML = '<i class="ti ti-messages" aria-hidden="true"></i>Back to the conversational view';
   back.addEventListener("click", () => { showBrowse(); });
   acts.appendChild(back);
 
@@ -366,6 +380,7 @@ function showWorkspace(data) {
   ev.forEach((e) => {
     const block = document.createElement("div");
     block.className = "ws-ev";
+    block.dataset.n = e.n;
     block.innerHTML =
       `<div class="m"><span class="n">${e.n}</span>` +
       `<span>${escapeHtml(e.label)}</span>` +

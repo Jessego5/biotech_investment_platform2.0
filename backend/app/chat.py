@@ -26,7 +26,10 @@ ANSWER_SYSTEM = (
     "You answer a question using ONLY the retrieved rows given to you. STRICT "
     "RULES: use only that data, never add outside knowledge, never invent numbers, "
     "never give buy/sell advice or predictions. If the rows do not answer the "
-    "question, say you don't have data on that. Be concise and factual."
+    "question, say you don't have data on that. Be concise and factual.\n\n"
+    "The rows are given in numbered blocks. Cite the block a fact came from with "
+    "a bracketed number directly after it, like [1] or [2]. Cite only block "
+    "numbers that exist. A sentence that rests on two blocks carries both."
 )
 
 # canned reply for greetings and "what can you do", friendlier than a refusal
@@ -364,6 +367,24 @@ def _run_tool(name, args, db, as_of):
     return "", []
 
 
+# a bracketed citation the model wrote, with any space in front of it, so
+# removing an invalid one does not leave "closed ." behind
+_CITATION = re.compile(r"[ ]?\[(\d+)\]")
+
+
+def strip_invalid_citations(answer, count):
+    """
+    Remove citations pointing at blocks that do not exist.
+
+    The model is asked to cite the numbered blocks it was given, and mostly
+    does. When it invents one — [4] against three blocks — the marker would
+    render as a link to nothing, which is worse than no marker at all: the whole
+    point of a citation here is that it can be followed.
+    """
+    return _CITATION.sub(
+        lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
+
+
 def _answer(question, facts_text):
     # build the prompt, handing the model only the retrieved rows to work from
     prompt = (
@@ -464,8 +485,11 @@ def answer_question(question, db, as_of=None):
         return {"answer": f"Sorry, I couldn't process that question ({e}).",
                 "sources": []}
 
-    facts_text = "\n\n".join(facts)
-    answer = _answer(question, facts_text)
+    # numbered in the prompt, so a citation refers to something the reader can
+    # also see: the evidence pane shows these same blocks under these numbers
+    facts_text = "\n\n".join(
+        f"[{e['n']}] {e['label']} ({e['source']})\n{e['text']}" for e in evidence)
+    answer = strip_invalid_citations(_answer(question, facts_text), len(evidence))
     # "retrieved" is the exact text the answer was allowed to use. the eval
     # suite checks every claim in the answer against it (groundedness).
     return {"answer": answer, "sources": list(dict.fromkeys(sources)),

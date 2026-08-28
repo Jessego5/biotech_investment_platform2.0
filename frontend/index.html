@@ -7,6 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- the icon set the reference specifies. Icons appear only on clickable
+       things and on the rail, never as decoration. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -97,7 +100,7 @@
            the shift in density is what tells you which surface you are on. -->
       <section class="ask" aria-label="Ask the data">
         <div class="ask-bar">
-          <span class="ask-mark" aria-hidden="true">◧</span>
+          <span class="ask-mark" aria-hidden="true"><i class="ti ti-dna-2"></i></span>
           <span class="ask-name">Ask</span>
           <span class="ask-sub" id="ask-thread">New thread</span>
           <button type="button" class="ask-open" id="ask-open" hidden>Open in workspace →</button>
@@ -147,15 +150,16 @@
       <button type="button" id="ws-back" class="ghost back">&larr; Back to browse</button>
       <div class="ws-frame">
         <div class="ws-bar">
+          <i class="ti ti-dna-2 ws-icon" aria-hidden="true"></i>
           <span class="ws-title" id="ws-question">—</span>
           <span class="ws-date" id="ws-date"></span>
         </div>
         <div class="ws-cols">
           <nav class="ws-rail" aria-label="Workspace sections">
-            <div class="on"><span>Answer</span></div>
-            <div data-ws-nav="trials"><span>Trials</span></div>
-            <div data-ws-nav="filings"><span>Filings</span></div>
-            <div class="off" title="Detection is built; it needs a second snapshot to diff against."><span>Alerts</span></div>
+            <div class="on"><i class="ti ti-messages" aria-hidden="true"></i><span>Answer</span></div>
+            <div data-ws-nav="trials"><i class="ti ti-flask" aria-hidden="true"></i><span>Trials</span></div>
+            <div data-ws-nav="filings"><i class="ti ti-file-text" aria-hidden="true"></i><span>Filings</span></div>
+            <div class="off" title="Detection is built; it needs a second snapshot to diff against."><i class="ti ti-bell" aria-hidden="true"></i><span>Alerts</span></div>
           </nav>
           <div class="ws-mid">
             <div class="ws-envelope" id="ws-envelope"></div>
