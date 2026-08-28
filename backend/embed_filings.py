@@ -14,6 +14,7 @@ It resumes: a company whose filing is already stored is skipped, so an
 interrupted run picks up where it left off and costs nothing to re-run.
 """
 
+import argparse
 import os
 import sys
 import time
@@ -62,7 +63,21 @@ def embed(client, texts):
 
 
 def store_filing(db, company, meta, text, sections):
-    """Write the filing record and its chunks. Returns the chunk rows to embed."""
+    """
+    Write the filing record and its chunks. Returns the chunk rows to embed.
+
+    Replaces whatever this company already had, so a refresh run swaps one
+    company at a time and the table is never missing a filing it used to hold.
+    """
+    old = db.query(Filing).filter(Filing.company_ticker == company.ticker).all()
+    if old:
+        ids = [f.id for f in old]
+        db.query(FilingChunk).filter(FilingChunk.filing_id.in_(ids)).delete(
+            synchronize_session=False)
+        db.query(Filing).filter(Filing.id.in_(ids)).delete(
+            synchronize_session=False)
+        db.flush()
+
     filing = Filing(
         company_ticker=company.ticker, form=meta["form"], filed=meta["filed"],
         accession=meta["accession"], document=meta["document"],
@@ -87,13 +102,26 @@ def store_filing(db, company, meta, text, sections):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--refresh", action="store_true",
+                    help="re-read every filing, replacing what is stored")
+    args = ap.parse_args()
+
     init_db()
     db = SessionLocal()
 
     # already done, so a re-run costs nothing
     done = {t for (t,) in db.query(Filing.company_ticker).all()}
+    # --refresh re-reads everything. Needed when the sections themselves change:
+    # the intellectual property section was added after most filings had been
+    # chunked, so 29 of 776 have it and the rest were read before it existed.
+    #
+    # Replacement happens per company, inside the loop, rather than by emptying
+    # the tables first. A wipe would leave the chat with no filing text at all
+    # for however long the run takes, and would lose everything if the run died
+    # halfway — which is exactly what happened to the first alias crawl.
     companies = [c for c in db.query(Company).order_by(Company.ticker).all()
-                 if c.ticker not in done and c.cik]
+                 if c.cik and (args.refresh or c.ticker not in done)]
     if not companies:
         print("Every company already has a filing stored. Nothing to do.")
         db.close()
