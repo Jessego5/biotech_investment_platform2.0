@@ -7,27 +7,66 @@
 */
 
 :root {
-  /* PMC / PubMed Central academic look: light, clean sans, visible borders,
-     a solid header banner. teal/green used instead of blue. */
-  --plane: #eef1f2;          
-  --surface: #ffffff;       
-  --ink: #1a1c1e;            
-  --ink-2: #45525a;          
-  --muted: #6c767c;          
-  --line: #ccd4d8;           
-  --accent: #0e7c78;        
-  --accent-ink: #0a5c59;     
-  --band: #0c5f5b;           /* solid header banner (PMCstyle colored bar) */
-  --band-line: #0a4643;
+  /* The palette is warm rather than cool: bone and stone instead of blue-grey,
+     which is what stops a dense table of numbers reading as a spreadsheet.
+     Teal is the one hue, and it never decorates — if colour appears it means
+     something. */
+  --plane: #f2f1ed;
+  --surface: #ffffff;
+  --surf-2: #fafaf9;
+  --ink: #1a1a18;
+  --ink-2: #5f5e5a;
+  --muted: #8a8983;
+  --line: #e3e2de;
+  --line-hi: #c9c8c3;
+  --accent: #1d9e75;
+  --accent-ink: #0f6e56;
+  --accent-deep: #085041;
+  --accent-tint: #e1f5ee;
+  --band: #0f6e56;
+  --band-line: #085041;
 
-  --p1: #63bdba;
-  --p2: #2f9d98;
-  --p3: #14807b;
-  --p4: #0a5f5b;
-  --p-na: #b9c2c5;
+  /* the phase ramp: the one place a gradient of colour is legitimate, because
+     the variable underneath it is genuinely ordinal */
+  --p1: #9fe1cb;
+  --p2: #5dcaa5;
+  --p3: #1d9e75;
+  --p4: #0f6e56;
+  --p-na: #d3d1c7;
 
-  --good: #0a6b2e;
-  --warn: #9a4a10;
+  /* a figure that traces to a source, and one that reports something adverse */
+  --cite-bg: #faeeda;
+  --cite-fg: #854f0b;
+  --good: #0f6e56;
+  --warn: #a32d2d;
+
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+/* Dark is a real mode rather than an inversion: the neutrals stay warm, the
+   teal lightens so it still reads on a dark ground, and the phase ramp keeps
+   its order. */
+html[data-mode="dark"] {
+  --plane: #0e1013;
+  --surface: #1a1d22;
+  --surf-2: #14161a;
+  --ink: #e6e6e2;
+  --ink-2: #9c9b95;
+  --muted: #75746f;
+  --line: #2a2e35;
+  --line-hi: #3e434b;
+  --accent: #1d9e75;
+  --accent-ink: #5dcaa5;
+  --accent-deep: #9fe1cb;
+  --accent-tint: #12352c;
+  --band: #12352c;
+  --band-line: #0a2620;
+  --p-na: #3a3e44;
+  --cite-bg: #3e3115;
+  --cite-fg: #f0c67a;
+  --good: #5dcaa5;
+  --warn: #e88a8a;
 }
 
 * { box-sizing: border-box; }
@@ -224,20 +263,26 @@ button.ghost.small { padding: 4px 10px; font-size: 13px; }
 
 /* - tables */
 .table-scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+/* The dense register. Rows are for scanning, so they are tighter than the rest
+   of the page and every number in them is tabular — a column of figures that
+   does not line up cannot be compared down its length, which is the only reason
+   to put it in a column. */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 12px; border-bottom: 1px solid var(--line); }
 thead th {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--ink-2); font-weight: 700; white-space: nowrap;
-  position: sticky; top: 0; background: #e6eded;      /* academic header fill */
-  border-bottom: 2px solid var(--accent);             /* teal rule under header */
+  font: 500 10px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted); white-space: nowrap;
+  position: sticky; top: 0; background: var(--surf-2);
+  border-bottom: 1px solid var(--line-hi);
+  padding: 7px 12px;
 }
 th.num, td.num { text-align: right; }
+td.num { font: 12px var(--mono); font-variant-numeric: tabular-nums; }
 tbody tr { background: var(--surface); }
 #browse-results tbody tr { cursor: pointer; }
-#browse-results tbody tr:hover { background: #e9f3f2; }
-#browse-results tbody tr:focus-within { background: #ddeeec; }
-td.tk { font-weight: 650; letter-spacing: 0.01em; }
+#browse-results tbody tr:hover { background: var(--accent-tint); }
+#browse-results tbody tr:focus-within { background: var(--accent-tint); }
+td.tk { font: 500 12px var(--mono); letter-spacing: 0.02em; }
 td.name { color: var(--ink); }
 .muted-cell { color: var(--muted); }
 
@@ -264,7 +309,7 @@ td.name { color: var(--ink); }
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 20px 22px;
   margin-top: 16px;
 }
@@ -343,9 +388,9 @@ td.name { color: var(--ink); }
 /* - financial figures */
 .figures { display: flex; flex-wrap: wrap; gap: 28px; }
 .figure { min-width: 130px; }
-.figure .flabel { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.figure .fval { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
-.figure .fsub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.figure .flabel { font: 500 10px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+.figure .fval { font: 500 24px var(--mono); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.figure .fsub { font: 11px var(--mono); color: var(--muted); margin-top: 2px; }
 .signal { margin: 14px 0 0; font-size: 14px; }
 .signal-label { font-weight: 650; }
 .signal-label.good { color: var(--good); }
@@ -631,3 +676,36 @@ td.nct a:hover { text-decoration: underline; }
   padding: 1px 4px;
   border-radius: 3px;
 }
+
+/* the mode toggle sits in the nav, not as a floating control */
+/* It sits in the white nav row, not on the teal band. Styled white the first
+   time, which made it invisible — the same mistake as the starter buttons, and
+   for the same reason: the global button rule paints text white for a solid
+   accent button and anything on a light ground has to set the colour back. */
+.mode-toggle {
+  margin-left: auto;
+  margin-right: 16px;
+  background: transparent;
+  border: 1px solid var(--line-hi);
+  color: var(--ink-2);
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.mode-toggle:hover { background: var(--accent-tint); color: var(--accent-ink); border-color: var(--accent); }
+
+/* dark mode has to reach the places that hardcoded a light value */
+html[data-mode="dark"] body { background: var(--plane); color: var(--ink); }
+html[data-mode="dark"] .disclaimer-callout { background: #2a2413; border-color: #4a3f1c; }
+html[data-mode="dark"] .dc-text { color: var(--ink); }
+html[data-mode="dark"] .dc-icon { background: #6b5410; color: #f0c67a; }
+html[data-mode="dark"] .stat-banner { background: var(--accent-tint); border-color: var(--line-hi); }
+html[data-mode="dark"] .gov-org-mark { background: var(--surface); color: var(--accent-ink); }
+html[data-mode="dark"] input,
+html[data-mode="dark"] select {
+  background: var(--surface); color: var(--ink); border-color: var(--line-hi);
+}
+html[data-mode="dark"] .starter { background: var(--surface); color: var(--ink); }
+html[data-mode="dark"] .ask-card { background: var(--surf-2); }

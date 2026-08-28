@@ -262,6 +262,28 @@ async function askQuestion(preset) {
   }
 }
 
+// Dark mode. Remembered, because a reader who chose it once did not choose it
+// for one page. The neutrals stay warm in both and the phase ramp keeps its
+// order, so a chart means the same thing either way.
+(function () {
+  const KEY = "bii-mode";
+  const apply = (mode) => document.documentElement.setAttribute("data-mode", mode);
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) { /* private window */ }
+  apply(saved || (window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  const btn = el("mode-toggle");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-mode") === "dark"
+        ? "light" : "dark";
+      apply(next);
+      try { localStorage.setItem(KEY, next); } catch (e) { /* nothing to remember with */ }
+    });
+  }
+})();
+
+
 // - BROWSE / FILTER
 
 // The sector labels this project curates. Everything else in the column is a
