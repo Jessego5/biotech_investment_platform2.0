@@ -401,15 +401,54 @@ function showWorkspace(data) {
     ? `+${sources.length - 10} more` : `${sources.length} in scope`;
   scope.appendChild(right);
 
+  // a new answer resets the rail, or the selection from the last one would sit
+  // highlighted over evidence it did not filter
+  document.querySelectorAll(".ws-rail div").forEach((d) =>
+    d.classList.toggle("on", d.dataset.wsNav === "all"));
+  renderEvidence("all");
+}
+
+
+// The rail filters the evidence pane by the source behind each block, which is
+// the only thing it can honestly do: a lookup either read the registry or it
+// read a filing, and that is recorded on the block. It was inert before —
+// attributes and no handler, so the two middle items rendered and did nothing,
+// which is worse than the disabled one because that at least says why.
+// One entry per source we actually hold. Trials and Filings alone left the FDA
+// blocks reachable only from Answer, which made the rail look like it covered
+// the evidence when it covered two thirds of it.
+const WS_FILTERS = {
+  all: () => true,
+  trials: (e) => (e.source || "").includes("CT.gov"),
+  filings: (e) => (e.source || "").includes("SEC EDGAR"),
+  approvals: (e) => (e.source || "").includes("FDA"),
+};
+
+const WS_WANTED = {
+  trials: "the trial registry",
+  filings: "an annual report",
+  approvals: "the FDA approval and patent files",
+};
+
+function renderEvidence(which) {
+  const data = LAST_ANSWER || {};
+  const all = data.evidence || [];
+  const keep = all.filter(WS_FILTERS[which] || WS_FILTERS.all);
   const pane = el("ws-evidence");
   pane.innerHTML = "";
-  if (!ev.length) {
-    const empty = document.createElement("div");
-    empty.className = "ws-ev";
-    empty.innerHTML = `<div class="b">Nothing was retrieved, so there is no evidence to show. The answer above reports that absence rather than filling it.</div>`;
-    pane.appendChild(empty);
+
+  if (!all.length) {
+    pane.innerHTML = `<div class="ws-ev"><div class="b">Nothing was retrieved, so there is no evidence to show. The answer reports that absence rather than filling it.</div></div>`;
+    return;
   }
-  ev.forEach((e) => {
+  if (!keep.length) {
+    // an empty section states which of the sources it wanted and that this
+    // answer did not reach it, rather than showing a blank pane
+    const what = WS_WANTED[which] || "that source";
+    pane.innerHTML = `<div class="ws-ev"><div class="b">This answer did not read ${what}. ${all.length} other lookup${all.length === 1 ? "" : "s"} stand behind it — see Answer.</div></div>`;
+    return;
+  }
+  keep.forEach((e) => {
     const block = document.createElement("div");
     block.className = "ws-ev";
     block.dataset.n = e.n;
@@ -421,6 +460,15 @@ function showWorkspace(data) {
     pane.appendChild(block);
   });
 }
+
+document.querySelectorAll(".ws-rail div").forEach((item) => {
+  if (item.classList.contains("off")) return;
+  item.addEventListener("click", () => {
+    document.querySelectorAll(".ws-rail div").forEach((d) => d.classList.remove("on"));
+    item.classList.add("on");
+    renderEvidence(item.dataset.wsNav || "all");
+  });
+});
 
 el("ws-back").addEventListener("click", () => showBrowse());
 
