@@ -472,3 +472,109 @@ td.nct a:hover { text-decoration: underline; }
 .starter:hover { border-color: var(--accent); background: var(--surface); }
 .starter strong { font-size: 14px; }
 .starter span { font-size: 12px; color: var(--muted); }
+
+/* ============================================================
+   ASK REGISTER
+   Two registers, one product. The browse table and company panel are the dense
+   analyst surface: hairlines, 11-13px, tabular numerals. The Ask surface is
+   generous: roomier padding, a serif answer, source cards.
+
+   The serif is doing real work rather than decoration. It marks the model's
+   voice apart from the interface's, which is the distinction this whole project
+   rests on — the interface states facts it computed, the model only phrases
+   them, and the reader should be able to see which is which without being told.
+   ============================================================ */
+:root {
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* the phase ramp is the one place a colour gradient is legitimate here,
+     because the underlying variable is genuinely ordinal */
+  --cite-bg: #faeeda;
+  --cite-fg: #854f0b;
+}
+
+/* the retrieval trace. The chat now chooses its own tools, so which ones it
+   called is the honest account of how an answer was reached — and it is what
+   makes a wrong answer diagnosable instead of merely wrong. */
+.ask-trace {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 11px/1 var(--mono);
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 5px 11px;
+  margin-bottom: 14px;
+}
+.ask-trace .tool { color: var(--accent-ink); }
+.ask-trace .sep { color: var(--line-hi, var(--line)); }
+
+/* the model's voice */
+.answer-prose {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+/* an absence must not render like an answer. This is the highest-leverage
+   trust decision in the product: say nothing was found rather than producing
+   fluent prose from the model's priors. */
+.answer-miss {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.72;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0 0 10px;
+}
+
+/* what the answer was allowed to use, as cards rather than a footnote */
+.ask-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.ask-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+}
+.ask-card:hover { border-color: var(--accent); background: var(--surface); }
+.ask-card .kind {
+  font: 10px var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ask-card .t { font-size: 13px; font-weight: 550; margin-top: 3px; }
+.ask-card .d { font: 11px var(--mono); color: var(--muted); margin-top: 2px; }
+
+/* follow-ups the data can actually answer */
+.ask-next { display: flex; gap: 7px; flex-wrap: wrap; }
+.ask-next button {
+  font-size: 12px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line-hi, var(--line));
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.ask-next button:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: rgba(14, 124, 120, 0.07);
+}
+
+/* numbers, ids and dates read as data, not prose */
+.num, .mn, .protect-dates strong, .kpi .v { font-variant-numeric: tabular-nums; }

@@ -29,12 +29,21 @@ const detailResults = el("detail-results");
 
 // how many companies there are in total, used for the "N of TOTAL" count
 let TOTAL = null;
+// ticker -> name, filled when the universe loads. The chat returns tickers as
+// its sources and a bare ticker is a poor receipt: ABBV means nothing to a
+// reader who does not already know the answer.
+let NAME_BY_TICKER = {};
 
 // setup on page load
 window.addEventListener("DOMContentLoaded", () => {
   loadSectors();
   // honor a #/c/TICKER deep link if there is one, otherwise show the browse view
   route();
+  // ?ask=... runs a question on load, so a question is shareable the same way a
+  // company page is. It is also the only way to drive the chat from outside the
+  // browser, which is how this surface gets checked.
+  const asked = new URLSearchParams(location.search).get("ask");
+  if (asked) askQuestion(asked);
 });
 // listen for hash changes so company pages stay shareable and back/forward work
 window.addEventListener("hashchange", route);
@@ -104,8 +113,29 @@ el("chat-form").addEventListener("submit", (e) => {
   askQuestion();
 });
 
-async function askQuestion() {
-  const q = el("chat-q").value.trim();
+// what each tool actually reached for, in words rather than function names
+const TOOL_LABEL = {
+  filter_companies: "filtered the universe",
+  company_report: "read one company's figures",
+  search_trials: "searched trial descriptions",
+  search_filings: "searched annual report text",
+  patent_protection: "checked patents and exclusivity",
+  upcoming_readouts: "looked up expected readouts",
+  decline: "declined",
+  greeting: "greeting",
+};
+
+// follow-ups the data can actually answer, so a suggestion is never a dead end
+const FOLLOW_UPS = [
+  "Which companies have a Phase 3 and over 3 years of runway?",
+  "What Phase 3 readouts are expected soonest?",
+  "Which company has the nearest patent cliff?",
+];
+
+async function askQuestion(preset) {
+  const input = el("chat-q");
+  if (preset) input.value = preset;
+  const q = input.value.trim();
   if (!q) return;
   const box = el("chat-answer");
   box.classList.remove("hidden");
@@ -119,20 +149,70 @@ async function askQuestion() {
     });
     const data = await r.json();
     box.className = "chat-answer";
-    box.innerHTML = `<p class="answer-text">${escapeHtml(data.answer || "")}</p>`;
-    // show the companies the answer was grounded in, as clickable receipts
+    box.innerHTML = "";
+
+    // the retrieval trace. The chat picks its own tools now, so which ones it
+    // called is the honest account of how the answer was reached — and it is
+    // what makes a wrong answer diagnosable rather than merely wrong.
+    const tools = (data.tools_used || []).filter((t) => t !== "greeting");
+    if (tools.length) {
+      const seen = [];
+      tools.forEach((t) => {
+        const last = seen[seen.length - 1];
+        if (last && last.name === t) last.n += 1;
+        else seen.push({ name: t, n: 1 });
+      });
+      const steps = seen.map((x) =>
+        `<span class="tool">${escapeHtml(TOOL_LABEL[x.name] || x.name)}${x.n > 1 ? ` ×${x.n}` : ""}</span>`
+      ).join('<span class="sep"> → </span>');
+      const trace = document.createElement("div");
+      trace.className = "ask-trace";
+      trace.innerHTML = steps;
+      box.appendChild(trace);
+    }
+
+    // an unsourced answer must not render like a sourced one
+    const grounded = (data.retrieved || "").trim().length > 0;
+    const p = document.createElement("p");
+    p.className = grounded ? "answer-prose" : "answer-miss";
+    p.textContent = data.answer || "";
+    box.appendChild(p);
+
+    // the companies the answer was allowed to use, as receipts you can open
     const sources = data.sources || [];
     if (sources.length) {
-      const shown = sources.slice(0, 15);
-      const chips = shown.map((t) => `<span class="source-chip" data-ticker="${t}">${t}</span>`).join("");
-      const more = sources.length > shown.length ? ` <span class="label">+${sources.length - shown.length} more</span>` : "";
-      const div = document.createElement("div");
-      div.className = "chat-sources";
-      div.innerHTML = `<span class="label">Based on</span>${chips}${more}`;
-      box.appendChild(div);
-      div.querySelectorAll(".source-chip").forEach((chip) =>
-        chip.addEventListener("click", () => showDetail(chip.dataset.ticker)));
+      const wrap = document.createElement("div");
+      wrap.className = "ask-cards";
+      sources.slice(0, 8).forEach((t) => {
+        const name = (NAME_BY_TICKER && NAME_BY_TICKER[t]) || "";
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "ask-card";
+        b.innerHTML = `<div class="kind">company</div>
+          <div class="t">${escapeHtml(t)}</div>
+          <div class="d">${escapeHtml(name.slice(0, 30))}</div>`;
+        b.addEventListener("click", () => showDetail(t));
+        wrap.appendChild(b);
+      });
+      box.appendChild(wrap);
+      if (sources.length > 8) {
+        const more = document.createElement("p");
+        more.className = "muted-cell";
+        more.textContent = `+${sources.length - 8} more companies behind this answer.`;
+        box.appendChild(more);
+      }
     }
+
+    const next = document.createElement("div");
+    next.className = "ask-next";
+    FOLLOW_UPS.filter((f) => f !== q).slice(0, 3).forEach((f) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = f;
+      b.addEventListener("click", () => askQuestion(f));
+      next.appendChild(b);
+    });
+    box.appendChild(next);
   } catch (e) {
     box.className = "chat-answer";
     box.textContent = "Couldn't reach the backend at " + API + ".";
@@ -184,6 +264,7 @@ async function loadSectors() {
     const counts = new Map();
     data.companies.forEach((c) => {
       if (c.sector) counts.set(c.sector, (counts.get(c.sector) || 0) + 1);
+      if (c.ticker) NAME_BY_TICKER[c.ticker] = c.name || "";
     });
 
     const sel = el("f-sector");
