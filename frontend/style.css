@@ -404,3 +404,18 @@ td.nct a:hover { text-decoration: underline; }
 @media (max-width: 640px) {
   .change { grid-template-columns: 1fr; gap: .15rem; }
 }
+
+/* a trial the company partners on rather than runs. The pipeline figures count
+   only what it leads, so this has to be visible in the table or a partnered
+   study reads as part of a pipeline it is not part of. */
+.role-tag {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 0.75rem;
+  font-size: 0.72rem;
+  color: var(--muted, #656d76);
+  vertical-align: middle;
+  white-space: nowrap;
+}

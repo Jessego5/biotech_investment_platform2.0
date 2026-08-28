@@ -1,7 +1,23 @@
 // This is the frontend for the platform. It has two views, a live browse and
 // filter screen and a detail view for one company. The detail view shows its work,
-// every figure ties back to and links to its real source. The backend runs on port 8000.
-const API = "http://127.0.0.1:8000";
+// every figure ties back to and links to its real source.
+//
+// Where the backend lives depends on where this page is being served from, and
+// hardcoding it to localhost meant the page could never be deployed anywhere:
+// a browser fetching 127.0.0.1 asks the machine it is running on, not the server
+// the page came from.
+//
+//   1. window.API_BASE, if config.js sets it. That is how a split deployment
+//      points the page at an API on another host.
+//   2. the local backend, when opened from the dev server or from a file://
+//      URL, which is how this is developed.
+//   3. same origin, meaning whatever is in front of both the page and the API
+//      routes to each of them. That is the deployment this wants by default.
+const API = (typeof window.API_BASE === "string")
+  ? window.API_BASE
+  : ((location.protocol === "file:" || location.port === "5501")
+      ? "http://127.0.0.1:8000"
+      : "");
 
 const el = (id) => document.getElementById(id);
 const browseView = el("browse-view");
@@ -329,7 +345,8 @@ function renderDetail(data) {
 
   // trials, linked out to ClinicalTrials.gov
   detailResults.appendChild(trialsCard(data.trials, p.total_trials,
-                                       p.total_trials_reported, p.truncated));
+                                       p.total_trials_reported, p.truncated,
+                                       p.collaborator_trials));
 
   const d = document.createElement("p");
   d.className = "disclaimer";
@@ -482,21 +499,28 @@ function count(entry) {
   return m >= 1 ? m.toFixed(1) + "M" : Math.round(entry.value).toLocaleString();
 }
 
-function trialsCard(trials, total, sponsorTotal, truncated) {
+function trialsCard(trials, total, sponsorTotal, truncated, collaborating) {
   if (!trials || !trials.length) {
     return card(`
       <p class="card-title">Registered trials</p>
       <p class="muted-cell">No registered trials under this sponsor name. Some companies
       (e.g. sequencing/tools firms) simply don't sponsor clinical trials.</p>`);
   }
+  // whether the company runs the trial or partners on one somebody else runs.
+  // The counts above are the ones it leads, so a partnered study sitting in the
+  // same table unlabelled reads as part of a pipeline it is not part of.
   const rows = trials.map((t) => `
     <tr>
       <td class="nct"><a href="https://clinicaltrials.gov/study/${t.nct_id}" target="_blank" rel="noopener">${t.nct_id}</a></td>
-      <td>${escapeHtml(t.title || "")}</td>
+      <td>${escapeHtml(t.title || "")}
+        ${t.role === "collaborator"
+          ? `<span class="role-tag" title="Led by ${escapeHtml(t.lead_sponsor || "another sponsor")}. Not counted in the pipeline figures above.">collaborator</span>`
+          : ""}</td>
       <td class="phase-tag">${escapeHtml(t.phase || "")}</td>
       <td class="muted-cell">${escapeHtml(t.status || "")}</td>
     </tr>`).join("");
-  const shown = total > trials.length ? `showing ${trials.length} of ${total}` : `${total} total`;
+  const led = trials.filter((t) => (t.role || "lead") === "lead").length;
+  const shown = total > led ? `showing ${led} of ${total} led` : `${total} led`;
   // a few very large sponsors register more studies than one ingest will pull.
   // say so, rather than presenting part of a pipeline as the whole of it.
   const partial = truncated && sponsorTotal
@@ -505,8 +529,12 @@ function trialsCard(trials, total, sponsorTotal, truncated) {
        phase breakdown above cover the ${total.toLocaleString()} stored here, not the
        full set.</p>`
     : "";
+  // reported next to the led count, never added to it
+  const alsoOn = collaborating
+    ? `, plus ${collaborating.toLocaleString()} it collaborates on`
+    : "";
   return card(`
-    <p class="card-title">Registered trials <span class="muted-cell">(${shown})</span></p>
+    <p class="card-title">Registered trials <span class="muted-cell">(${shown}${alsoOn})</span></p>
     ${partial}
     <div class="table-scroll"><table>
       <thead><tr><th>NCT id</th><th>Title</th><th>Phase</th><th>Status</th></tr></thead>
