@@ -9,7 +9,7 @@ and two of those are not tickers at all. Resolution happens here instead, agains
 the companies actually held. Run them with pytest.
 """
 
-from app.chat import _resolve_company, _sector_labels
+from app.chat import _resolve_company, _sector_labels, _run_tool, TOOLS
 
 from conftest import add_company
 
@@ -90,3 +90,41 @@ def test_the_sector_labels_come_from_the_data(db):
 
 def test_no_sectors_is_not_an_error(db):
     assert _sector_labels(db) == []
+
+
+def test_every_tool_the_model_is_offered_can_actually_be_run(db):
+    # a tool in the schema with no branch behind it would look available to the
+    # model and silently return nothing
+    handled = {"greeting", "decline"}          # these end the turn instead
+    for t in TOOLS:
+        name = t["function"]["name"]
+        if name in handled:
+            continue
+        text, sources = _run_tool(name, {}, db, "2026-08-27")
+        assert isinstance(text, str) and isinstance(sources, list), name
+
+
+def test_a_tool_that_finds_nothing_says_so_in_words(db):
+    # an empty string reads to the model as though it had never asked, and it
+    # then answers from somewhere else
+    text, sources = _run_tool("filter_companies", {"min_cash": 10**12}, db, "2026-08-27")
+    assert "No companies match" in text
+    assert sources == []
+
+
+def test_an_unknown_tool_returns_nothing_rather_than_guessing(db):
+    assert _run_tool("drop_table", {}, db, "2026-08-27") == ("", [])
+
+
+def test_a_company_that_is_not_held_is_named_as_missing(db):
+    text, sources = _run_tool("company_report", {"company": "Nonexistent Bio"}, db,
+                              "2026-08-27")
+    assert "is in the database" in text and sources == []
+
+
+def test_there_is_no_tool_that_runs_arbitrary_queries(db):
+    # the line that keeps "the LLM only phrases facts" true: choosing a tool is
+    # not inventing a number, but handing back raw rows to compute over would be
+    names = {t["function"]["name"] for t in TOOLS}
+    for banned in ("sql", "query", "run_sql", "execute", "raw_query"):
+        assert banned not in names

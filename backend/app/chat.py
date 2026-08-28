@@ -8,70 +8,18 @@ there is no data on that, not a made up one. It uses OpenAI and needs
 OPENAI_API_KEY. Without the key the chat is simply off.
 """
 
+import datetime
 import json
 import os
 import re
 
 from .models import Company
-from .retrieval import query_companies, company_facts
+from .exclusivity import protection_for
+from .retrieval import query_companies, company_facts, upcoming_readouts
 from .semantic import semantic_search, search_filings
 
 CHAT_MODEL = "gpt-4o-mini"
 
-# Step 1 prompt: turn the question into a query plan. the model does NOT answer
-# here and knows no company data, it only picks a query.
-PLAN_SYSTEM = (
-    "You translate a question about a biotech company database into a structured "
-    "query plan. You do NOT answer the question and you know no company data "
-    "yourself. Return ONLY JSON of this shape:\n"
-    '{\n'
-    '  "intent": "filter" | "company" | "search" | "risks" | "greeting" | "refuse",\n'
-    '  "reason": string,               // if refuse, a short why\n'
-    '  "company": string | null,       // if about ONE company: its NAME exactly\n'
-    '                                  // as written in the question. Never guess\n'
-    '                                  // a ticker; it is looked up here.\n'
-    '  "search_query": string | null,  // for intent=search: a concise search phrase\n'
-    '  "filters": {                    // for intent=filter; all optional\n'
-    '     "min_rd": number|null,       // minimum R&D expense in DOLLARS\n'
-    '     "min_cash": number|null,     // minimum cash in DOLLARS\n'
-    '     "min_active_trials": integer|null,\n'
-    '     "has_phase3": boolean|null,  // true = has a Phase 3+ program\n'
-    '     "sector": string|null,       // one of the labels listed below\n'
-    '     "min_runway": number|null    // minimum years of runway: liquidity\n'
-    '                                  // (cash + marketable securities) divided\n'
-    '                                  // by a year of cash burn\n'
-    '  },\n'
-    '  "sort_by": "rd"|"cash"|"active_trials"|"total_trials"|"runway"|null,\n'
-    '  "limit": integer|null           // for "top N" / "most" questions\n'
-    '}\n'
-    "Convert money to raw dollars (\"$1 billion\" becomes 1000000000). "
-    "If the message is a greeting or small talk (hi, hello, how are you), or asks "
-    "what you can do or how this works, use intent=greeting. "
-    "If the question is about one named company, use intent=company and put the "
-    "company's name in company, copied from the question. Do not supply a ticker "
-    "symbol and do not guess one: the name is matched against the database here. "
-    "If the question is about trial CONTENT, a disease or condition, a drug, a "
-    "therapy or mechanism (e.g. CAR-T, oncology, a specific mutation), or asks "
-    "what trials study or test something, use intent=search and put a concise "
-    "search phrase in search_query. There is no structured field for those, so "
-    "they are answered by semantic search over trial descriptions. Do NOT map "
-    "them to sector: the sector labels are listed at the end of this prompt. "
-    "If the question asks what a company SAYS about its risks, challenges, "
-    "competition, regulatory exposure or how it explains its own results, use "
-    "intent=risks and put the topic in search_query. Those answers come from "
-    "the narrative of its annual report, not from the structured fields. "
-    "If the question asks to predict the future, give buy/sell or investment "
-    "advice, or asks anything neither the structured data nor the trial text can "
-    "answer, use intent=refuse. "
-    "Data available per company: name, sector, trial "
-    "counts by phase and status, active and terminated counts, and these SEC "
-    "figures: R&D expense, cash, marketable securities, debt, operating cash "
-    "flow, net income, revenue, and shares outstanding. The Risk Factors and "
-    "Management's Discussion narrative of each company's latest annual report "
-    "is also searchable. Runway is years of "
-    "liquidity (cash plus marketable securities) divided by a year of cash burn, "
-    "not a cash-to-R&D ratio."
-)
 
 # Step 2 prompt: answer strictly from the retrieved rows.
 ANSWER_SYSTEM = (
@@ -88,6 +36,96 @@ GREETING = (
     "pipeline and financial data stored here. Try asking things like: "
     "\"Which companies have a Phase 3 trial and over 2x cash runway?\", "
     "\"Who has the most clinical trials?\", or \"What is Moderna's cash position?\""
+)
+
+
+# - tools
+#
+# The query plan used to be a fixed JSON menu: an intent enum and a filters
+# object, and every question had to be expressible inside it. That menu went
+# stale every time the schema grew, and it had: it offered three sector labels
+# while the database held ten, so 124 medical-device companies could not be
+# reached at all, and it knew nothing about patents, exclusivity, indications or
+# readout dates.
+#
+# These are the same accessors the API already uses, exposed for the model to
+# choose between. Every one of them returns a computed fact with its evidence.
+# There is deliberately no "run this query" tool: choosing a tool is not
+# inventing a number, but handing the model raw rows to do arithmetic on would
+# be, and the whole app rests on that line.
+MAX_ROUNDS = 3
+
+TOOLS = [
+    {"type": "function", "function": {
+        "name": "filter_companies",
+        "description": "Filter and rank companies by structured figures. Use for "
+                       "'which companies', 'top N', 'most', 'more than X' questions.",
+        "parameters": {"type": "object", "properties": {
+            "min_rd": {"type": "number", "description": "minimum R&D expense in DOLLARS"},
+            "min_cash": {"type": "number", "description": "minimum cash in DOLLARS"},
+            "min_active_trials": {"type": "integer"},
+            "has_phase3": {"type": "boolean"},
+            "sector": {"type": "string", "description": "must be one of the labels listed in the system prompt"},
+            "min_runway": {"type": "number", "description": "minimum years of runway"},
+            "sort_by": {"type": "string", "enum": ["rd", "cash", "active_trials", "total_trials", "runway"]},
+            "limit": {"type": "integer"}}}}},
+    {"type": "function", "function": {
+        "name": "company_report",
+        "description": "Everything held on ONE company: pipeline and financial "
+                       "signals with the evidence behind each.",
+        "parameters": {"type": "object", "properties": {
+            "company": {"type": "string", "description": "the company NAME as written in the question. Never guess a ticker."}},
+            "required": ["company"]}}},
+    {"type": "function", "function": {
+        "name": "search_trials",
+        "description": "Semantic search over trial descriptions. Use for what a "
+                       "trial studies or tests — mechanisms, mutations, therapies — "
+                       "which no structured field holds.",
+        "parameters": {"type": "object", "properties": {
+            "query": {"type": "string"}}, "required": ["query"]}}},
+    {"type": "function", "function": {
+        "name": "search_filings",
+        "description": "Search the narrative of annual reports: what a company SAYS "
+                       "about its risks, competition, regulation, or its own results.",
+        "parameters": {"type": "object", "properties": {
+            "query": {"type": "string"},
+            "company": {"type": "string", "description": "optional, to narrow to one company's filing"}},
+            "required": ["query"]}}},
+    {"type": "function", "function": {
+        "name": "patent_protection",
+        "description": "How long a company's approved products stay protected, and "
+                       "whether it has any. Answers patents, exclusivity, patent cliffs.",
+        "parameters": {"type": "object", "properties": {
+            "company": {"type": "string"}}, "required": ["company"]}}},
+    {"type": "function", "function": {
+        "name": "upcoming_readouts",
+        "description": "Trials with a readout still ahead of them, soonest first. "
+                       "Answers catalysts, expected data, when a programme reports.",
+        "parameters": {"type": "object", "properties": {
+            "company": {"type": "string", "description": "optional"},
+            "phase": {"type": "string", "description": "optional, e.g. PHASE3"},
+            "limit": {"type": "integer"}}}}},
+    {"type": "function", "function": {
+        "name": "decline",
+        "description": "The question asks for a prediction, investment advice, or "
+                       "something neither the structured data nor the text can answer.",
+        "parameters": {"type": "object", "properties": {
+            "reason": {"type": "string"}}, "required": ["reason"]}}},
+    {"type": "function", "function": {
+        "name": "greeting",
+        "description": "The message is a greeting or small talk, not a question "
+                       "about the data.",
+        "parameters": {"type": "object", "properties": {}}}},
+]
+
+TOOL_SYSTEM = (
+    "You answer questions about a biotech company database by choosing tools. "
+    "You know no company data yourself and must never state a figure that a tool "
+    "did not return. Call the tools you need — more than one if the question "
+    "needs composing, for example finding companies first and then checking one "
+    "of them. When you have enough, stop calling tools. "
+    "Every figure comes from SEC filings and ClinicalTrials.gov. Never predict, "
+    "never advise buying or selling: call decline for those."
 )
 
 
@@ -122,22 +160,6 @@ def _sector_labels(db):
     return sorted({s for (s,) in rows if s})
 
 
-def _plan(question, db=None):
-    # ask the model to translate the question into a JSON query plan
-    system = PLAN_SYSTEM
-    labels = _sector_labels(db) if db is not None else []
-    if labels:
-        system += ("\n\nThe sector labels in this database are exactly: "
-                   + "; ".join(labels)
-                   + ". Use one of these verbatim or null. Never invent one.")
-    resp = _client().chat.completions.create(
-        model=CHAT_MODEL,
-        response_format={"type": "json_object"},
-        messages=[{"role": "system", "content": system},
-                  {"role": "user", "content": question}],
-    )
-    # parse the JSON it returned back into a dict
-    return json.loads(resp.choices[0].message.content)
 
 
 def _resolve_company(named, db):
@@ -188,101 +210,115 @@ def _resolve_company(named, db):
     return best
 
 
-def _retrieve(plan, db):
-    """Run the plan against the DB. Returns (facts_text, sources, retrieved_count)."""
-    intent = plan.get("intent")
+def _company_block(db, named):
+    ticker = _resolve_company(named, db)
+    facts = company_facts(db, ticker) if ticker else None
+    if not facts:
+        return f"No company matching {named!r} is in the database.", []
+    a = facts["assessment"]
+    lines = [f"{facts['ticker']}: {facts['name']} (sector: {facts['sector']})",
+             f"Pipeline signal: {a['pipeline_signal']['label']}"]
+    lines += [f"  - {e}" for e in a["pipeline_signal"]["evidence"]]
+    lines.append(f"Financial signal: {a['financial_signal']['label']}")
+    lines += [f"  - {e}" for e in a["financial_signal"]["evidence"]]
+    return "\n".join(lines), [facts["ticker"]]
 
-    # one named company: pull its full grounded facts and lay them out
-    if intent == "company":
-        ticker = _resolve_company(plan.get("company"), db)
-        facts = company_facts(db, ticker) if ticker else None
-        # no ticker or not in the DB means nothing to retrieve
-        if not facts:
-            return "", [], 0
-        a = facts["assessment"]
-        # start with the company header and its pipeline signal
-        lines = [
-            f"{facts['ticker']}: {facts['name']} (sector: {facts['sector']})",
-            f"Pipeline signal: {a['pipeline_signal']['label']}",
-        ]
-        # add the pipeline evidence, then the financial signal and its evidence
-        lines += [f"  - {e}" for e in a["pipeline_signal"]["evidence"]]
-        lines.append(f"Financial signal: {a['financial_signal']['label']}")
-        lines += [f"  - {e}" for e in a["financial_signal"]["evidence"]]
-        return "\n".join(lines), [facts["ticker"]], 1
 
-    # filter intent: run the structured query with whatever filters the plan gave
-    if intent == "filter":
-        f = plan.get("filters") or {}
+def _run_tool(name, args, db, as_of):
+    """
+    Execute one tool. Returns (facts_text, sources).
+
+    Each returns a computed fact with the evidence behind it, never rows for the
+    model to work on. A tool that finds nothing says so in words, because an
+    empty string reads to the model as though it had not asked.
+    """
+    if name == "filter_companies":
         rows = query_companies(
-            db,
-            min_rd=f.get("min_rd"), min_cash=f.get("min_cash"),
-            has_phase3=f.get("has_phase3"),
-            min_active_trials=f.get("min_active_trials"),
-            sector=f.get("sector"), min_runway=f.get("min_runway"),
-            sort_by=plan.get("sort_by"), limit=None,
-        )
+            db, min_rd=args.get("min_rd"), min_cash=args.get("min_cash"),
+            has_phase3=args.get("has_phase3"),
+            min_active_trials=args.get("min_active_trials"),
+            sector=args.get("sector"), min_runway=args.get("min_runway"),
+            sort_by=args.get("sort_by"), limit=None)
         total = len(rows)
-        # cap how many rows we feed the model, defaulting to 25
-        shown = rows[:(plan.get("limit") or 25)]
-        # the header states the full match count, even if we only show some
+        shown = rows[:(args.get("limit") or 25)]
+        if not shown:
+            return "No companies match those filters.", []
         header = f"Total companies matching: {total}"
         if total > len(shown):
             header += f" (showing the first {len(shown)})"
         lines = [header, ""]
-        # write one compact line per company with its key numbers
         for r in shown:
             lines.append(
                 f"{r['ticker']}: {r['name']} | sector={r['sector']} | "
                 f"trials={r['total_trials']} active={r['active_trials']} "
                 f"phase3={'yes' if r['has_phase3'] else 'no'} | "
                 f"R&D={_money(r['rd_expense'])} cash={_money(r['cash'])} "
-                f"runway={r['runway'] if r['runway'] is not None else 'n/a'}"
-            )
-        return "\n".join(lines), [r["ticker"] for r in shown], total
+                f"runway={r['runway'] if r['runway'] is not None else 'n/a'}")
+        return "\n".join(lines), [r["ticker"] for r in shown]
 
-    # search intent: semantic search over the trial descriptions
-    if intent == "search":
-        query = plan.get("search_query") or ""
-        trials = semantic_search(query, k=8) if query else []
-        # nothing matched, so retrieve nothing
+    if name == "company_report":
+        return _company_block(db, args.get("company"))
+
+    if name == "search_trials":
+        # an empty query would be sent to the embedding API and rejected there.
+        # A tool called with nothing to search for has found nothing, which is
+        # an answer rather than an error.
+        query = (args.get("query") or "").strip()
+        if not query:
+            return "No search terms were given, so nothing was searched.", []
+        trials = semantic_search(query, k=8)
         if not trials:
-            return "", [], 0
-        lines = ["Trials whose descriptions best match the question:", ""]
-        # one block per matching trial, with a short snippet of its summary
+            return "No trial descriptions matched that.", []
+        lines = ["Trials whose descriptions best match:", ""]
         for t in trials:
-            # collapse newlines and cap the snippet length
             snippet = (t["summary"] or "").replace("\n", " ")[:320]
-            lines.append(
-                f"{t['nct_id']} ({t['ticker']}): {t['title']} | {t['phase']} | "
-                f"{t['status']}\n  {snippet}"
-            )
-        # unique tickers in their original order, for the source chips
-        sources = list(dict.fromkeys(t["ticker"] for t in trials if t["ticker"]))
-        return "\n".join(lines), sources, len(trials)
+            lines.append(f"{t['nct_id']} ({t['ticker']}): {t['title']} | "
+                         f"{t['phase']} | {t['status']}\n  {snippet}")
+        return "\n".join(lines), list(dict.fromkeys(
+            t["ticker"] for t in trials if t["ticker"]))
 
-    # risks intent: search the narrative of the annual reports
-    if intent == "risks":
-        query = plan.get("search_query") or ""
-        # a named company narrows it to that company's own filing
-        ticker = _resolve_company(plan.get("company"), db)
-        passages = search_filings(query, k=6, ticker=ticker) if query else []
-        # nothing matched, so retrieve nothing and let the answer say so
+    if name == "search_filings":
+        query = (args.get("query") or "").strip()
+        if not query:
+            return "No search terms were given, so nothing was searched.", []
+        ticker = _resolve_company(args.get("company"), db) if args.get("company") else None
+        passages = search_filings(query, k=6, ticker=ticker)
         if not passages:
-            return "", [], 0
+            return "No filing passages matched that.", []
         lines = ["Passages from annual report narrative:", ""]
-        for p in passages:
-            # say which filing each passage came from, so a claim can be checked
-            # against the actual document
-            lines.append(
-                f"{p['ticker']} {p['form']} filed {p['filed']} "
-                f"({p['section']}):\n  {p['text'][:600]}"
-            )
-        sources = list(dict.fromkeys(p["ticker"] for p in passages if p["ticker"]))
-        return "\n".join(lines), sources, len(passages)
+        for pg in passages:
+            lines.append(f"{pg['ticker']} {pg['form']} filed {pg['filed']} "
+                         f"({pg['section']}):\n  {pg['text'][:600]}")
+        return "\n".join(lines), list(dict.fromkeys(
+            pg["ticker"] for pg in passages if pg["ticker"]))
 
-    # any other intent retrieves nothing
-    return "", [], 0
+    if name == "patent_protection":
+        ticker = _resolve_company(args.get("company"), db)
+        if not ticker:
+            return f"No company matching {args.get('company')!r} is in the database.", []
+        r = protection_for(db, ticker, as_of)
+        lines = [f"{ticker} patent and exclusivity position: {r['state']}"]
+        lines += [f"  - {e}" for e in r["evidence"]]
+        if r.get("next_expiry"):
+            lines.append(f"  - nearest expiry {r['next_expiry']}, "
+                         f"furthest {r['last_expiry']}")
+        return "\n".join(lines), [ticker]
+
+    if name == "upcoming_readouts":
+        ticker = _resolve_company(args.get("company"), db) if args.get("company") else None
+        rows = upcoming_readouts(db, as_of, ticker=ticker, phase=args.get("phase"),
+                                 limit=args.get("limit") or 25)
+        if not rows:
+            return "No trials with an expected readout ahead of them.", []
+        lines = ["Trials with a readout still expected (estimated dates):", ""]
+        for r in rows:
+            lines.append(f"{r['ticker']} {r['nct_id']} | {r['phase']} | "
+                         f"expected {r['completion_date']} | n={r['enrollment']} | "
+                         f"{(r['conditions'] or '')[:70]}")
+        return "\n".join(lines), list(dict.fromkeys(
+            r["ticker"] for r in rows if r["ticker"]))
+
+    return "", []
 
 
 def _answer(question, facts_text):
@@ -301,39 +337,81 @@ def _answer(question, facts_text):
     return resp.choices[0].message.content.strip()
 
 
-def answer_question(question, db):
-    """Full flow: plan -> retrieve real rows -> grounded answer + sources."""
-    # no OpenAI key means the chat is simply off, so say so plainly
+def answer_question(question, db, as_of=None):
+    """
+    Choose tools, run them, then phrase an answer from only what they returned.
+
+    The two halves are kept apart deliberately. The loop decides WHAT to fetch;
+    the answer step is unchanged from when a fixed plan chose it, and still sees
+    nothing but the retrieved text. Choosing a tool is not inventing a number,
+    and that separation is what keeps it that way.
+
+    The loop is bounded. Composing takes more than one call — find the companies,
+    then check one of them — but agentic retrieval costs a round trip and tokens
+    each time, so it stops at MAX_ROUNDS whether or not the model would continue.
+    """
     if not os.environ.get("OPENAI_API_KEY"):
         return {"answer": "The chat needs an OpenAI API key. Set OPENAI_API_KEY in "
                           "backend/.env (the rest of the app works without it).",
                 "sources": [], "unavailable": True}
 
-    # step 1: turn the question into a query plan, bailing out if that fails
+    as_of = as_of or datetime.date.today().isoformat()
+    system = TOOL_SYSTEM
+    labels = _sector_labels(db)
+    if labels:
+        system += ("\n\nThe sector labels in this database are exactly: "
+                   + "; ".join(labels) + ". Use one verbatim or omit it.")
+
+    messages = [{"role": "system", "content": system},
+                {"role": "user", "content": question}]
+    facts, sources, called = [], [], []
+
     try:
-        plan = _plan(question, db)
+        for _ in range(MAX_ROUNDS):
+            resp = _client().chat.completions.create(
+                model=CHAT_MODEL, messages=messages, tools=TOOLS)
+            msg = resp.choices[0].message
+            if not msg.tool_calls:
+                break
+            messages.append({
+                "role": "assistant", "content": msg.content,
+                "tool_calls": [{"id": c.id, "type": "function",
+                                "function": {"name": c.function.name,
+                                             "arguments": c.function.arguments}}
+                               for c in msg.tool_calls]})
+            for call in msg.tool_calls:
+                name = call.function.name
+                try:
+                    args = json.loads(call.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    args = {}
+                called.append(name)
+
+                # these two end the conversation rather than retrieving anything
+                if name == "greeting":
+                    return {"answer": GREETING, "sources": [], "tools_used": called}
+                if name == "decline":
+                    reason = args.get("reason") or "That is outside what this data can answer."
+                    return {"answer": f"I can't answer that. {reason} I only report the "
+                                      "real pipeline and financial data in the database, "
+                                      "so try asking about trials by phase, R&D, cash, "
+                                      "runway, patents, or expected readouts.",
+                            "sources": [], "tools_used": called}
+
+                text, srcs = _run_tool(name, args, db, as_of)
+                if text:
+                    facts.append(text)
+                sources += srcs
+                messages.append({"role": "tool", "tool_call_id": call.id,
+                                 "content": text or "(nothing found)"})
     except Exception as e:
         return {"answer": f"Sorry, I couldn't process that question ({e}).",
                 "sources": []}
 
-    # a greeting gets the canned welcome reply instead of a data lookup
-    if plan.get("intent") == "greeting":
-        return {"answer": GREETING, "sources": [], "plan": plan}
-
-    # a refusal politely declines and points at what the data can actually answer
-    if plan.get("intent") == "refuse":
-        reason = plan.get("reason") or "That is outside what this data can answer."
-        return {"answer": f"I can't answer that. {reason} I only report the real "
-                          "pipeline and financial data in the database, so try asking "
-                          "about trials by phase, R&D, cash, runway, or filtering "
-                          "companies.",
-                "sources": [], "plan": plan}
-
-    # step 2: run the plan against the real DB to get the rows
-    facts_text, sources, count = _retrieve(plan, db)
-    # step 3: have the model phrase an answer from only those rows
+    facts_text = "\n\n".join(facts)
     answer = _answer(question, facts_text)
     # "retrieved" is the exact text the answer was allowed to use. the eval
     # suite checks every claim in the answer against it (groundedness).
-    return {"answer": answer, "sources": sources, "match_count": count,
-            "plan": plan, "retrieved": facts_text}
+    return {"answer": answer, "sources": list(dict.fromkeys(sources)),
+            "match_count": len(sources), "tools_used": called,
+            "retrieved": facts_text}

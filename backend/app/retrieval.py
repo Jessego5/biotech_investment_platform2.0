@@ -208,3 +208,33 @@ def company_facts(db, ticker):
         "derived": derived_figures(financials),
         "assessment": assessment,
     }
+
+
+def upcoming_readouts(db, as_of, ticker=None, phase=None, limit=25):
+    """
+    Trials with a readout still ahead of them, soonest first.
+
+    A completion date is only a catalyst if it has not happened yet and was
+    never claimed to have happened: the registry marks a date ACTUAL or
+    ESTIMATED, and only an ESTIMATED one in the future is a forecast readout.
+    Reading an ACTUAL date the same way would turn history into a prediction.
+
+    Lead trials only. A readout the company does not run is not its catalyst to
+    report, and the pipeline counts exclude those for the same reason.
+    """
+    from .models import Trial
+
+    q = (db.query(Trial)
+           .filter(Trial.completion_date_type == "ESTIMATED",
+                   Trial.completion_date >= as_of,
+                   Trial.role == "lead"))
+    if ticker:
+        q = q.filter(Trial.company_ticker == ticker)
+    if phase:
+        q = q.filter(Trial.phase.like(f"%{phase}%"))
+    rows = q.order_by(Trial.completion_date).limit(limit).all()
+    return [{"nct_id": t.nct_id, "ticker": t.company_ticker, "title": t.title,
+             "phase": t.phase, "status": t.status,
+             "completion_date": t.completion_date,
+             "conditions": t.conditions, "enrollment": t.enrollment}
+            for t in rows]
