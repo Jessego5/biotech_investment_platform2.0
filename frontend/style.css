@@ -615,3 +615,19 @@ td.nct a:hover { text-decoration: underline; }
   cursor: pointer;
 }
 .ask-copy:hover { border-color: var(--accent); background: rgba(14, 124, 120, 0.07); }
+
+/* the universe failing to load used to leave "Loading the universe…" on screen
+   indefinitely, because the catch swallowed it. A slow endpoint and a dead one
+   looked identical from the page. */
+.stat-banner.banner-error {
+  background: #fdf3e3;
+  border-color: #e2c58a;
+  color: #7a4e08;
+}
+.stat-banner.banner-error code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 1px 4px;
+  border-radius: 3px;
+}

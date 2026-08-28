@@ -86,6 +86,55 @@ def late_stage_count(by_phase):
     return sum(c for ph, c in by_phase.items() if "PHASE3" in ph or "PHASE4" in ph)
 
 
+def _pipelines_by_ticker(db):
+    """
+    {ticker: pipeline summary}, from one grouped query.
+
+    Selects the three columns the rollup needs and nothing else. The point is
+    what it leaves behind: Trial carries an embedding, and loading rows as ORM
+    objects brings it along.
+    """
+    from sqlalchemy import func
+    from .models import Trial
+
+    rows = (db.query(Trial.company_ticker, Trial.phase, Trial.status, Trial.role,
+                     func.count().label("n"))
+              .group_by(Trial.company_ticker, Trial.phase, Trial.status, Trial.role)
+              .all())
+    ACTIVE = ("RECRUITING", "ACTIVE_NOT_RECRUITING", "ENROLLING_BY_INVITATION")
+    out = {}
+    for ticker, phase, status, role, n in rows:
+        p = out.setdefault(ticker, {"total_trials": 0, "by_phase": {},
+                                    "by_status": {}, "active_trials": 0,
+                                    "terminated_trials": 0,
+                                    "collaborator_trials": 0})
+        # a trial the company does not lead is counted apart and never added in,
+        # exactly as summarize_pipeline does it
+        if (role or "lead") != "lead":
+            p["collaborator_trials"] += n
+            continue
+        p["total_trials"] += n
+        p["by_phase"][phase] = p["by_phase"].get(phase, 0) + n
+        p["by_status"][status] = p["by_status"].get(status, 0) + n
+        if status in ACTIVE:
+            p["active_trials"] += n
+        if status == "TERMINATED":
+            p["terminated_trials"] += n
+    return out
+
+
+def _financials_by_ticker(db):
+    """{ticker: {metric: figure}}, from one query rather than one per company."""
+    from .models import Financial
+
+    out = {}
+    for f in db.query(Financial).all():
+        out.setdefault(f.company_ticker, {})[f.metric] = {
+            "value": int(f.value), "fiscal_year": f.fiscal_year,
+            "fiscal_period": f.fiscal_period, "period_end": f.period_end}
+    return out
+
+
 def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
                     min_active_trials=None, sector=None, min_runway=None,
                     sort_by=None, limit=None):
@@ -95,14 +144,22 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
     sort_by ("rd"/"cash"/"active_trials"/"total_trials"/"runway") sorts descending
     (for "most"/"highest" questions); limit caps the count.
     """
+    # Two aggregate queries rather than two per company.
+    #
+    # This walked every company and lazy-loaded its trials and financials, which
+    # is 787 companies against roughly 1,600 queries — and the trial load pulled
+    # whole ORM objects, embedding column included. Counting phases was dragging
+    # 30,142 vectors of 1,536 floats out of the database, about 185 MB, to
+    # render a table that shows none of it. The browse endpoint took 7.6
+    # seconds, and the page calls it twice on load, so the universe banner sat
+    # on "Loading…" for fifteen.
+    pipelines = _pipelines_by_ticker(db)
+    financials = _financials_by_ticker(db)
+
     results = []
-    # walk every company and build up its summary as we go
     for c in db.query(Company).all():
-        # pull this company's trials and roll them up into a pipeline summary
-        trials = trials_from_db(c)
-        pipeline = summarize_pipeline(trials)
-        # pull its financials and grab the R&D and cash figures
-        fins = metrics_from_db(c)
+        pipeline = pipelines.get(c.ticker) or summarize_pipeline([])
+        fins = financials.get(c.ticker, {})
         rd, cash = fins.get("rd_expense"), fins.get("cash")
         late = late_stage_count(pipeline["by_phase"])
         # runway: cash divided by a year of burn, when both are known. burn comes

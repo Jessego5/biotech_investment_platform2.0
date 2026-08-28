@@ -327,7 +327,18 @@ async function loadSectors() {
       rest.forEach((s) => group.appendChild(new Option(label(s), s)));
       sel.appendChild(group);
     }
-  } catch (e) { /* the dropdown still works from the static options, so just ignore this */ }
+  } catch (e) {
+    // Never swallow this. The banner is the first thing on the page and it
+    // starts on "Loading the universe…", so a failure here leaves that sitting
+    // there forever with nothing to say what went wrong — which is exactly how
+    // a slow endpoint looked identical to a broken one from the browser.
+    const banner = el("stat-banner");
+    if (banner) {
+      banner.innerHTML = `Couldn't load the universe from <code>${escapeHtml(API || location.origin)}</code>. ` +
+        `Is the API running? <code>./run-local.sh</code> starts it.`;
+      banner.classList.add("banner-error");
+    }
+  }
 }
 
 async function runFilters() {
