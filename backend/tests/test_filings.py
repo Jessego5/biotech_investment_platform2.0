@@ -10,6 +10,7 @@ pinned below with the filing that exposed it. Run them with pytest.
 import pytest
 
 from app.filings import (html_to_text, extract_sections, chunk_text, filing_url,
+                         bounds_for, ANNUAL_FORMS, _FORTYF_BOUNDS, _TWENTYF_BOUNDS, _TENK_BOUNDS,
                          latest_annual_filing, MIN_SECTION_CHARS)
 
 
@@ -457,3 +458,31 @@ def test_a_heading_after_item_1a_is_not_the_business_section():
               "be able to protect our rights. " * 60
             + "Competition is fierce. " * 80)
     assert "intellectual_property" not in extract_sections(text, "10-K")
+
+
+def test_a_40f_uses_its_own_headings():
+    # a 40-F wraps the Canadian Annual Information Form and MD&A, which carry no
+    # item numbers at all, so the 10-K patterns find nothing in one
+    assert bounds_for("40-F") is _FORTYF_BOUNDS
+    assert bounds_for("20-F") is _TWENTYF_BOUNDS
+    assert bounds_for("10-K") is _TENK_BOUNDS
+
+
+def test_the_canadian_annual_report_sections_are_found():
+    text = ("Annual Information Form " + "Corporate structure and history. " * 60
+            + "Risk Factors An investment in the Common Shares involves a high "
+              "degree of risk and should be considered speculative. " * 40
+            + "Dividends and Distributions We have never paid a dividend. " * 60
+            + "Management's Discussion and Analysis For the year ended December 31. "
+            + "Results of operations are discussed below. " * 60
+            + "Consolidated Financial Statements " + "Balance sheet. " * 60)
+    got = extract_sections(text, "40-F")
+    assert got["risk_factors"].startswith("Risk Factors")
+    assert "speculative" in got["risk_factors"]
+    assert "Dividends and Distributions" not in got["risk_factors"]
+    assert got["mdna"].startswith("Management's Discussion and Analysis")
+
+
+def test_40f_is_an_annual_form():
+    # Aurora Cannabis, Cybin and NervGen file one and had no filing stored at all
+    assert "40-F" in ANNUAL_FORMS

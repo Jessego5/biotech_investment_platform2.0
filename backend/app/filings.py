@@ -18,12 +18,14 @@ import re
 from .data_sources import _sec_get
 
 SEC_SUBMISSIONS = "https://data.sec.gov/submissions/CIK{cik}.json"
+FILING_INDEX = ("https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/"
+                "{accession_dashed}-index.htm")
 SEC_ARCHIVE = ("https://www.sec.gov/Archives/edgar/data/{cik}/{accession}/"
                "{document}")
 
 # the annual reports worth reading the narrative out of. 20-F is included for the
 # same reason data_sources.py includes it: foreign issuers file one instead.
-ANNUAL_FORMS = ("10-K", "20-F")
+ANNUAL_FORMS = ("10-K", "20-F", "40-F")
 
 # how much text goes in one chunk, and how much of the previous chunk each one
 # repeats. the overlap is so a risk that straddles a boundary is still wholly
@@ -69,11 +71,61 @@ def filing_url(cik, accession, document):
                               document=document)
 
 
-def fetch_filing_text(cik, accession, document):
-    """Download the filing and reduce it to plain text."""
+def exhibit_documents(cik, accession):
+    """
+    The EX-99 documents attached to a filing, in the order EDGAR lists them.
+
+    A 40-F needs them. It is a cover form under the Canada-US multijurisdictional
+    system, and the narrative it reports is the Canadian Annual Information Form
+    and MD&A, filed as exhibits rather than written into the form itself.
+
+    Which exhibit holds what cannot be inferred from its number. Cybin files the
+    Annual Information Form as EX-99.1 and the MD&A as EX-99.3; Aurora Cannabis
+    files certifications as EX-99.1 through EX-99.3; NervGen's are named nothing
+    at all. So every EX-99 is fetched and the headings decide, which is what the
+    section finder already does.
+    """
+    r = _sec_get(FILING_INDEX.format(cik=int(cik),
+                                     accession=accession.replace("-", ""),
+                                     accession_dashed=accession))
+    if r.status_code != 200:
+        return []
+    docs = []
+    for row in re.findall(r"<tr[^>]*>(.*?)</tr>", r.text, re.S):
+        cells = [re.sub(r"<[^>]+>", "", c).strip()
+                 for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
+        if len(cells) >= 4 and cells[3].upper().startswith("EX-99"):
+            link = re.search(r'href="([^"]+)"', row)
+            if link:
+                docs.append(link.group(1).split("/")[-1])
+    return docs
+
+
+def fetch_filing_text(cik, accession, document, form="10-K"):
+    """
+    Download the filing and reduce it to plain text.
+
+    For a 40-F that means the exhibits as well as the form, joined into one
+    document. The section finder then works over the whole submission and picks
+    up Risk Factors and MD&A wherever the filer put them. Certifications and
+    financial statements come along too; they are short or carry none of the
+    headings, so they cost nothing.
+    """
     r = _sec_get(filing_url(cik, accession, document))
     r.raise_for_status()
-    return html_to_text(r.text)
+    text = html_to_text(r.text)
+    if form != "40-F":
+        return text
+    parts = [text]
+    for doc in exhibit_documents(cik, accession):
+        try:
+            er = _sec_get(filing_url(cik, accession, doc))
+            if er.status_code == 200:
+                parts.append(html_to_text(er.text))
+        except Exception:
+            # one unreadable exhibit must not cost the rest of the filing
+            continue
+    return "\n\n".join(parts)
 
 
 # tags that end a line of text. everything else is inline styling that can sit in
@@ -182,13 +234,41 @@ _TWENTYF_BOUNDS = {
 }
 
 
+# A 40-F is numbered differently again, because it is not really a form of its
+# own: it wraps the Canadian Annual Information Form and MD&A, which use their
+# own section names and no item numbers at all. The headings below are the ones
+# an AIF actually uses, and the ends are the sections that conventionally follow
+# Risk Factors in one.
+_FORTYF_BOUNDS = {
+    "risk_factors": (
+        r"Risk\s*Factors",
+        [r"Dividends\s+and\s+Distributions", r"Dividend\s+Policy",
+         r"Description\s+of\s+(?:the\s+)?(?:Share\s+)?Capital\s+Structure",
+         r"Market\s+for\s+Securities", r"Directors\s+and\s+(?:Executive\s+)?Officers",
+         r"Legal\s+Proceedings", r"Material\s+Contracts", r"Transfer\s+Agents?",
+         r"Interests?\s+of\s+Experts", r"Additional\s+Information"],
+    ),
+    "mdna": (
+        r"Management.{0,3}s\s+Discussion\s+and\s+Analysis",
+        [r"Consolidated\s+Financial\s+Statements",
+         r"Report\s+of\s+Independent", r"Interests?\s+of\s+Experts",
+         r"CERTIFICATION"],
+    ),
+}
+
+
 def bounds_for(form):
     """
-    Which set of headings to look for. A 10-K and a 20-F share no section
-    numbering, so reading one with the other's patterns finds nothing at all,
+    Which set of headings to look for. The three forms share no section
+    numbering, so reading one with another's patterns finds nothing at all,
     which is what left every foreign issuer with no risk factors.
     """
-    return _TWENTYF_BOUNDS if (form or "").upper().startswith("20-F") else _TENK_BOUNDS
+    form = (form or "").upper()
+    if form.startswith("20-F"):
+        return _TWENTYF_BOUNDS
+    if form.startswith("40-F"):
+        return _FORTYF_BOUNDS
+    return _TENK_BOUNDS
 
 
 def _positions(pattern, text):
