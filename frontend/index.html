@@ -153,6 +153,38 @@
     </section>
 
     <!-- company detail -->
+    <!-- ============ WORKSPACE VIEW (the dense register) ============
+         The same answer as the chat, in the analyst surface: scope stated above
+         it, evidence beside it, and the rows each lookup returned kept apart
+         instead of concatenated. -->
+    <section id="workspace-view" class="hidden">
+      <button type="button" id="ws-back" class="ghost back">&larr; Back to browse</button>
+      <div class="ws-frame">
+        <div class="ws-bar">
+          <span class="ws-title" id="ws-question">—</span>
+          <span class="ws-date" id="ws-date"></span>
+        </div>
+        <div class="ws-cols">
+          <nav class="ws-rail" aria-label="Workspace sections">
+            <div class="on"><span>Answer</span></div>
+            <div data-ws-nav="trials"><span>Trials</span></div>
+            <div data-ws-nav="filings"><span>Filings</span></div>
+            <div class="off" title="Detection is built; it needs a second snapshot to diff against."><span>Alerts</span></div>
+          </nav>
+          <div class="ws-mid">
+            <div class="ws-envelope" id="ws-envelope"></div>
+            <div class="ws-answer" id="ws-answer"></div>
+            <div class="ws-acts" id="ws-acts"></div>
+            <div class="ws-scope" id="ws-scope"></div>
+          </div>
+          <aside class="ws-side">
+            <div class="ws-sh">Evidence</div>
+            <div id="ws-evidence"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
     <section id="detail-view" class="hidden">
       <button type="button" id="back" class="ghost back">&larr; Back to browse</button>
       <div id="detail-status" class="status"></div>

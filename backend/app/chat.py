@@ -125,6 +125,28 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {}}}},
 ]
 
+TOOL_LABELS = {
+    "filter_companies": "filtered the universe",
+    "company_report": "read one company's figures",
+    "search_trials": "searched trial descriptions",
+    "search_filings": "searched annual report text",
+    "patent_protection": "checked patents and exclusivity",
+    "soonest_patent_cliffs": "ranked companies by expiry",
+    "upcoming_readouts": "looked up expected readouts",
+}
+
+# the primary source behind each, stated rather than implied. A registry record
+# and an SEC filing are different kinds of claim and should not look alike.
+TOOL_SOURCES = {
+    "filter_companies": "SEC EDGAR · CT.gov",
+    "company_report": "SEC EDGAR · CT.gov",
+    "search_trials": "CT.gov",
+    "search_filings": "SEC EDGAR",
+    "patent_protection": "FDA Orange/Purple Book",
+    "soonest_patent_cliffs": "FDA Orange Book",
+    "upcoming_readouts": "CT.gov",
+}
+
 TOOL_SYSTEM = (
     "You answer questions about a biotech company database by choosing tools. "
     "You know no company data yourself and must never state a figure that a tool "
@@ -385,7 +407,12 @@ def answer_question(question, db, as_of=None):
 
     messages = [{"role": "system", "content": system},
                 {"role": "user", "content": question}]
-    facts, sources, called = [], [], []
+    # Evidence is kept as blocks rather than one concatenated string. The string
+    # is what the answer is allowed to use and is still returned for the eval
+    # suite, but a reader checking a claim needs to know WHICH lookup produced
+    # WHICH rows — an undifferentiated wall of text cannot be audited, only
+    # trusted.
+    facts, sources, called, evidence = [], [], [], []
 
     try:
         for _ in range(MAX_ROUNDS):
@@ -422,6 +449,14 @@ def answer_question(question, db, as_of=None):
                 text, srcs = _run_tool(name, args, db, as_of)
                 if text:
                     facts.append(text)
+                    evidence.append({
+                        "n": len(evidence) + 1,
+                        "tool": name,
+                        "label": TOOL_LABELS.get(name, name),
+                        "source": TOOL_SOURCES.get(name, "database"),
+                        "text": text,
+                        "tickers": srcs,
+                    })
                 sources += srcs
                 messages.append({"role": "tool", "tool_call_id": call.id,
                                  "content": text or "(nothing found)"})
@@ -435,4 +470,4 @@ def answer_question(question, db, as_of=None):
     # suite checks every claim in the answer against it (groundedness).
     return {"answer": answer, "sources": list(dict.fromkeys(sources)),
             "match_count": len(sources), "tools_used": called,
-            "retrieved": facts_text}
+            "retrieved": facts_text, "evidence": evidence}

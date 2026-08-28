@@ -709,3 +709,76 @@ html[data-mode="dark"] select {
 }
 html[data-mode="dark"] .starter { background: var(--surface); color: var(--ink); }
 html[data-mode="dark"] .ask-card { background: var(--surf-2); }
+
+/* ============================================================
+   WORKSPACE REGISTER — the dense analyst surface
+   Radius 0, hairlines instead of cards, 11-12px body, rows that scan. The
+   density is the signal: you can tell which surface you are on without a label.
+   ============================================================ */
+.ws-frame { border: 1px solid var(--line-hi); background: var(--surface); margin-top: 14px; }
+.ws-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 10px; border-bottom: 1px solid var(--line-hi);
+  font-size: 12px; color: var(--ink-2);
+}
+.ws-title { color: var(--ink); }
+.ws-date { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+.ws-cols { display: grid; grid-template-columns: 108px minmax(0, 1fr) 260px; }
+.ws-rail { border-right: 1px solid var(--line); font-size: 11px; color: var(--ink-2); }
+.ws-rail div {
+  padding: 5px 9px; border-left: 2px solid transparent; white-space: nowrap; cursor: pointer;
+}
+.ws-rail div.on { color: var(--accent-ink); background: var(--accent-tint); border-left-color: var(--accent); }
+.ws-rail div.off { color: var(--muted); cursor: not-allowed; }
+.ws-mid { min-width: 0; }
+
+/* scope stated before the first word of the answer, so what was searched is
+   known before what was found */
+.ws-envelope {
+  padding: 5px 10px; border-bottom: 1px solid var(--line);
+  font: 11px var(--mono); color: var(--ink-2);
+}
+.ws-answer { padding: 9px 10px; font-size: 12px; line-height: 1.6; }
+.ws-answer.miss { color: var(--muted); font-style: italic; }
+.ws-acts {
+  padding: 5px 10px; border-top: 1px solid var(--line);
+  font-size: 11px; display: flex; gap: 14px; flex-wrap: wrap;
+}
+.ws-acts button {
+  background: none; border: 0; padding: 0; font: inherit;
+  color: var(--accent-ink); cursor: pointer;
+}
+.ws-acts button:hover { text-decoration: underline; background: none; }
+.ws-scope {
+  padding: 5px 10px; border-top: 1px solid var(--line);
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 11px;
+}
+.ws-chip {
+  background: var(--accent-tint); color: var(--accent-ink);
+  padding: 1px 6px; font: 11px var(--mono);
+}
+.ws-scope .right { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+
+/* the evidence pane: one block per lookup, kept apart rather than concatenated,
+   because a claim can only be audited against the rows that produced it */
+.ws-side { border-left: 1px solid var(--line); min-width: 0; }
+.ws-sh {
+  padding: 4px 9px; border-bottom: 1px solid var(--line);
+  font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted);
+}
+.ws-ev { padding: 6px 9px; border-bottom: 1px solid var(--line); }
+.ws-ev .m { font: 10px var(--mono); color: var(--muted); margin-bottom: 3px; display: flex; gap: 6px; align-items: baseline; }
+.ws-ev .n {
+  background: var(--cite-bg); color: var(--cite-fg);
+  font: 10px var(--mono); padding: 0 4px;
+}
+.ws-ev .b {
+  font: 11px/1.5 var(--mono); color: var(--ink-2);
+  white-space: pre-wrap; max-height: 132px; overflow: hidden;
+}
+@media (max-width: 860px) {
+  .ws-cols { grid-template-columns: 1fr; }
+  .ws-rail { display: flex; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .ws-side { border-left: 0; border-top: 1px solid var(--line); }
+}

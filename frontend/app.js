@@ -42,8 +42,11 @@ window.addEventListener("DOMContentLoaded", () => {
   // ?ask=... runs a question on load, so a question is shareable the same way a
   // company page is. It is also the only way to drive the chat from outside the
   // browser, which is how this surface gets checked.
-  const asked = new URLSearchParams(location.search).get("ask");
-  if (asked) askQuestion(asked);
+  const params = new URLSearchParams(location.search);
+  const asked = params.get("ask");
+  // ?ws=1 lands the answer in the dense register rather than the conversational
+  // one, so a workspace view is as shareable as a company page
+  if (asked) askQuestion(asked, params.get("ws") === "1");
 });
 // listen for hash changes so company pages stay shareable and back/forward work
 window.addEventListener("hashchange", route);
@@ -132,7 +135,7 @@ const FOLLOW_UPS = [
   "Which company has the nearest patent cliff?",
 ];
 
-async function askQuestion(preset) {
+async function askQuestion(preset, openWorkspace) {
   const input = el("chat-q");
   if (preset) input.value = preset;
   const q = input.value.trim();
@@ -209,6 +212,12 @@ async function askQuestion(preset) {
     // and the sources out with the text.
     const actions = document.createElement("div");
     actions.className = "ask-actions";
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "ask-copy";
+    open.textContent = "Open in workspace →";
+    open.addEventListener("click", () => showWorkspace({ ...data, question: q }));
+    actions.appendChild(open);
     const copy = document.createElement("button");
     copy.type = "button";
     copy.className = "ask-copy";
@@ -246,6 +255,8 @@ async function askQuestion(preset) {
     actions.appendChild(copy);
     box.appendChild(actions);
 
+    if (openWorkspace) showWorkspace({ ...data, question: q });
+
     const next = document.createElement("div");
     next.className = "ask-next";
     FOLLOW_UPS.filter((f) => f !== q).slice(0, 3).forEach((f) => {
@@ -282,6 +293,86 @@ async function askQuestion(preset) {
     });
   }
 })();
+
+
+// - WORKSPACE (the dense register)
+//
+// The same answer as the chat, laid out for reading rather than conversing:
+// scope stated above it, evidence beside it, and the rows each lookup returned
+// kept apart. The handoff carries the whole result over — nothing is re-asked,
+// because re-running would risk a different answer and the point is to inspect
+// THIS one.
+let LAST_ANSWER = null;
+
+function showWorkspace(data) {
+  LAST_ANSWER = data;
+  browseView.classList.add("hidden");
+  detailView.classList.add("hidden");
+  el("workspace-view").classList.remove("hidden");
+  window.scrollTo(0, 0);
+
+  el("ws-question").textContent = data.question || "Answer";
+  el("ws-date").textContent = new Date().toISOString().slice(0, 10);
+
+  const ev = data.evidence || [];
+  const sources = data.sources || [];
+  // what was searched, before what was found
+  const kinds = [...new Set(ev.map((e) => e.source))];
+  el("ws-envelope").textContent =
+    `${ev.length} lookup${ev.length === 1 ? "" : "s"} · ` +
+    (kinds.join(" · ") || "no source reached") +
+    ` · ${sources.length} compan${sources.length === 1 ? "y" : "ies"}`;
+
+  const grounded = (data.retrieved || "").trim().length > 0;
+  const ans = el("ws-answer");
+  ans.className = grounded ? "ws-answer" : "ws-answer miss";
+  ans.textContent = data.answer || "";
+
+  const acts = el("ws-acts");
+  acts.innerHTML = "";
+  const back = document.createElement("button");
+  back.type = "button";
+  back.textContent = "Back to the conversational view";
+  back.addEventListener("click", () => { showBrowse(); });
+  acts.appendChild(back);
+
+  const scope = el("ws-scope");
+  scope.innerHTML = "";
+  sources.slice(0, 10).forEach((t) => {
+    const chip = document.createElement("span");
+    chip.className = "ws-chip";
+    chip.textContent = t;
+    chip.style.cursor = "pointer";
+    chip.addEventListener("click", () => showDetail(t));
+    scope.appendChild(chip);
+  });
+  const right = document.createElement("span");
+  right.className = "right";
+  right.textContent = sources.length > 10
+    ? `+${sources.length - 10} more` : `${sources.length} in scope`;
+  scope.appendChild(right);
+
+  const pane = el("ws-evidence");
+  pane.innerHTML = "";
+  if (!ev.length) {
+    const empty = document.createElement("div");
+    empty.className = "ws-ev";
+    empty.innerHTML = `<div class="b">Nothing was retrieved, so there is no evidence to show. The answer above reports that absence rather than filling it.</div>`;
+    pane.appendChild(empty);
+  }
+  ev.forEach((e) => {
+    const block = document.createElement("div");
+    block.className = "ws-ev";
+    block.innerHTML =
+      `<div class="m"><span class="n">${e.n}</span>` +
+      `<span>${escapeHtml(e.label)}</span>` +
+      `<span style="margin-left:auto">${escapeHtml(e.source)}</span></div>` +
+      `<div class="b">${escapeHtml(e.text)}</div>`;
+    pane.appendChild(block);
+  });
+}
+
+el("ws-back").addEventListener("click", () => showBrowse());
 
 
 // - BROWSE / FILTER
@@ -441,6 +532,8 @@ async function showDetail(ticker, fromRoute) {
   // set the hash and let route() render it, unless we already came from route()
   if (!fromRoute) { location.hash = "#/c/" + ticker; return; }
   browseView.classList.add("hidden");
+  const wsv = el("workspace-view");
+  if (wsv) wsv.classList.add("hidden");
   detailView.classList.remove("hidden");
   window.scrollTo(0, 0);
   detailResults.innerHTML = "";
@@ -502,6 +595,8 @@ function showBrowse(fromRoute) {
   // clear the hash and let route() show it, unless we already came from route()
   if (!fromRoute && location.hash) { location.hash = ""; return; }
   detailView.classList.add("hidden");
+  const ws = el("workspace-view");
+  if (ws) ws.classList.add("hidden");
   browseView.classList.remove("hidden");
 }
 
