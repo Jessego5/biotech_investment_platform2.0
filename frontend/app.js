@@ -203,6 +203,49 @@ async function askQuestion(preset) {
       }
     }
 
+    // The provenance is the point of this project, and it used to stop at the
+    // edge of the page: copy an answer into a memo and every figure became an
+    // assertion with nothing behind it. This carries the trace, the companies
+    // and the sources out with the text.
+    const actions = document.createElement("div");
+    actions.className = "ask-actions";
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "ask-copy";
+    copy.textContent = "Copy with citations";
+    copy.addEventListener("click", async () => {
+      const steps = (data.tools_used || [])
+        .filter((t) => t !== "greeting" && t !== "decline")
+        .map((t) => TOOL_LABEL[t] || t);
+      const uniqueSteps = steps.filter((v, i) => v !== steps[i - 1]);
+      const lines = [
+        data.answer || "",
+        "",
+        `Question: ${q}`,
+        `Retrieved: ${new Date().toISOString().slice(0, 10)}` +
+          (uniqueSteps.length ? ` — ${uniqueSteps.join(" → ")}` : ""),
+      ];
+      if (sources.length) {
+        lines.push(`Companies behind this answer: ${sources.join(", ")}`);
+      }
+      // stated rather than implied: an answer with nothing behind it must not
+      // travel as though it had sources
+      if (!grounded) {
+        lines.push("No matching data was found; this answer reports an absence.");
+      }
+      lines.push("Primary sources: ClinicalTrials.gov, SEC EDGAR, FDA Orange Book and Purple Book.");
+      lines.push(`${location.origin}${location.pathname}?ask=${encodeURIComponent(q)}`);
+      try {
+        await navigator.clipboard.writeText(lines.join("\n"));
+        copy.textContent = "Copied";
+        setTimeout(() => { copy.textContent = "Copy with citations"; }, 1800);
+      } catch (err) {
+        copy.textContent = "Press ⌘C to copy";
+      }
+    });
+    actions.appendChild(copy);
+    box.appendChild(actions);
+
     const next = document.createElement("div");
     next.className = "ask-next";
     FOLLOW_UPS.filter((f) => f !== q).slice(0, 3).forEach((f) => {

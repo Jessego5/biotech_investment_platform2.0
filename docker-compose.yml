@@ -44,6 +44,16 @@ services:
       # OpenAI key, it just falls back to the fixed template narrative.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SEC_USER_AGENT: ${SEC_USER_AGENT:-}
+      # the API reads the archive as well as writing it: /snapshots, /changes and
+      # /company/{ticker}/changes all answer out of it. Without this the archive
+      # is only visible to the ingest container, and those three endpoints return
+      # empty in a way that looks like "nothing has changed" rather than "this
+      # process cannot see the history".
+      RAW_DIR: /snapshots
+    volumes:
+      # read-only: the API answers from the archive and must never write to it.
+      # Only ingestion adds a snapshot, and only on a dated key it has not used.
+      - snapshots:/snapshots:ro
     depends_on:
       db:
         condition: service_healthy

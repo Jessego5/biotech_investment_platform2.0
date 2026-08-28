@@ -600,3 +600,18 @@ td.nct a:hover { text-decoration: underline; }
   font-size: 11px;
   cursor: help;
 }
+
+/* carrying the provenance out of the page. Without this an answer copied into a
+   memo becomes an assertion with nothing behind it, which wastes the grounding
+   work at exactly the moment it matters. */
+.ask-actions { margin: 0 0 12px; }
+.ask-copy {
+  font-size: 12px;
+  color: var(--accent-ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 11px;
+  cursor: pointer;
+}
+.ask-copy:hover { border-color: var(--accent); background: rgba(14, 124, 120, 0.07); }
