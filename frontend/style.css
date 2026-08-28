@@ -412,10 +412,10 @@ td.nct a:hover { text-decoration: underline; }
   display: inline-block;
   margin-left: 0.4rem;
   padding: 0.05rem 0.4rem;
-  border: 1px solid var(--border, #d0d7de);
+  border: 1px solid var(--line);
   border-radius: 0.75rem;
   font-size: 0.72rem;
-  color: var(--muted, #656d76);
+  color: var(--muted);
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -458,13 +458,17 @@ td.nct a:hover { text-decoration: underline; }
   align-items: flex-start;
   gap: 1px;
   padding: 7px 13px;
-  border: 1px solid var(--border, #d0d7de);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--card, #fff);
+  background: var(--surface);
+  /* the global button rule paints text white for a solid accent button. This
+     one has a white background, so without setting the colour back the company
+     name is white on white — which is exactly how it first rendered. */
+  color: var(--ink);
   cursor: pointer;
   font: inherit;
   text-align: left;
 }
-.starter:hover { border-color: var(--accent, #1a4480); }
+.starter:hover { border-color: var(--accent); background: var(--surface); }
 .starter strong { font-size: 14px; }
 .starter span { font-size: 12px; color: var(--muted); }
