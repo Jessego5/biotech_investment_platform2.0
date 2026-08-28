@@ -60,17 +60,29 @@
     <!-- stat banner (like the "594,972 studies" line on ClinicalTrials.gov) -->
     <div class="stat-banner" id="stat-banner">Loading the universe…</div>
 
+    <!-- somewhere to start. A reviewer landing cold has a filter bar and no
+         reason to prefer any one of 787 tickers, so these are three companies
+         that show different things the tool can actually do. -->
+    <div class="starters" id="starters">
+      <span class="starters-label">Start with</span>
+      <button type="button" class="starter" data-ticker="ABBV">
+        <strong>AbbVie</strong><span>a patent cliff two days out</span></button>
+      <button type="button" class="starter" data-ticker="REGN">
+        <strong>Regeneron</strong><span>protected, but by exclusivity not patents</span></button>
+      <button type="button" class="starter" data-ticker="CYTK">
+        <strong>Cytokinetics</strong><span>clinical-stage, readouts ahead</span></button>
+    </div>
+
     <!-- ============ BROWSE / FILTER VIEW (the instrument) ============ -->
     <section id="browse-view">
       <form class="filters" id="filters" autocomplete="off">
         <div class="filters-title">Focus your filters <span>(all optional)</span></div>
         <div class="filter">
           <label for="f-sector">Sector</label>
+          <!-- filled from the data on load, grouped so the curated labels come
+               first and EDGAR's one-off filing descriptions stay out of the way -->
           <select id="f-sector">
-            <option value="">Any</option>
-            <option value="Biologics">Biologics</option>
-            <option value="Pharma preparations">Pharma preparations</option>
-            <option value="Bio research">Bio research</option>
+            <option value="">Any sector</option>
           </select>
         </div>
         <div class="filter">

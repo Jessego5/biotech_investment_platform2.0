@@ -112,8 +112,11 @@ def main():
                 print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} "
                       f"no annual filing on EDGAR")
                 continue
+            # the form decides how the filing is read, not just how it is
+            # parsed: a 40-F keeps its narrative in exhibits, so fetching the
+            # primary document alone returns a few pages of certifications
             text = fetch_filing_text(company.cik, meta["accession"],
-                                     meta["document"])
+                                     meta["document"], meta["form"])
             sections = extract_sections(text, meta['form'])
         except Exception as e:
             # a failed fetch is not recorded, so the next run tries again rather

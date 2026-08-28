@@ -419,3 +419,52 @@ td.nct a:hover { text-decoration: underline; }
   vertical-align: middle;
   white-space: nowrap;
 }
+
+/* the three dates on the patents card, side by side so a cliff and a reach can
+   be compared at a glance rather than read out of a sentence */
+.protect-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  margin: 12px 0 4px;
+}
+.protect-dates > div { display: flex; flex-direction: column; gap: 2px; }
+.protect-dates .label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.protect-dates strong { font-size: 17px; font-variant-numeric: tabular-nums; }
+
+/* three worked examples on the landing screen. A reviewer arriving cold has a
+   filter bar and no reason to prefer any one of 787 tickers. */
+.starters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.starters-label {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.starter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 13px;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 8px;
+  background: var(--card, #fff);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.starter:hover { border-color: var(--accent, #1a4480); }
+.starter strong { font-size: 14px; }
+.starter span { font-size: 12px; color: var(--muted); }

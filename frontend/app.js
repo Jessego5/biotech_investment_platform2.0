@@ -141,29 +141,68 @@ async function askQuestion() {
 
 // - BROWSE / FILTER
 
+// The sector labels this project curates. Everything else in the column is a
+// description EDGAR supplied for a filing code we do not label ourselves, which
+// is how a biotech screener ends up offering "Cigarettes" and "Wholesale-Beer,
+// Wine & Distilled Alcoholic Beverages" as sectors. Those companies belong in
+// the universe — they run real clinical trials — but they do not belong at the
+// same level as Biologics in a dropdown of 34.
+const CURATED_SECTORS = [
+  "Pharma preparations", "Biologics", "Medical devices", "Diagnostics",
+  "Medicinal chemicals", "Bio research", "Lab instruments", "Medical labs",
+  "Health services", "Medical distribution",
+];
+
+// the three worked examples on the landing screen
+document.querySelectorAll(".starter").forEach((b) =>
+  b.addEventListener("click", () => showDetail(b.dataset.ticker)));
+
+
 async function loadSectors() {
-  // the common sectors are already hardcoded in the HTML so the dropdown always
-  // works even if this fetch fails, like when the page opens before the backend is up.
-  // this just records the total count and adds any sector the HTML doesn't already list.
   try {
     const data = await (await fetch(API + "/companies")).json();
     TOTAL = data.count;
+    // counted by the API rather than written here: every one of these has moved
+    // as the universe widened, and a number typed into the page would quietly
+    // become a claim the data no longer supports
+    let stats = null;
+    try { stats = await (await fetch(API + "/stats")).json(); } catch (e) { /* banner falls back */ }
     const banner = el("stat-banner");
     if (banner) {
-      banner.innerHTML = `This platform analyzes <strong>${TOTAL}</strong> public biotech companies ` +
-        `using real clinical-trial and financial data.`;
+      const n = (v) => (v || 0).toLocaleString();
+      banner.innerHTML = stats
+        ? `<strong>${n(stats.companies)}</strong> public biotech companies ·
+           <strong>${n(stats.trials)}</strong> trials they lead ·
+           <strong>${n(stats.upcoming_readouts)}</strong> readouts still expected ·
+           <strong>${n(stats.filings)}</strong> annual reports read ·
+           <strong>${n(stats.registry_trials)}</strong> studies in the wider registry`
+        : `This platform analyzes <strong>${TOTAL}</strong> public biotech companies ` +
+          `using real clinical-trial and financial data.`;
     }
+
+    // counts, so the dropdown says how much is behind each label
+    const counts = new Map();
+    data.companies.forEach((c) => {
+      if (c.sector) counts.set(c.sector, (counts.get(c.sector) || 0) + 1);
+    });
+
     const sel = el("f-sector");
-    const existing = new Set([...sel.options].map((o) => o.value));
-    [...new Set(data.companies.map((c) => c.sector).filter(Boolean))]
-      .sort()
-      .forEach((s) => {
-        if (!existing.has(s)) {
-          const opt = document.createElement("option");
-          opt.value = s; opt.textContent = s;
-          sel.appendChild(opt);
-        }
-      });
+    sel.innerHTML = '<option value="">Any sector</option>';
+    const label = (s) => `${s} (${counts.get(s)})`;
+
+    // curated first, biggest first, because that is what someone is looking for
+    CURATED_SECTORS.filter((s) => counts.has(s))
+      .sort((a, b) => counts.get(b) - counts.get(a))
+      .forEach((s) => sel.add(new Option(label(s), s)));
+
+    // and the rest kept apart rather than mixed in
+    const rest = [...counts.keys()].filter((s) => !CURATED_SECTORS.includes(s)).sort();
+    if (rest.length) {
+      const group = document.createElement("optgroup");
+      group.label = `Other filers running trials (${rest.length} codes)`;
+      rest.forEach((s) => group.appendChild(new Option(label(s), s)));
+      sel.appendChild(group);
+    }
   } catch (e) { /* the dropdown still works from the static options, so just ignore this */ }
 }
 
@@ -343,6 +382,17 @@ function renderDetail(data) {
   detailResults.appendChild(financialsCard(data.financials, a.financial_signal,
                                            data.cik, data.derived));
 
+  // what is expected to report, and when. The dates are forecasts the registry
+  // publishes, never dates we worked out
+  if (data.readouts && data.readouts.length) {
+    detailResults.appendChild(readoutsCard(data.readouts));
+  }
+
+  // patents and exclusivity on the approved products, if there are any
+  if (data.protection) {
+    detailResults.appendChild(protectionCard(data.protection));
+  }
+
   // trials, linked out to ClinicalTrials.gov
   detailResults.appendChild(trialsCard(data.trials, p.total_trials,
                                        p.total_trials_reported, p.truncated,
@@ -499,6 +549,66 @@ function count(entry) {
   return m >= 1 ? m.toFixed(1) + "M" : Math.round(entry.value).toLocaleString();
 }
 
+function readoutsCard(readouts) {
+  // an estimated completion is when a readout is EXPECTED. The registry marks a
+  // date ACTUAL or ESTIMATED and only the second is a forecast, so calling these
+  // "expected" rather than "due" is the honest word for what they are.
+  const rows = readouts.map((r) => `
+    <tr>
+      <td class="nct"><a href="https://clinicaltrials.gov/study/${encodeURIComponent(r.nct_id)}"
+        target="_blank" rel="noopener">${escapeHtml(r.nct_id)}</a></td>
+      <td class="phase-tag">${escapeHtml(r.phase || "")}</td>
+      <td>${escapeHtml((r.conditions || "").split(";")[0] || "—")}</td>
+      <td class="num">${r.enrollment == null ? "—" : r.enrollment.toLocaleString()}</td>
+      <td class="num">${escapeHtml(r.completion_date || "")}</td>
+    </tr>`).join("");
+  return card(`
+    <p class="card-title">Expected readouts <span class="muted-cell">(${readouts.length} soonest)</span></p>
+    <p class="muted-cell">Primary completion dates the sponsor has filed as
+      <em>estimated</em>. A forecast the registry publishes, not a prediction made here,
+      and only for trials this company leads.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>NCT id</th><th>Phase</th><th>Indication</th>
+        <th class="num">Enrolment</th><th class="num">Expected</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`);
+}
+
+
+function protectionCard(pr) {
+  // the whole point of this card is that "no approved product" is not the same
+  // claim as "no patents", so the state carries its own explanation
+  const evidence = (pr.evidence || [])
+    .map((e) => `<li>${escapeHtml(e)}</li>`).join("");
+  // "no approved product" is a gap in the source, not a weak company, so it must
+  // not be coloured like one. Only genuinely open generic entry is a warning.
+  const cls = pr.state === "protected" ? "good"
+            : (pr.state === "approved, no listed protection" ? "warn" : "");
+  const dates = pr.next_expiry
+    ? `<div class="protect-dates">
+         <div><span class="label">Nearest expiry</span><strong>${escapeHtml(pr.next_expiry)}</strong></div>
+         <div><span class="label">Protection runs to</span><strong>${escapeHtml(pr.last_expiry)}</strong></div>
+         <div><span class="label">Composition-of-matter</span><strong>${pr.composition_of_matter}</strong></div>
+       </div>`
+    : "";
+  const held = [];
+  if (pr.products) held.push(`${pr.products} approved drug${pr.products === 1 ? "" : "s"}`);
+  if (pr.biologics) held.push(`${pr.biologics} licensed biologic${pr.biologics === 1 ? "" : "s"}`);
+  return card(`
+    <p class="card-title">Patents &amp; exclusivity</p>
+    ${held.length ? `<p class="stage-legend">${held.join(" and ")}.</p>` : ""}
+    ${dates}
+    <p class="signal"><span class="signal-label ${cls}">${escapeHtml(pr.state)}</span></p>
+    <ul>${evidence}</ul>
+    <p class="provenance">From the FDA
+      <a href="https://www.fda.gov/drugs/drug-approvals-and-databases/orange-book-data-files"
+         target="_blank" rel="noopener">Orange Book</a> and
+      <a href="https://purplebooksearch.fda.gov/" target="_blank" rel="noopener">Purple Book</a>.
+      US approvals only, so protection held outside the United States is not
+      shown here at all.</p>`);
+}
+
+
 function trialsCard(trials, total, sponsorTotal, truncated, collaborating) {
   if (!trials || !trials.length) {
     return card(`
@@ -512,6 +622,7 @@ function trialsCard(trials, total, sponsorTotal, truncated, collaborating) {
   const rows = trials.map((t) => `
     <tr>
       <td class="nct"><a href="https://clinicaltrials.gov/study/${t.nct_id}" target="_blank" rel="noopener">${t.nct_id}</a></td>
+      <td class="muted-cell">${escapeHtml((t.conditions || "").split(";")[0] || "—")}</td>
       <td>${escapeHtml(t.title || "")}
         ${t.role === "collaborator"
           ? `<span class="role-tag" title="Led by ${escapeHtml(t.lead_sponsor || "another sponsor")}. Not counted in the pipeline figures above.">collaborator</span>`
@@ -537,7 +648,7 @@ function trialsCard(trials, total, sponsorTotal, truncated, collaborating) {
     <p class="card-title">Registered trials <span class="muted-cell">(${shown}${alsoOn})</span></p>
     ${partial}
     <div class="table-scroll"><table>
-      <thead><tr><th>NCT id</th><th>Title</th><th>Phase</th><th>Status</th></tr></thead>
+      <thead><tr><th>NCT id</th><th>Indication</th><th>Title</th><th>Phase</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
     <p class="provenance">Each NCT id links to its registration on

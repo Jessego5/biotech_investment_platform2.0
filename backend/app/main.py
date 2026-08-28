@@ -8,6 +8,7 @@ live fetch if the ticker isn't stored yet, so the app works even before you run
 ingestion.
 """
 
+import datetime
 import json
 import os
 
@@ -26,13 +27,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .database import SessionLocal, init_db
-from .models import Company
+from .models import (Company, Trial, RegistryTrial, ApprovedProduct, Filing)
 from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
                            fetch_financials, company_name)
 from .analysis import build_assessment
 from .narrative import generate_narrative
+from .exclusivity import protection_for
 from .retrieval import (trials_from_db, financials_from_db, query_companies,
-                        derived_figures)
+                        derived_figures, upcoming_readouts)
 from .chat import answer_question
 from .changes import compare, compare_universe, latest_pair
 from .raw_store import get_store, snapshot_coverage
@@ -97,6 +99,36 @@ def root():
         db.close()
     return {"status": "ok", "companies_in_db": count,
             "hint": "run `python ingest.py` to populate the DB" if count == 0 else None}
+
+
+@app.get("/stats")
+def stats():
+    """
+    What the database actually holds, for the landing banner.
+
+    Counted rather than written into the page, because every one of these
+    numbers has changed as the universe widened, and a hardcoded figure would
+    quietly become a claim the data no longer supports.
+    """
+    db = SessionLocal()
+    try:
+        today = datetime.date.today().isoformat()
+        led = db.query(Trial).filter(Trial.role != "collaborator").count()
+        return {
+            "companies": db.query(Company).count(),
+            "trials": led,
+            "registry_trials": db.query(RegistryTrial).count(),
+            "upcoming_readouts": db.query(Trial).filter(
+                Trial.completion_date_type == "ESTIMATED",
+                Trial.completion_date >= today,
+                Trial.role == "lead").count(),
+            "companies_with_protection": db.query(
+                ApprovedProduct.company_ticker).filter(
+                ApprovedProduct.company_ticker.isnot(None)).distinct().count(),
+            "filings": db.query(Filing).count(),
+        }
+    finally:
+        db.close()
 
 
 @app.get("/companies")
@@ -197,6 +229,20 @@ def analyze_company(ticker: str):
     finally:
         db.close()
 
+    # the FDA and readout views are database-only: both are joins over tables
+    # ingestion fills, so a company being served live has neither yet
+    protection, readouts = None, []
+    if source == "database":
+        db2 = SessionLocal()
+        try:
+            today = datetime.date.today().isoformat()
+            protection = protection_for(db2, ticker, today)
+            readouts = upcoming_readouts(db2, today, ticker=ticker, limit=10)
+        except Exception:
+            protection, readouts = None, []
+        finally:
+            db2.close()
+
     # roll the trials up into a pipeline summary and derive the grounded assessment
     pipeline = summarize_pipeline(trials)
     pipeline["total_trials_reported"] = reported_total
@@ -217,6 +263,14 @@ def analyze_company(ticker: str):
         # so there is one implementation of those rules and not two
         "derived": derived_figures(financials),
         "assessment": assessment,
+        # what protects the approved products, and when that runs out. Absent
+        # for a company with nothing approved, which is most of them, and the
+        # signal says so in words rather than leaving a blank to be read as "no
+        # patents" — see app/exclusivity.py.
+        "protection": protection,
+        # trials with a readout still ahead of them, soonest first. Lead-only:
+        # a readout the company does not run is not its catalyst to report.
+        "readouts": readouts,
         "trials": trials[:20],
     }
 
