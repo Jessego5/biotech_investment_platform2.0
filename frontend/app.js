@@ -69,25 +69,24 @@ el("clear").addEventListener("click", clearFilters);
 el("back").addEventListener("click", () => showBrowse());
 
 // fold or unfold the company list, the count stays visible either way
-// the last result set, held so the table can be built when it is actually shown
+// the last result set, held so the table is built when the pane is opened
 let LAST_ROWS = [];
 
-// Closed is the landing state. 787 rows is a wall rather than an answer, and
-// scrolling one is not how anyone finds a company — a filter or a question is.
-function setListOpen(open) {
-  const results = el("browse-results");
-  const btn = el("toggle-list");
-  results.classList.toggle("hidden", !open);
-  btn.textContent = open ? "Hide list" : `Show all`;
-  btn.setAttribute("aria-expanded", String(open));
-  results.innerHTML = "";
-  if (open) renderBrowse(LAST_ROWS);
+// The rail switches panes. The company table is not a landing state and not
+// something to scroll past: a question is how anyone finds a company here, so
+// Ask is what opens, and the table is a panel you ask for.
+function showPane(name) {
+  document.querySelectorAll(".pane").forEach((pane) =>
+    pane.classList.toggle("hidden", pane.id !== "pane-" + name));
+  document.querySelectorAll(".tool-rail button").forEach((b) =>
+    b.classList.toggle("on", b.dataset.pane === name));
+  // built on open rather than held hidden: rendering 787 rows nobody asked for
+  // is most of the work for none of the benefit
+  if (name === "companies") renderBrowse(LAST_ROWS);
 }
 
-el("toggle-list").addEventListener("click", () => {
-  const open = el("browse-results").classList.contains("hidden");
-  setListOpen(open);
-});
+document.querySelectorAll(".tool-rail button").forEach((b) =>
+  b.addEventListener("click", () => showPane(b.dataset.pane)));
 el("lookup-btn").addEventListener("click", doLookup);
 el("ticker-box").addEventListener("keydown", (e) => { if (e.key === "Enter") doLookup(); });
 
@@ -587,16 +586,19 @@ async function runFilters() {
 
   try {
     const data = await (await fetch(API + "/companies?" + params.toString())).json();
-    const of = TOTAL ? ` <span class="muted-cell">of ${TOTAL}</span>` : "";
-    browseCount.innerHTML = `<strong>${data.count}</strong> companies${of}`;
+    // No count. A number of rows is not a finding, and putting "787 companies"
+    // at the top invites reading the list as the product when the answer to
+    // almost every real question is one company or a handful.
+    browseCount.textContent = "";
     // Held rather than rendered. Hiding 787 rows still builds 787 rows, which
     // is most of the work for none of the benefit — and it is not really
     // declining to list them, only declining to show the list.
     LAST_ROWS = data.companies;
-    const btn = el("toggle-list");
-    // a filter is a request to see the result, so the list opens itself once it
-    // has been narrowed to something worth reading. Unfiltered it stays closed.
-    setListOpen(anyFilterSet());
+    // a filter is a request to see the result, so narrowing the set opens the
+    // pane that shows it
+    if (!el("pane-companies").classList.contains("hidden") || anyFilterSet()) {
+      showPane("companies");
+    }
   } catch (e) {
     browseCount.textContent = "Couldn't reach the backend at " + API + ". Is it running?";
     browseResults.innerHTML = "";

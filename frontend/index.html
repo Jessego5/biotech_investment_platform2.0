@@ -53,8 +53,21 @@
   </section>
 
   <main id="tool">
+    <!-- A rail, the same idea as the workspace's. The company table is not a
+         landing state and not a thing to scroll — it is a panel you open when
+         you want it, from here. -->
+    <div class="tool-shell">
+      <nav class="tool-rail" aria-label="Sections">
+        <button type="button" class="on" data-pane="ask" title="Ask">
+          <i class="ti ti-message-circle-question" aria-hidden="true"></i><span>Ask</span></button>
+        <button type="button" data-pane="companies" title="Companies">
+          <i class="ti ti-table" aria-hidden="true"></i><span>Companies</span></button>
+        <button type="button" data-pane="about" title="About the data">
+          <i class="ti ti-info-circle" aria-hidden="true"></i><span>About</span></button>
+      </nav>
+      <div class="tool-body">
     <!-- what the database holds, as a line rather than a banner -->
-    <p class="scope-line" id="stat-banner">Loading the universe…</p>
+    <p class="scope-line" id="stat-banner"></p>
     <!-- somewhere to start. A reviewer landing cold has a filter bar and no
          reason to prefer any one of 787 tickers, so these are three companies
          that show different things the tool can actually do. -->
@@ -70,6 +83,42 @@
 
     <!-- ============ BROWSE / FILTER VIEW (the instrument) ============ -->
     <section id="browse-view">
+      <!-- Ask is the landing pane: a question is how anyone finds a company
+           here, and a table of every one is not. -->
+      <div class="pane" id="pane-ask">
+      <p class="eyebrow">Ask</p>
+      <!-- The generous register. Roomier than everything below it on purpose:
+           the shift in density is what tells you which surface you are on. -->
+      <section class="ask" aria-label="Ask the data">
+        <div class="ask-bar">
+          <span class="ask-mark" aria-hidden="true"><i class="ti ti-dna-2"></i></span>
+          <span class="ask-name">Ask</span>
+          <span class="ask-sub" id="ask-thread">New thread</span>
+          <button type="button" class="ask-open" id="ask-open" hidden>Open in workspace →</button>
+        </div>
+        <div class="ask-empty" id="ask-empty">
+          <h3>Ask across filings, trials, and approvals</h3>
+          <p>Every answer says which lookups produced it, and reports an absence rather than filling one.</p>
+          <div class="ask-starters">
+            <button type="button" data-ask="Which company has the nearest patent cliff?">Which company has the nearest patent cliff?</button>
+            <button type="button" data-ask="What Phase 3 readouts are expected soonest?">What Phase 3 readouts are expected soonest?</button>
+            <button type="button" data-ask="Which medical device companies have a Phase 3 program?">Which medical device companies have a Phase 3 program?</button>
+            <button type="button" data-ask="Which companies have over 3 years of runway and a Phase 3?">Which companies have over 3 years of runway and a Phase 3?</button>
+          </div>
+        </div>
+        <form class="chat-form" id="chat-form">
+          <input id="chat-q" type="text" autocomplete="off"
+                 placeholder="Ask about pipelines, runway, readouts, patent expiry…"
+                 aria-label="Ask a question about the data" />
+          <button type="submit" id="chat-send">Ask</button>
+        </form>
+        <div id="chat-answer" class="chat-answer hidden"></div>
+      </section>
+
+      </div>
+
+      <!-- The table lives behind the rail rather than under the fold. -->
+      <div class="pane hidden" id="pane-companies">
       <p class="eyebrow">Browse</p>
       <form class="filters" id="filters" autocomplete="off">
         <div class="filters-title">Filters <span>(all optional)</span></div>
@@ -114,50 +163,42 @@
         <button type="button" id="clear" class="ghost">Reset</button>
       </form>
 
-      <p class="eyebrow">Ask</p>
-      <!-- The generous register. Roomier than everything below it on purpose:
-           the shift in density is what tells you which surface you are on. -->
-      <section class="ask" aria-label="Ask the data">
-        <div class="ask-bar">
-          <span class="ask-mark" aria-hidden="true"><i class="ti ti-dna-2"></i></span>
-          <span class="ask-name">Ask</span>
-          <span class="ask-sub" id="ask-thread">New thread</span>
-          <button type="button" class="ask-open" id="ask-open" hidden>Open in workspace →</button>
-        </div>
-        <div class="ask-empty" id="ask-empty">
-          <h3>Ask across filings, trials, and approvals</h3>
-          <p>Every answer says which lookups produced it, and reports an absence rather than filling one.</p>
-          <div class="ask-starters">
-            <button type="button" data-ask="Which company has the nearest patent cliff?">Which company has the nearest patent cliff?</button>
-            <button type="button" data-ask="What Phase 3 readouts are expected soonest?">What Phase 3 readouts are expected soonest?</button>
-            <button type="button" data-ask="Which medical device companies have a Phase 3 program?">Which medical device companies have a Phase 3 program?</button>
-            <button type="button" data-ask="Which companies have over 3 years of runway and a Phase 3?">Which companies have over 3 years of runway and a Phase 3?</button>
-          </div>
-        </div>
-        <form class="chat-form" id="chat-form">
-          <input id="chat-q" type="text" autocomplete="off"
-                 placeholder="Ask about pipelines, runway, readouts, patent expiry…"
-                 aria-label="Ask a question about the data" />
-          <button type="submit" id="chat-send">Ask</button>
-        </form>
-        <div id="chat-answer" class="chat-answer hidden"></div>
-      </section>
-
       <div class="browse-head">
         <div class="browse-head-left">
-          <p id="browse-count" class="count" aria-live="polite">Loading the universe…</p>
-          <button type="button" id="toggle-list" class="ghost small" aria-expanded="false"
-                  aria-controls="browse-results">Show all</button>
+          <p id="browse-count" class="count" aria-live="polite"></p>
         </div>
         <p class="table-source">Pipeline &amp; financials per company. Click a row for the full analysis.</p>
       </div>
-      <div id="browse-results" class="table-scroll hidden"></div>
+      <div id="browse-results" class="table-scroll"></div>
 
       <p class="lookup">
         Not in the list? Analyze any ticker live:
         <input id="ticker-box" type="text" placeholder="TICKER" aria-label="Ticker" />
         <button type="button" id="lookup-btn">Analyze</button>
       </p>
+      </div>
+
+      <div class="pane hidden" id="pane-about">
+        <p class="eyebrow">About the data</p>
+        <div class="about">
+          <p>Every figure is computed from a primary source and says which one.
+             Nothing is estimated, and a missing figure is shown as missing
+             rather than as a zero.</p>
+          <ul>
+            <li><strong>Trials</strong> — ClinicalTrials.gov. A pipeline counts
+                only the trials a company leads; ones it collaborates on are
+                kept and labelled apart.</li>
+            <li><strong>Financials</strong> — SEC EDGAR company facts. Runway
+                divides liquidity by cash actually used in operations, not by
+                R&amp;D expense, and says when it fell back.</li>
+            <li><strong>Patents and exclusivity</strong> — FDA Orange Book and
+                Purple Book. US approvals only: protection held elsewhere is not
+                shown at all.</li>
+            <li><strong>Annual report text</strong> — 10-K, 20-F and 40-F
+                narrative, chunked and embedded for search.</li>
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- company detail -->
@@ -200,6 +241,8 @@
       <div id="detail-status" class="status"></div>
       <div id="detail-results"></div>
     </section>
+      </div>
+    </div>
   </main>
   </div>
 
