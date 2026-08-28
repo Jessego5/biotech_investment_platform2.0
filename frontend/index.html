@@ -3,65 +3,36 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI-Assisted Biotech Investment Platform</title>
-  <!-- Public Sans: the same typeface ClinicalTrials.gov / US gov sites use -->
+  <title>Biotech research platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- top banner, mirroring the NIH / NLM government bar -->
-  <div class="gov-banner">
-    <div class="wrap">
-      <div class="gov-org">
-        <span class="gov-logo" aria-hidden="true">BII</span>
-        <span class="gov-org-text">
-          <strong>Biotech Investment Intelligence</strong>
-          <em>Real clinical-trial and SEC filing data</em>
-        </span>
-      </div>
-      <a class="gov-login" href="https://clinicaltrials.gov/data-api/api" target="_blank" rel="noopener">Data &amp; API</a>
-    </div>
-  </div>
+  <div class="page">
 
-  <!-- wordmark row + navigation, mirroring the ClinicalTrials.gov wordmark and nav bar -->
-  <header class="site-header">
-    <div class="wrap wordmark-row">
-      <h1 class="wordmark"><span class="wm-1">AI-Assisted Biotech Investment</span> <span class="wm-2">Platform</span></h1>
+  <!-- A quiet header. The government-style banner and the 30px wordmark this
+       replaces belonged to a different design: they announce an institution,
+       and the surfaces below are supposed to be what the eye lands on. -->
+  <header class="app-head">
+    <div class="app-mark" aria-hidden="true">BII</div>
+    <div class="app-name">
+      <strong>Biotech research platform</strong>
+      <span>SEC filings · clinical trials · FDA approvals and patents</span>
     </div>
-    <nav class="gov-nav" aria-label="Primary">
-      <div class="wrap">
-        <ul class="nav-links">
-          <li><a href="#" data-nav="browse">Browse Companies</a></li>
-          <li><a href="#" data-nav="ask">Ask the Data</a></li>
-          <li><a href="#" data-nav="about">About the Data</a></li>
-        </ul>
-        <button type="button" id="mode-toggle" class="mode-toggle"
-                aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
-        <span class="nav-right" aria-label="Data sources">
-          Sourced from
-          <a href="https://clinicaltrials.gov/" target="_blank" rel="noopener">ClinicalTrials.gov</a>
-          <span class="dot" aria-hidden="true">·</span>
-          <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC&nbsp;EDGAR</a>
-        </span>
-      </div>
+    <nav class="app-nav" aria-label="Primary">
+      <a href="#" data-nav="browse" class="on">Browse</a>
+      <a href="#" data-nav="ask">Ask</a>
+      <a href="#" data-nav="about">About the data</a>
     </nav>
+    <button type="button" id="mode-toggle" class="mode-toggle"
+            aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
   </header>
 
-  <main class="wrap">
-    <!-- disclaimer callout, mirroring the CT.gov disclaimer box -->
-    <div class="disclaimer-callout" id="disclaimer-callout" role="note">
-      <span class="dc-icon" aria-hidden="true">!</span>
-      <div class="dc-text">
-        <strong>This tool is informational only and is not investment advice.</strong>
-        Every figure is grounded in primary-source data (ClinicalTrials.gov and SEC EDGAR).
-      </div>
-    </div>
-
-    <!-- stat banner (like the "594,972 studies" line on ClinicalTrials.gov) -->
-    <div class="stat-banner" id="stat-banner">Loading the universe…</div>
-
+  <main>
+    <!-- what the database holds, as a line rather than a banner -->
+    <p class="scope-line" id="stat-banner">Loading the universe…</p>
     <!-- somewhere to start. A reviewer landing cold has a filter bar and no
          reason to prefer any one of 787 tickers, so these are three companies
          that show different things the tool can actually do. -->
@@ -77,8 +48,9 @@
 
     <!-- ============ BROWSE / FILTER VIEW (the instrument) ============ -->
     <section id="browse-view">
+      <p class="eyebrow">Browse</p>
       <form class="filters" id="filters" autocomplete="off">
-        <div class="filters-title">Focus your filters <span>(all optional)</span></div>
+        <div class="filters-title">Filters <span>(all optional)</span></div>
         <div class="filter">
           <label for="f-sector">Sector</label>
           <!-- filled from the data on load, grouped so the curated labels come
@@ -120,15 +92,29 @@
         <button type="button" id="clear" class="ghost">Reset</button>
       </form>
 
-      <!-- secondary "you can also ask" feature. The filters above stay the star. -->
-      <section class="chat-card" aria-label="Ask the data">
-        <div class="chat-head">
-          <span class="chat-title">Ask the data</span>
-          <span class="chat-sub">Answers come only from the database. If it's not in the data, it says so.</span>
+      <p class="eyebrow">Ask</p>
+      <!-- The generous register. Roomier than everything below it on purpose:
+           the shift in density is what tells you which surface you are on. -->
+      <section class="ask" aria-label="Ask the data">
+        <div class="ask-bar">
+          <span class="ask-mark" aria-hidden="true">◧</span>
+          <span class="ask-name">Ask</span>
+          <span class="ask-sub" id="ask-thread">New thread</span>
+          <button type="button" class="ask-open" id="ask-open" hidden>Open in workspace →</button>
+        </div>
+        <div class="ask-empty" id="ask-empty">
+          <h3>Ask across filings, trials, and approvals</h3>
+          <p>Every answer says which lookups produced it, and reports an absence rather than filling one.</p>
+          <div class="ask-starters">
+            <button type="button" data-ask="Which company has the nearest patent cliff?">Which company has the nearest patent cliff?</button>
+            <button type="button" data-ask="What Phase 3 readouts are expected soonest?">What Phase 3 readouts are expected soonest?</button>
+            <button type="button" data-ask="Which medical device companies have a Phase 3 program?">Which medical device companies have a Phase 3 program?</button>
+            <button type="button" data-ask="Which companies have over 3 years of runway and a Phase 3?">Which companies have over 3 years of runway and a Phase 3?</button>
+          </div>
         </div>
         <form class="chat-form" id="chat-form">
           <input id="chat-q" type="text" autocomplete="off"
-                 placeholder="e.g. Which companies have a Phase 3 trial and over 2x cash runway?"
+                 placeholder="Ask about pipelines, runway, readouts, patent expiry…"
                  aria-label="Ask a question about the data" />
           <button type="submit" id="chat-send">Ask</button>
         </form>
@@ -191,6 +177,7 @@
       <div id="detail-results"></div>
     </section>
   </main>
+  </div>
 
   <!-- config first: it may set window.API_BASE, which app.js reads on load -->
   <script src="config.js"></script>

@@ -782,3 +782,88 @@ html[data-mode="dark"] .ask-card { background: var(--surf-2); }
   .ws-rail { display: flex; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
   .ws-side { border-left: 0; border-top: 1px solid var(--line); }
 }
+
+
+/* ============================================================
+   PAGE SHELL — quiet, so the surfaces are what the eye lands on
+   ============================================================ */
+body { background: var(--plane); font-size: 13px; }
+.page { max-width: 1080px; margin: 0 auto; padding: 26px 20px 80px; }
+
+.app-head {
+  display: flex; align-items: center; gap: 11px;
+  padding-bottom: 12px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--line-hi);
+}
+.app-mark {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font: 500 10px var(--mono); flex: none;
+}
+.app-name { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.app-name strong { font-weight: 500; font-size: 14px; }
+.app-name span { font: 11px var(--mono); color: var(--muted); }
+.app-nav { margin-left: auto; display: flex; gap: 16px; }
+.app-nav a {
+  font-size: 12px; color: var(--ink-2); text-decoration: none; padding-bottom: 2px;
+}
+.app-nav a.on { color: var(--accent-ink); border-bottom: 1px solid var(--accent); }
+.app-nav a:hover { color: var(--accent-ink); }
+
+/* the section label the spec uses: mono caps over a hairline */
+.eyebrow {
+  font: 500 10px/1 var(--mono); letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--muted); margin: 26px 0 10px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--line-hi);
+}
+.scope-line {
+  font: 11px/1.7 var(--mono); color: var(--ink-2); margin: 0 0 4px;
+}
+.scope-line strong { color: var(--accent-ink); font-weight: 500; }
+.scope-line.banner-error { color: var(--cite-fg); }
+
+/* ============================================================
+   ASK REGISTER — generous: radius, padding, a bar of its own
+   ============================================================ */
+.ask {
+  background: var(--surf-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.ask-bar {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 18px; border-bottom: 1px solid var(--line);
+}
+.ask-mark {
+  width: 20px; height: 20px; border-radius: 6px; background: var(--accent);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex: none;
+}
+.ask-name { font-size: 14px; font-weight: 500; }
+.ask-sub { font-size: 12px; color: var(--muted); }
+.ask-open {
+  margin-left: auto; background: none; border: 0; padding: 0;
+  font: inherit; font-size: 12px; color: var(--accent-ink); cursor: pointer;
+}
+.ask-open:hover { background: none; text-decoration: underline; }
+
+/* nobody discovers what a research tool can do from a blinking cursor */
+.ask-empty { padding: 34px 22px 8px; text-align: center; }
+.ask-empty h3 { font: 500 17px var(--sans, inherit); margin: 0 0 5px; }
+.ask-empty p { font-size: 13px; color: var(--ink-2); margin: 0 auto 18px; max-width: 52ch; }
+.ask-starters {
+  display: flex; flex-direction: column; gap: 7px;
+  max-width: 430px; margin: 0 auto; text-align: left;
+}
+.ask-starters button {
+  border: 1px solid var(--line); border-radius: 10px; padding: 9px 13px;
+  font: inherit; font-size: 13px; background: var(--surface); color: var(--ink);
+  cursor: pointer; text-align: left;
+}
+.ask-starters button:hover {
+  border-color: var(--accent); background: var(--accent-tint); color: var(--accent-ink);
+}
+.ask .chat-form { padding: 14px 18px; border-top: 1px solid var(--line); margin: 0; }
+.ask .chat-answer { padding: 4px 22px 18px; }

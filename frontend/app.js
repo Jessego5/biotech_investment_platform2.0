@@ -153,6 +153,15 @@ async function askQuestion(preset, openWorkspace) {
     const data = await r.json();
     box.className = "chat-answer";
     box.innerHTML = "";
+    const empty = el("ask-empty");
+    if (empty) empty.hidden = true;
+    const thread = el("ask-thread");
+    if (thread) thread.textContent = q.length > 46 ? q.slice(0, 46) + "…" : q;
+    const openBar = el("ask-open");
+    if (openBar) {
+      openBar.hidden = false;
+      openBar.onclick = () => showWorkspace({ ...data, question: q });
+    }
 
     // the retrieval trace. The chat picks its own tools now, so which ones it
     // called is the honest account of how the answer was reached — and it is
@@ -212,12 +221,6 @@ async function askQuestion(preset, openWorkspace) {
     // and the sources out with the text.
     const actions = document.createElement("div");
     actions.className = "ask-actions";
-    const open = document.createElement("button");
-    open.type = "button";
-    open.className = "ask-copy";
-    open.textContent = "Open in workspace →";
-    open.addEventListener("click", () => showWorkspace({ ...data, question: q }));
-    actions.appendChild(open);
     const copy = document.createElement("button");
     copy.type = "button";
     copy.className = "ask-copy";
@@ -392,6 +395,12 @@ const CURATED_SECTORS = [
 // the three worked examples on the landing screen
 document.querySelectorAll(".starter").forEach((b) =>
   b.addEventListener("click", () => showDetail(b.dataset.ticker)));
+
+// and the question starters inside the ask surface. Each demonstrates a
+// different lookup — a cross-company ranking, a date query, a sector filter,
+// a composed one — rather than four flavours of the same thing.
+document.querySelectorAll(".ask-starters button").forEach((b) =>
+  b.addEventListener("click", () => askQuestion(b.dataset.ask)));
 
 
 async function loadSectors() {
