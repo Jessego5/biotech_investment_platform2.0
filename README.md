@@ -109,6 +109,38 @@ ROADMAP.md             # future phases
 
 ## How to run
 
+### The short way
+
+If Docker is running and the database has already been built, one command brings
+up Postgres, the API and the frontend together:
+
+```bash
+./run-local.sh              # start; prints where everything is
+./run-local.sh stop         # stop
+```
+
+It reads `OPENAI_API_KEY` and `SEC_USER_AGENT` out of `backend/.env`, waits for
+the API to answer, and prints what the database is holding, so an empty one is
+obvious immediately rather than looking like a broken page:
+
+```
+  app       http://127.0.0.1:5501/index.html
+  API       http://localhost:8000   (try /stats, /companies, /company/ABBV)
+
+  holding   {"companies":787,"trials":21341,"registry_trials":112812,
+             "upcoming_readouts":2840,"companies_with_protection":112,"filings":776}
+```
+
+Without an OpenAI key everything still works; the chat is off and the company
+narrative falls back to its fixed template.
+
+Populating an empty database is a separate job. `migrate_to_postgres.py` carries
+across the tables that are expensive to rebuild if a local SQLite copy exists;
+otherwise `ingest.py` fetches the universe from the live APIs, which takes hours.
+
+The rest of this section is the manual path, which is what to read if any of the
+above does not work.
+
 ### 1. Install
 
 ```bash
