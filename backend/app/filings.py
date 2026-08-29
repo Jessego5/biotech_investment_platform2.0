@@ -379,7 +379,22 @@ _ITEM_HEADING = re.compile(r"Item\s*\d+[A-C]?[.:\s]", re.I)
 # Factors"), which is numbering too. Sanofi's citation reads "discussed under
 # Item 3. Key Information D. Risk Factors", and both parts have to go.
 # "Part II," immediately before a heading, which introduces a reference
-_PART_REFERENCE = re.compile(r"\bPart\s+[IVX0-9]+\s*,\s*$", re.I)
+# "Part II," with a comma, or a "Part II." that a lowercase word runs into.
+# The comma alone was the tell, and Precision BioSciences and Structure
+# Therapeutics both point at their own management discussion with a full stop
+# instead — "identified in Part I. Item 1A. Risk Factors and Part II. Item 7.
+# Management's Discussion". The conjunction in front is what separates that
+# from the structural "PART II" that really does head Item 7: a part heading
+# does not follow the word "and".
+_PART_REFERENCE = re.compile(
+    r"\bPart\s+[IVX0-9]+\s*(?:,\s*$|\.\s*$)"
+    r"|\b(?:and|or|in|to|under|of|see)\s+Part\s+[IVX0-9]+\s*[.,]\s*$", re.I)
+
+# A heading inside quotation marks is a filing naming one of its sections.
+# Telix writes 'can be found in "Item 5. Operating and financial review and
+# prospects" of this Annual Report', which started the management discussion
+# 475,000 characters early.
+_QUOTED = re.compile(r"[\"“‘']\s*$")
 
 _ITEM_REFERENCE = re.compile(r"\b(?:Item|Part)\s*[0-9IVX]+[A-C]?(?:\.[A-Z])?[.:,]?"
                              r"|\b[A-Z]\.(?=\s)", re.I)
@@ -447,7 +462,9 @@ def _is_cross_reference(text, pos):
     # in it at all. the comma is the tell: a structural "PART II ITEM 7A" heading
     # does not have one. ImmunityBio points at its accounts this way three times
     # before the real closing heading.
-    if _PART_REFERENCE.search(text[max(0, pos - 25):pos]):
+    if _PART_REFERENCE.search(text[max(0, pos - 40):pos]):
+        return True
+    if _QUOTED.search(text[max(0, pos - 4):pos]):
         return True
     window = text[max(0, pos - 45):pos]
     cue = None
@@ -500,7 +517,8 @@ def _is_contents_line(text, pos, span=90):
 # A heading phrase running on into "below" or "above": capitalised words, with
 # the small joining words a title is allowed, and then the direction.
 _POINTS_ELSEWHERE = re.compile(
-    r"[A-Z][\w,]*(?:\s+(?:and|or|of|the|to|[A-Z][\w,]*)){0,6}\s+(?:below|above)\b")
+    r"[A-Z][\w,.]*(?:\s+(?:and|or|of|the|to|in|this|[A-Z0-9][\w,.]*)){0,16}"
+    r"\s+(?:below|above|elsewhere)\b")
 
 
 def _points_elsewhere(text, pos):
@@ -513,8 +531,14 @@ def _points_elsewhere(text, pos):
     "see" is out of the window. What gives it away is in front of it. A real
     heading is followed by the section; this one is followed by the rest of its
     own sentence, and a heading is never followed by the word "below".
+
+    "Elsewhere" is the same move over a longer phrase: GPCR's risk factors point
+    at "Item 7. Management's Discussion and Analysis of Financial Condition and
+    Results of Operations and elsewhere in this Annual Report", and taking that
+    for the heading started the management discussion inside the risk factors
+    and ran it 605,000 characters, which is most of the filing.
     """
-    return _POINTS_ELSEWHERE.match(text[pos:pos + 90]) is not None
+    return _POINTS_ELSEWHERE.match(text[pos:pos + 180]) is not None
 
 
 # Three numbers in the first 40 characters after the heading. Aurora Cannabis'
