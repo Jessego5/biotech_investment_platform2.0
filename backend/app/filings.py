@@ -233,8 +233,15 @@ _TENK_BOUNDS = {
         #
         # It is safe here in a way it is not in a 20-F, because a 10-K's section
         # must sit before Item 1A and a 20-F has no Item 1A to bound against.
-        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|PATENTS|Patents|"
-        r"PROPRIETARY\s+RIGHTS|Proprietary\s+Rights)\b",
+        # The optional leading "Something and " matters more than it looks.
+        # Filers combine the heading — Colgate writes "Trademarks and Patents",
+        # Alx Oncology "Licensing and Intellectual Property" — and matching only
+        # the tail lands the start on a lowercase "and", which reads as running
+        # prose and is thrown out. Anchoring at the first word of the heading
+        # keeps it a heading.
+        r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?"
+        r"(?:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|PATENTS|Patents|"
+        r"PROPRIETARY\s+RIGHTS|Proprietary\s+Rights|Trademarks))\b",
         [r"Government(?:al)?\s*Regulation", r"Competition",
          r"Manufacturing", r"Human\s*Capital", r"Employees",
          r"Sales\s*and\s*Marketing", r"Commerciali[sz]ation",
