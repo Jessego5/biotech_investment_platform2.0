@@ -279,17 +279,21 @@ _TWENTYF_BOUNDS = {
     # Abivax uses that word sixteen times and the other twice. There is no Item
     # 1A here to bound against, so Item 5 does it: Item 4 always precedes it.
     "intellectual_property": (
-        # "Patents" on its own is not a heading here. Abivax uses the word
-        # sixteen times in ordinary prose — "Patents granted before the
-        # implementation of the UPC" — and matching it read 47,000 characters of
-        # European patent-law discussion as a description of a patent estate. A
-        # miss is the cheaper error.
-        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|Patents\s+and\s+"
-        r"Proprietary|Patents,\s+Trademarks|Patents\s+and\s+Trade)\b",
+        # Tried in order. "Patents" is back — its absence cost Novo Nordisk,
+        # which heads the section exactly that — but it goes last, because it is
+        # also an ordinary word.
+        [r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?"
+         r"(?:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|Proprietary\s+Rights))\b",
+         r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?(?:PATENTS|Patents))\b"],
         [r"Competition", r"Government(?:al)?\s*Regulation", r"Manufacturing",
          r"Employees", r"Human\s*Capital", r"Organi[sz]ational\s+Structure",
          r"Propert(?:y|ies),?\s+Plants?\s+and\s+Equipment",
          r"Item\s*4A[.:\s\-–—]*Unresolved",
+         # Item 5's own sub-headings, which close Item 4 as reliably as Item 5
+         # does and survive where it does not: AstraZeneca's "Item 5" appears
+         # only inside a run-together navigation string, so nothing closed the
+         # section and it ran 36,000 characters into the sales commentary.
+         r"Geographical\s+Review", r"Operating\s+Results",
          r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial"],
         r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial",
         r"Item\s*4[.:\s\-–—]*Information\s*on\s*the\s*Company",
@@ -444,7 +448,11 @@ def _is_contents_entry(text, pos, span=130):
 # heading is a page break landing there — Vericel's real "Patents and
 # Proprietary Rights" is followed by "9 Table of Contents" — so two pairs are
 # required before calling it a contents line.
-_PAGE_NUMBERED = re.compile(r"\s\d{1,3}\s+[A-Z][A-Za-z]")
+# "Patents and Licenses, etc. 82 5.D Trend Information 82 5.E" — a 20-F numbers
+# its contents entries, so what follows the page number is "5.D" and not a
+# capital letter. Takeda and Galapagos both had their contents line read as the
+# section because of it.
+_PAGE_NUMBERED = re.compile(r"\s\d{1,3}\s+(?:[A-Z][A-Za-z]|\d+\.[A-Z]|[A-Z]\.)")
 
 
 def _is_contents_line(text, pos, span=90):
@@ -461,13 +469,34 @@ def _is_contents_line(text, pos, span=90):
     return len(_PAGE_NUMBERED.findall(text[pos:pos + span])) >= 2
 
 
+# A heading phrase running on into "below" or "above": capitalised words, with
+# the small joining words a title is allowed, and then the direction.
+_POINTS_ELSEWHERE = re.compile(
+    r"[A-Z][\w,]*(?:\s+(?:and|or|of|the|to|[A-Z][\w,]*)){0,6}\s+(?:below|above)\b")
+
+
+def _points_elsewhere(text, pos):
+    """
+    Whether the heading is the tail of a cross-reference rather than a heading.
+
+    _is_cross_reference looks backwards for a cue word, and finds nothing when
+    the cue is far enough back: Sanofi writes "see Patents, Intellectual
+    Property and Other Rights below", and by the time the match starts the
+    "see" is out of the window. What gives it away is in front of it. A real
+    heading is followed by the section; this one is followed by the rest of its
+    own sentence, and a heading is never followed by the word "below".
+    """
+    return _POINTS_ELSEWHERE.match(text[pos:pos + 90]) is not None
+
+
 def _real_headings(text, pattern):
     """The matches that are the heading itself, in document order."""
     return [p for p in _positions(pattern, text)
             if _is_heading(text, p)
             and not _is_cross_reference(text, p)
             and not _is_contents_entry(text, p)
-            and not _is_contents_line(text, p)]
+            and not _is_contents_line(text, p)
+            and not _points_elsewhere(text, p)]
 
 
 def _find_section(text, start_pattern, end_patterns, limit=None,
@@ -534,6 +563,19 @@ def extract_sections(text, form="10-K"):
             after = _real_headings(text, must_precede)
             if after:
                 limit = after[0]
+        # When a section is bracketed by two Item headings, the first match of
+        # each is the wrong pair: a contents page lists them adjacently, so
+        # Sanofi's Item 4 and Item 5 came out 232 characters apart and Novartis
+        # got Item 5 BEFORE Item 4. The real pair is the one that brackets the
+        # most document, because that is what an Item actually is.
+        if must_precede and must_follow:
+            lows = _real_headings(text, must_follow)
+            highs = _real_headings(text, must_precede)
+            best = max(((hi - lo, lo, hi) for lo in lows for hi in highs if hi > lo),
+                       default=None)
+            if best:
+                _, lo, hi = best
+                limit = hi
         # and where it must start after. A 20-F puts its risk factors in Item 3
         # and its business description in Item 4, so "must precede Item 5" alone
         # lets the section match risk-factor prose sitting earlier in the
@@ -544,9 +586,29 @@ def extract_sections(text, form="10-K"):
             before = _real_headings(text, must_follow)
             if before:
                 floor_pos = before[0]
+            if must_precede:
+                lows = before
+                highs = _real_headings(text, must_precede)
+                best = max(((hi - lo, lo) for lo in lows for hi in highs if hi > lo),
+                           default=None)
+                if best:
+                    floor_pos = best[1]
         floor = MIN_SUBSECTION_CHARS if name in SUBSECTIONS else MIN_SECTION_CHARS
-        found = _find_section(text, start_pattern, end_patterns, limit, floor,
-                              floor_pos)
+        # A start may be a list, tried in order of how unambiguous it is.
+        # "Intellectual Property" is a heading and almost nothing else;
+        # "Patents" is also an ordinary word that a filing about patents uses
+        # constantly. Preferring the first means AstraZeneca and Sanofi stop
+        # matching "Patents covering our products are routinely challenged",
+        # which is a sentence, while Novo Nordisk still resolves through the
+        # fallback because "Patents" is genuinely what it heads the section.
+        patterns = start_pattern if isinstance(start_pattern, (list, tuple)) \
+            else [start_pattern]
+        found = None
+        for candidate in patterns:
+            found = _find_section(text, candidate, end_patterns, limit, floor,
+                                  floor_pos)
+            if found is not None:
+                break
         if found is None:
             continue
         body = text[found[0]:found[1]].strip()
