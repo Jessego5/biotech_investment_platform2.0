@@ -476,6 +476,12 @@ def _is_cross_reference(text, pos):
     return "." not in _ITEM_REFERENCE.sub(" ", window[cue.end():])
 
 
+# A 20-F's lettered sub-item, "5.A Operating results". Novartis lists its
+# contents entirely this way, with no page numbers and only one "Item" per line,
+# so neither the item-heading rule nor the page-number rule saw anything.
+_SUBITEM_ENTRY = re.compile(r"\b\d+\.[A-F]\s+[A-Z]")
+
+
 def _is_contents_entry(text, pos, span=130):
     """
     Whether this is a line in the table of contents.
@@ -483,8 +489,16 @@ def _is_contents_entry(text, pos, span=130):
     A contents entry is followed by the next item's entry; a real heading is
     followed by prose. This is what tells the two apart, since both can sit
     behind a page number.
+
+    Counting sub-items as well needs a third match rather than a second,
+    because a real Item 5 heading is genuinely followed by its own "5.A
+    Operating results". What it is not followed by is 5.B as well, 130
+    characters later — in the document those are thousands of characters apart,
+    and only the contents puts them side by side.
     """
-    return len(_ITEM_HEADING.findall(text[pos:pos + span])) >= 2
+    window = text[pos:pos + span]
+    items = len(_ITEM_HEADING.findall(window))
+    return items >= 2 or items + len(_SUBITEM_ENTRY.findall(window)) >= 3
 
 
 # a heading followed by its page number, which is what a contents line looks
@@ -519,6 +533,20 @@ def _is_contents_line(text, pos, span=90):
 _POINTS_ELSEWHERE = re.compile(
     r"[A-Z][\w,.]*(?:\s+(?:and|or|of|the|to|in|this|[A-Z0-9][\w,.]*)){0,16}"
     r"\s+(?:below|above|elsewhere)\b")
+
+
+# The heading's own words, then a comma and ordinary prose. Novartis writes
+# "Item 5. Operating and Financial Review and Prospects, together with the
+# sections on products", which is a noun phrase inside a sentence. A heading
+# ends at a line break; it does not run into a subordinate clause.
+_TITLE_RUN = re.compile(r"^\S+(?:\s+(?:and|or|of|the|to|[A-Z0-9][^\s,]*))*")
+_RUNS_INTO_SENTENCE = re.compile(r"^,\s+[a-z]")
+
+
+def _runs_into_sentence(text, pos):
+    """Whether the heading's words continue into a clause instead of stopping."""
+    after = text[pos:pos + 200]
+    return bool(_RUNS_INTO_SENTENCE.match(after[_TITLE_RUN.match(after).end():]))
 
 
 def _points_elsewhere(text, pos):
@@ -575,7 +603,8 @@ def _real_headings(text, pattern):
             and not _is_contents_entry(text, p)
             and not _is_contents_line(text, p)
             and not _points_elsewhere(text, p)
-            and not _is_table_or_glossary(text, p)]
+            and not _is_table_or_glossary(text, p)
+            and not _runs_into_sentence(text, p)]
 
 
 def _find_section(text, start_pattern, end_patterns, limit=None,
