@@ -154,6 +154,20 @@ def html_to_text(html):
     CRISPR Therapeutics' risk factors went missing.
     """
     text = re.sub(r"(?is)<(script|style).*?</\1>", " ", html)
+
+    # Inline XBRL first. A modern filing carries its machine-readable facts in
+    # the same document as its prose, inside <ix:hidden> and a header block that
+    # are never displayed to a reader. Left in, they arrive as a wall of
+    # "jnj:PatentsAndTrademarksMember2025-12-28" — which is not merely noise:
+    # it matched "patent" twenty-four times inside Johnson & Johnson's Item 1
+    # and produced "IntellectualPropertyMember" as a candidate heading at CRISPR
+    # Therapeutics. It also inflates every position the section finder works
+    # with, so an Item boundary is measured against text a reader never sees.
+    text = re.sub(r"(?is)<ix:hidden.*?</ix:hidden>", " ", text)
+    text = re.sub(r"(?is)<ix:header.*?</ix:header>", " ", text)
+    # elements the filer explicitly hides carry the same kind of content
+    text = re.sub(r'(?is)<div[^>]*style="[^"]*display:\s*none[^"]*"[^>]*>.*?</div>',
+                  " ", text)
     # a block tag ends a line, so it becomes a space
     text = re.sub(rf"(?i)</?({_BLOCK_TAGS})\b[^>]*>", " ", text)
     # everything else is inline and is removed without one, keeping words whole
