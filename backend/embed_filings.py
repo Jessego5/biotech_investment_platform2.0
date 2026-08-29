@@ -107,6 +107,11 @@ def main():
                     help="re-read every filing, replacing what is stored")
     ap.add_argument("--missing-section", metavar="NAME",
                     help="re-read only filings that yielded no NAME section")
+    ap.add_argument("--tickers", metavar="LIST",
+                    help="re-read only these companies, comma separated")
+    ap.add_argument("--oversized-section", metavar="NAME:CHARS",
+                    help="re-read filings whose NAME section exceeds CHARS, "
+                         "which is how a bad boundary shows itself")
     args = ap.parse_args()
 
     init_db()
@@ -127,7 +132,24 @@ def main():
     # would be fetched and embedded again to arrive at the same rows. Widening
     # the intellectual-property bounds recovers about one miss in five, which is
     # worth 274 fetches and is not worth 787.
-    if args.missing_section:
+    # A section that is too large is as wrong as one that is missing, and it
+    # does not show up as a gap. A management discussion running to 500,000
+    # characters is the whole filing: the heading matched the table of contents
+    # and the section ran from there to the next real heading. Those filings
+    # already have every section, so --missing-section will never revisit them.
+    if args.tickers or args.oversized_section:
+        wanted = set()
+        if args.tickers:
+            wanted |= {t.strip().upper() for t in args.tickers.split(",") if t.strip()}
+        if args.oversized_section:
+            name, _, size = args.oversized_section.partition(":")
+            column = {"mdna": Filing.mdna_chars,
+                      "risk_factors": Filing.risk_factors_chars}[name]
+            wanted |= {t for (t,) in db.query(Filing.company_ticker)
+                         .filter(column > int(size)).all()}
+        companies = [c for c in db.query(Company).order_by(Company.ticker).all()
+                     if c.cik and c.ticker in wanted]
+    elif args.missing_section:
         have = {t for (t,) in db.query(Filing.company_ticker)
                   .join(FilingChunk, FilingChunk.filing_id == Filing.id)
                   .filter(FilingChunk.section == args.missing_section).distinct()}
