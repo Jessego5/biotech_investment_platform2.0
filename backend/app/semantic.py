@@ -36,6 +36,27 @@ EMBED_MODEL = "text-embedding-3-small"
 # irrelevant question gets an honest "no data" instead of the closest wrong trials.
 MIN_SCORE = 0.40
 
+# The same floor does not fit the filings. It was calibrated against trials,
+# which are short and titled like the questions people ask; a filing passage is
+# 3,000 characters of dense corporate prose and scores lower for saying the same
+# thing. Measured across all 776 companies, taking each company's best chunk:
+#
+#   the weather forecast tomorrow   median 0.156   max 0.272
+#   time travel and wormholes       median 0.212   max 0.268
+#   best pizza recipe               median 0.094   max 0.201
+#   patent protection               median 0.543
+#   competition from biosimilars    median 0.516
+#   manufacturing capacity          median 0.399
+#
+# 0.40 sits in the middle of the on-topic distribution, not above the off-topic
+# one: it hid the intellectual property section of 168 of the 745 companies that
+# have one, asked the most on-topic question there is, and would have answered
+# "no filing passages matched" for half the database asked about manufacturing.
+# Novo Nordisk's patent section scores 0.329 and is 10,000 characters long.
+#
+# 0.30 clears every off-topic maximum and keeps the honest "no data".
+MIN_FILING_SCORE = 0.30
+
 # both of these are built once, on the first search
 _index = None    # the FAISS index holding the unit-normalized trial vectors
 _meta = None     # list of trial dicts, lined up row for row with the index
@@ -217,8 +238,8 @@ def search_filings(query, k=6, ticker=None):
             hits = [_filing_hit(rows[i][0], rows[i][1], float(scores[i]))
                     for i in order]
 
-        # the same floor as the trial search, so an off-topic question gets an
-        # honest "no data" rather than the least bad passage
-        return [h for h in hits if h["score"] >= MIN_SCORE]
+        # a floor of its own, measured on this corpus, so an off-topic question
+        # gets an honest "no data" rather than the least bad passage
+        return [h for h in hits if h["score"] >= MIN_FILING_SCORE]
     finally:
         db.close()
