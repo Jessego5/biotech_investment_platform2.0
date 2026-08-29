@@ -430,12 +430,32 @@ def _is_contents_entry(text, pos, span=130):
     return len(_ITEM_HEADING.findall(text[pos:pos + span])) >= 2
 
 
+# a heading followed by its page number, which is what a contents line looks
+# like once the layout is gone: "Patents 3 Trademarks 3 Seasonality 3"
+_PAGE_NUMBERED = re.compile(r"^[^\n]{0,60}?\s\d{1,3}\s+[A-Z]")
+
+
+def _is_contents_line(text, pos, span=90):
+    """
+    Whether a match is an entry in the table of contents rather than the
+    section itself.
+
+    _is_contents_entry catches the numbered kind, by looking for two "Item N"
+    headings close together. A section listed by name has no item number:
+    Johnson & Johnson's contents reads "Raw materials 3 Patents 3 Trademarks 3",
+    and the "Patents" in it is followed by a page number and the next entry. A
+    real heading is followed by prose.
+    """
+    return bool(_PAGE_NUMBERED.match(text[pos:pos + span]))
+
+
 def _real_headings(text, pattern):
     """The matches that are the heading itself, in document order."""
     return [p for p in _positions(pattern, text)
             if _is_heading(text, p)
             and not _is_cross_reference(text, p)
-            and not _is_contents_entry(text, p)]
+            and not _is_contents_entry(text, p)
+            and not _is_contents_line(text, p)]
 
 
 def _find_section(text, start_pattern, end_patterns, limit=None,
@@ -458,7 +478,16 @@ def _find_section(text, start_pattern, end_patterns, limit=None,
     every_end = sorted(set(p for pattern in end_patterns
                            for p in _positions(pattern, text)))
     for start in starts:
-        end = next((p for p in ends if p > start), None)
+        # The nearest closing heading, and then the next one if that is too
+        # close to be real. A word that also heads a section appears inside the
+        # prose of the section before it — "a combination of patents,
+        # trademarks, trade secrets" sits 168 characters into Treace's
+        # intellectual property section — and taking the first match and giving
+        # up when it proved too near threw away sections that a later, real
+        # heading would have closed properly.
+        end = next((p for p in ends if p > start and (p - start) >= floor), None)
+        if end is None:
+            end = next((p for p in ends if p > start), None)
         # a closing heading may legitimately follow prose with no page number
         # before it, and ImmunityBio's every closing match sits before its real
         # heading. rather than lose the section, fall back to every match
