@@ -321,6 +321,21 @@ _FORTYF_BOUNDS = {
          r"Report\s+of\s+Independent", r"Interests?\s+of\s+Experts",
          r"CERTIFICATION"],
     ),
+    # A 40-F carries its business description in the Annual Information Form
+    # attached as an exhibit, which is laid out like a prospectus rather than
+    # like an Item. There are no item numbers to bound against, so the headings
+    # of the parts around it do the work.
+    "intellectual_property": (
+        [r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?"
+         r"(?:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|Proprietary\s+Rights))\b",
+         r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?(?:PATENTS|Patents))\b"],
+        [r"Competition", r"Government(?:al)?\s*Regulation", r"Manufacturing",
+         r"Employees", r"Human\s*Capital", r"Risk\s*Factors",
+         r"Legal\s+Proceedings", r"Dividends\s+and\s+Distributions",
+         r"Description\s+of\s+(?:the\s+)?(?:Share\s+)?Capital\s+Structure",
+         r"Market\s+for\s+Securities",
+         r"Directors\s+and\s+(?:Executive\s+)?Officers"],
+    ),
 }
 
 
@@ -502,6 +517,32 @@ def _points_elsewhere(text, pos):
     return _POINTS_ELSEWHERE.match(text[pos:pos + 90]) is not None
 
 
+# Three numbers in the first 40 characters after the heading. Aurora Cannabis'
+# "Patents 189 6 (197) 2 Software 749 3,406" is a row of an intangible-assets
+# note, not the start of a description of a patent estate.
+_TABLE_ROW = re.compile(r"^[^a-z]{0,40}?(?:\(?\d[\d,.]*\)?\s+){3}")
+
+# A glossary entry defines the term rather than heading a section. Bright Minds
+# lists "Patents and Patent Applications" among its defined terms, and the
+# giveaway is the word that follows shortly after.
+_DEFINITION = re.compile(r"^.{0,80}?\bmeans\b", re.S)
+
+
+# The name of an institution, not a heading. Cybin's filing names the United
+# Kingdom Intellectual Property Office while listing its patent applications.
+_NAMES_A_BODY = re.compile(r"^(?:Intellectual\s+Property|INTELLECTUAL\s+PROPERTY)"
+                           r"\s+(?:Office|Organi[sz]ation|Court|Tribunal|Appeal)")
+
+
+def _is_table_or_glossary(text, pos):
+    """Whether the match heads a financial table or a list of defined terms."""
+    if _NAMES_A_BODY.match(text[pos:pos + 60]):
+        return True
+    after = text[pos:pos + 120]
+    after = after[len(re.match(r"[^\s]*(?:\s+[A-Z][^\s]*)*", after).group(0)):]
+    return bool(_TABLE_ROW.match(after) or _DEFINITION.match(after))
+
+
 def _real_headings(text, pattern):
     """The matches that are the heading itself, in document order."""
     return [p for p in _positions(pattern, text)
@@ -509,7 +550,8 @@ def _real_headings(text, pattern):
             and not _is_cross_reference(text, p)
             and not _is_contents_entry(text, p)
             and not _is_contents_line(text, p)
-            and not _points_elsewhere(text, p)]
+            and not _points_elsewhere(text, p)
+            and not _is_table_or_glossary(text, p)]
 
 
 def _find_section(text, start_pattern, end_patterns, limit=None,
