@@ -26,6 +26,8 @@ try:
 except ImportError:
     pass
 
+from sqlalchemy import func
+
 from app.database import SessionLocal, init_db
 from app.models import Company, Financial, FINANCIAL_METRICS
 from app.data_sources import fetch_financials
@@ -36,10 +38,18 @@ PAUSE = 0.15
 
 
 def years_stored(db, ticker):
-    """How many distinct fiscal years this company has across all metrics."""
-    return (db.query(Financial.fiscal_year)
+    """
+    The most fiscal years any single metric has for this company.
+
+    Counting distinct years ACROSS metrics is the wrong question and silently
+    skipped 715 companies on the first run: a company whose cash is FY2025 and
+    whose revenue is FY2024 has two distinct years and one figure each, which
+    is exactly the state this script exists to replace.
+    """
+    rows = (db.query(Financial.metric, func.count(Financial.id))
               .filter(Financial.company_ticker == ticker)
-              .distinct().count())
+              .group_by(Financial.metric).all())
+    return max((n for _, n in rows), default=0)
 
 
 def replace_financials(db, company, financials):

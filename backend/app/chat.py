@@ -15,7 +15,8 @@ import re
 
 from .models import Company
 from .exclusivity import protection_for, soonest_cliffs
-from .retrieval import query_companies, company_facts, upcoming_readouts
+from .retrieval import (query_companies, company_facts, upcoming_readouts,
+                        history_from_db)
 from .semantic import semantic_search, search_filings
 
 CHAT_MODEL = "gpt-4o-mini"
@@ -80,6 +81,18 @@ TOOLS = [
             "company": {"type": "string", "description": "the company NAME as written in the question. Never guess a ticker."}},
             "required": ["company"]}}},
     {"type": "function", "function": {
+        "name": "financial_history",
+        "description": "How a company's figures have MOVED over the years: "
+                       "revenue, cash, R&D spend, net income, debt, shares. Use "
+                       "this for any question about a trend, a direction, or a "
+                       "comparison across years — growing, shrinking, since, "
+                       "over time, peak, runway shortening. company_report gives "
+                       "the current figure only.",
+        "parameters": {"type": "object", "properties": {
+            "company": {"type": "string", "description": "the company NAME as written in the question. Never guess a ticker."},
+            "metric": {"type": "string", "description": "optional, one of revenue, cash, rd_expense, net_income, operating_cash_flow, debt, shares_outstanding, marketable_securities. Omit for all of them."}},
+            "required": ["company"]}}},
+    {"type": "function", "function": {
         "name": "search_trials",
         "description": "Semantic search over trial descriptions. Use for what a "
                        "trial studies or tests — mechanisms, mutations, therapies — "
@@ -133,6 +146,7 @@ TOOL_LABELS = {
     "company_report": "read one company's figures",
     "search_trials": "searched trial descriptions",
     "search_filings": "searched annual report text",
+    "financial_history": "read the reported figures year by year",
     "patent_protection": "checked patents and exclusivity",
     "soonest_patent_cliffs": "ranked companies by expiry",
     "upcoming_readouts": "looked up expected readouts",
@@ -145,6 +159,7 @@ TOOL_SOURCES = {
     "company_report": "SEC EDGAR · CT.gov",
     "search_trials": "CT.gov",
     "search_filings": "SEC EDGAR",
+    "financial_history": "SEC EDGAR (XBRL company facts)",
     "patent_protection": "FDA Orange/Purple Book",
     "soonest_patent_cliffs": "FDA Orange Book",
     "upcoming_readouts": "CT.gov",
@@ -308,6 +323,35 @@ def _run_tool(name, args, db, as_of):
                          f"{t['phase']} | {t['status']}\n  {snippet}")
         return "\n".join(lines), list(dict.fromkeys(
             t["ticker"] for t in trials if t["ticker"]))
+
+    if name == "financial_history":
+        ticker = _resolve_company(args.get("company"), db)
+        if not ticker:
+            return f"No company matching {args.get('company')!r} is in the database.", []
+        company = db.get(Company, ticker)
+        series = history_from_db(company) if company else {}
+        wanted = args.get("metric")
+        if wanted:
+            series = {k: v for k, v in series.items() if k == wanted}
+        # every figure is stripped of the metrics that returned nothing, so the
+        # model is never handed an empty list to describe as a trend
+        series = {k: v for k, v in series.items() if v}
+        if not series:
+            return (f"No financial history is stored for {ticker}"
+                    + (f" under {wanted}." if wanted else "."), [ticker])
+        lines = [f"{ticker} reported figures by fiscal year, newest first:", ""]
+        for metric, rows in sorted(series.items()):
+            if len(rows) == 1:
+                # one year is not a trend, and saying so stops it being read as
+                # one. A company that listed last year has one year and that is
+                # a fact about the company, not a gap in the data.
+                lines.append(f"{metric}: only {rows[0]['fiscal_year']} reported "
+                             f"({int(rows[0]['value']):,})")
+                continue
+            figures = ", ".join(f"{r['fiscal_year']}: {int(r['value']):,}"
+                                for r in rows)
+            lines.append(f"{metric}: {figures}")
+        return "\n".join(lines), [ticker]
 
     if name == "search_filings":
         query = (args.get("query") or "").strip()

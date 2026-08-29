@@ -33,8 +33,8 @@ from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
 from .analysis import build_assessment
 from .narrative import generate_narrative
 from .exclusivity import protection_for
-from .retrieval import (trials_from_db, financials_from_db, query_companies,
-                        derived_figures, upcoming_readouts)
+from .retrieval import (trials_from_db, financials_from_db, history_from_db,
+                        query_companies, derived_figures, upcoming_readouts)
 from .chat import answer_question
 from .changes import compare, compare_universe, latest_pair
 from .raw_store import get_store, snapshot_coverage
@@ -245,6 +245,7 @@ def analyze_company(ticker: str):
             cik = company.cik
             trials = trials_from_db(company)
             financials = financials_from_db(company)
+            fin_history = history_from_db(company)
             # how many the sponsor really has, so a pipeline we only fetched part
             # of isn't shown as the whole of it
             reported_total = company.trial_count_total
@@ -267,6 +268,7 @@ def analyze_company(ticker: str):
                 reported_total = raw_trials.get("totalCount")
                 truncated = bool(raw_trials.get("truncated"))
                 financials = fetch_financials(ticker)
+                fin_history = financials.get("history") or {}
             # surface an upstream failure as a 502 instead of a raw crash
             except Exception as e:
                 raise HTTPException(status_code=502,
@@ -306,6 +308,10 @@ def analyze_company(ticker: str):
         "narrative": narrative,
         "pipeline": pipeline,
         "financials": financials,
+        # every year reported, newest first, alongside the single current
+        # figure. Both are here because they answer different questions: what
+        # the cash is, and whether it is running out.
+        "financial_history": fin_history,
         # liquidity, burn and runway worked out here rather than in the browser,
         # so there is one implementation of those rules and not two
         "derived": derived_figures(financials),
