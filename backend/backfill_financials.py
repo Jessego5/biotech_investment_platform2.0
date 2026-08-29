@@ -52,6 +52,41 @@ def years_stored(db, ticker):
     return max((n for _, n in rows), default=0)
 
 
+def _rows_for(financials):
+    """
+    The Financial rows for one company: the annual series, plus the current
+    figure when it is fresher than the last year end.
+
+    Both are needed and they are not the same number. The series is annual so
+    that years compare against years; the current figure takes the newest
+    balance of any form, so Moderna's cash is the $1.7bn it reported for Q2
+    2026 and not the $2.6bn it held at the 2025 year end. Storing only the
+    series quietly moved every runway calculation onto stale cash.
+
+    They are told apart by fiscal_period: the series is all "FY", so the trend
+    reads only those and the current figure is whatever row is newest.
+    """
+    from app.models import Financial, FINANCIAL_METRICS
+
+    history = financials.get("history") or {}
+    rows = []
+    for metric in FINANCIAL_METRICS:
+        entries = list(history.get(metric) or [])
+        latest = financials.get(metric)
+        # a company whose history could not be read still gets its latest
+        # figure, so this never loses what the old shape captured
+        if latest and not any(e.get("period_end") == latest.get("period_end")
+                              for e in entries):
+            entries.append(latest)
+        for e in entries:
+            rows.append(Financial(
+                metric=metric, value=e["value"], fiscal_year=e["fiscal_year"],
+                fiscal_period=e.get("fiscal_period"),
+                period_end=e.get("period_end"),
+            ))
+    return rows
+
+
 def replace_financials(db, company, financials):
     """
     Write the whole series for one company, replacing what it had.
@@ -61,19 +96,9 @@ def replace_financials(db, company, financials):
     reports under IFRS has no us-gaap facts, and emptying its table would turn
     "we could not read this" into "this company reports nothing".
     """
-    history = financials.get("history") or {}
-    rows = []
-    for metric in FINANCIAL_METRICS:
-        entries = history.get(metric) or []
-        if not entries and financials.get(metric):
-            entries = [financials[metric]]
-        for e in entries:
-            rows.append(Financial(
-                company_ticker=company.ticker, metric=metric, value=e["value"],
-                fiscal_year=e["fiscal_year"],
-                fiscal_period=e.get("fiscal_period"),
-                period_end=e.get("period_end"),
-            ))
+    rows = _rows_for(financials)
+    for row in rows:
+        row.company_ticker = company.ticker
     if not rows:
         return 0
 

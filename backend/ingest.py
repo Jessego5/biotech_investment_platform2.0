@@ -29,6 +29,7 @@ from concurrent.futures import ThreadPoolExecutor
 from app.database import SessionLocal, init_db
 from app.models import Company, Trial, Financial, FINANCIAL_METRICS
 from app.data_sources import fetch_trials_raw, parse_trials, fetch_financials
+from backfill_financials import _rows_for
 from app.raw_store import get_store, raw_key, snapshot_date
 
 COMPANIES_PATH = os.path.join(os.path.dirname(__file__), "companies.json")
@@ -190,20 +191,8 @@ def write_company(db, row, trials, financials, trial_totals=None):
     # newest made every question about a company a question about one instant.
     # "Is the runway shortening" is not answerable from a single figure.
     if financials.get("available"):
-        history = financials.get("history") or {}
-        for metric in FINANCIAL_METRICS:
-            rows = history.get(metric) or []
-            # a company whose history could not be read still gets its latest
-            # figure stored, so this never loses what the old shape captured
-            if not rows and financials.get(metric):
-                rows = [financials[metric]]
-            for entry in rows:
-                company.financials.append(Financial(
-                    metric=metric, value=entry["value"],
-                    fiscal_year=entry["fiscal_year"],
-                    fiscal_period=entry.get("fiscal_period"),
-                    period_end=entry.get("period_end"),
-                ))
+        for row in _rows_for(financials):
+            company.financials.append(row)
 
 
 def parse_args():

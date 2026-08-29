@@ -59,7 +59,12 @@ def history_from_db(company):
     trend want the list.
     """
     out = {}
+    # annual rows only. The table also holds the current figure, which for a
+    # balance is usually a quarter end, and a series that mixed one quarter in
+    # among nine year ends would read as a year that fell off a cliff.
     for f in sorted(company.financials, key=_period_key, reverse=True):
+        if f.fiscal_period != "FY":
+            continue
         out.setdefault(f.metric, []).append(
             {"value": int(f.value), "fiscal_year": f.fiscal_year,
              "fiscal_period": f.fiscal_period, "period_end": f.period_end})
