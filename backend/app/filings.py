@@ -38,6 +38,15 @@ CHUNK_OVERLAP = 300
 # and stored it as a Management's Discussion, which is worse than finding none.
 MIN_SECTION_CHARS = 2000
 
+# A subsection is not an Item and cannot be held to an Item's length. The floor
+# above exists to reject a table-of-contents line, which is a few dozen
+# characters before the next entry — it does not need to be 2,000 to do that.
+# Intellectual property runs to 1,795 characters at Monopar and was thrown away
+# for being short, when a company with one licensed asset has little to say and
+# says it briefly.
+MIN_SUBSECTION_CHARS = 600
+SUBSECTIONS = {"intellectual_property"}
+
 
 def latest_annual_filing(cik):
     """
@@ -231,6 +240,26 @@ _TWENTYF_BOUNDS = {
         r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial",
         [r"Item\s*6[.:\s\-–—]*Directors", r"Item\s*7[.:\s\-–—]*Major\s*Shareholders"],
     ),
+    # A foreign issuer describes its IP under Item 4B, Business Overview, and
+    # frequently heads it "Patents" rather than "Intellectual Property" —
+    # Abivax uses that word sixteen times and the other twice. There is no Item
+    # 1A here to bound against, so Item 5 does it: Item 4 always precedes it.
+    "intellectual_property": (
+        # "Patents" on its own is not a heading here. Abivax uses the word
+        # sixteen times in ordinary prose — "Patents granted before the
+        # implementation of the UPC" — and matching it read 47,000 characters of
+        # European patent-law discussion as a description of a patent estate. A
+        # miss is the cheaper error.
+        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|Patents\s+and\s+"
+        r"Proprietary|Patents,\s+Trademarks|Patents\s+and\s+Trade)\b",
+        [r"Competition", r"Government(?:al)?\s*Regulation", r"Manufacturing",
+         r"Employees", r"Human\s*Capital", r"Organi[sz]ational\s+Structure",
+         r"Propert(?:y|ies),?\s+Plants?\s+and\s+Equipment",
+         r"Item\s*4A[.:\s\-–—]*Unresolved",
+         r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial"],
+        r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial",
+        r"Item\s*4[.:\s\-–—]*Information\s*on\s*the\s*Company",
+    ),
 }
 
 
@@ -383,7 +412,8 @@ def _real_headings(text, pattern):
             and not _is_contents_entry(text, p)]
 
 
-def _find_section(text, start_pattern, end_patterns, limit=None):
+def _find_section(text, start_pattern, end_patterns, limit=None,
+                  floor=MIN_SECTION_CHARS, after=None):
     """
     Locate one section by its heading and the heading of whatever follows it.
 
@@ -395,6 +425,8 @@ def _find_section(text, start_pattern, end_patterns, limit=None):
     starts = _real_headings(text, start_pattern)
     if limit is not None:
         starts = [p for p in starts if p < limit]
+    if after is not None:
+        starts = [p for p in starts if p > after]
     ends = sorted(set(p for pattern in end_patterns
                       for p in _real_headings(text, pattern)))
     every_end = sorted(set(p for pattern in end_patterns
@@ -407,7 +439,7 @@ def _find_section(text, start_pattern, end_patterns, limit=None):
         if end is None:
             end = next((p for p in every_end if p > start), None)
         # too short to be the section itself, so this start was a stray match
-        if end is not None and (end - start) >= MIN_SECTION_CHARS:
+        if end is not None and (end - start) >= floor:
             return (start, end)
     return None
 
@@ -429,17 +461,30 @@ def extract_sections(text, form="10-K"):
         # its name reads as ordinary prose everywhere else in the filing
         start_pattern, end_patterns = spec[0], spec[1]
         must_precede = spec[2] if len(spec) > 2 else None
+        must_follow = spec[3] if len(spec) > 3 else None
         limit = None
         if must_precede:
             after = _real_headings(text, must_precede)
             if after:
                 limit = after[0]
-        found = _find_section(text, start_pattern, end_patterns, limit)
+        # and where it must start after. A 20-F puts its risk factors in Item 3
+        # and its business description in Item 4, so "must precede Item 5" alone
+        # lets the section match risk-factor prose sitting earlier in the
+        # document — which is how "If we are unable to obtain and maintain
+        # patent protection" was read as a description of a patent estate.
+        floor_pos = None
+        if must_follow:
+            before = _real_headings(text, must_follow)
+            if before:
+                floor_pos = before[0]
+        floor = MIN_SUBSECTION_CHARS if name in SUBSECTIONS else MIN_SECTION_CHARS
+        found = _find_section(text, start_pattern, end_patterns, limit, floor,
+                              floor_pos)
         if found is None:
             continue
         body = text[found[0]:found[1]].strip()
         # too short to be the section itself, so this was a contents line
-        if len(body) >= MIN_SECTION_CHARS:
+        if len(body) >= floor:
             sections[name] = body
     return sections
 

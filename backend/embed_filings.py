@@ -105,6 +105,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--refresh", action="store_true",
                     help="re-read every filing, replacing what is stored")
+    ap.add_argument("--missing-section", metavar="NAME",
+                    help="re-read only filings that yielded no NAME section")
     args = ap.parse_args()
 
     init_db()
@@ -120,8 +122,20 @@ def main():
     # the tables first. A wipe would leave the chat with no filing text at all
     # for however long the run takes, and would lose everything if the run died
     # halfway — which is exactly what happened to the first alias crawl.
-    companies = [c for c in db.query(Company).order_by(Company.ticker).all()
-                 if c.cik and (args.refresh or c.ticker not in done)]
+    # Re-read only what is missing a section, rather than everything. A rule
+    # change usually affects one section, and the filings that already yield it
+    # would be fetched and embedded again to arrive at the same rows. Widening
+    # the intellectual-property bounds recovers about one miss in five, which is
+    # worth 274 fetches and is not worth 787.
+    if args.missing_section:
+        have = {t for (t,) in db.query(Filing.company_ticker)
+                  .join(FilingChunk, FilingChunk.filing_id == Filing.id)
+                  .filter(FilingChunk.section == args.missing_section).distinct()}
+        companies = [c for c in db.query(Company).order_by(Company.ticker).all()
+                     if c.cik and c.ticker not in have]
+    else:
+        companies = [c for c in db.query(Company).order_by(Company.ticker).all()
+                     if c.cik and (args.refresh or c.ticker not in done)]
     if not companies:
         print("Every company already has a filing stored. Nothing to do.")
         db.close()

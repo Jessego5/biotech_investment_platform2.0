@@ -486,3 +486,39 @@ def test_the_canadian_annual_report_sections_are_found():
 def test_40f_is_an_annual_form():
     # Aurora Cannabis, Cybin and NervGen file one and had no filing stored at all
     assert "40-F" in ANNUAL_FORMS
+
+
+def test_a_subsection_may_be_short():
+    # the 2,000 floor exists to reject a contents line and was applied to a
+    # subsection too. Monopar's intellectual property section is 1,795
+    # characters and was thrown away for it — a company with one licensed asset
+    # has little to say and says it briefly
+    body = ("Intellectual Property We hold one issued US patent covering our lead "
+            "candidate and license further rights from a university. " * 12
+            + "Competition The market is competitive. " * 80)
+    got = extract_sections(_tenk(body), "10-K")
+    assert "intellectual_property" in got
+    assert 600 < len(got["intellectual_property"]) < 2000
+
+
+def test_a_contents_line_is_still_rejected():
+    # the lower floor must not start admitting the table of contents
+    body = "Intellectual Property 14 Competition 15 Manufacturing 16 " * 2
+    assert "intellectual_property" not in extract_sections(_tenk(body), "10-K")
+
+
+def test_a_20f_finds_its_ip_section_inside_item_4():
+    # a 20-F has no Item 1A. Its risk factors are Item 3 and its business
+    # description Item 4, so bounding only on "before Item 5" matched
+    # risk-factor prose sitting earlier in the document
+    text = ("Item 3. Key Information Risk Factors "
+            + "Intellectual Property If we are unable to obtain and maintain patent "
+              "protection our competitors may commercialise our technology. " * 40
+            + "Item 4. Information on the Company Business Overview "
+            + "Intellectual Property We own issued patents covering our candidate "
+              "and license rights from a university. " * 30
+            + "Competition The market is competitive. " * 60
+            + "Item 5. Operating and Financial Review " + "Results follow. " * 200)
+    got = extract_sections(text, "20-F")
+    assert got["intellectual_property"].startswith("Intellectual Property We own")
+    assert "unable to obtain" not in got["intellectual_property"]
