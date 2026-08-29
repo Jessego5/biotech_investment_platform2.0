@@ -370,6 +370,11 @@ _ITEM_REFERENCE = re.compile(r"\b(?:Item|Part)\s*[0-9IVX]+[A-C]?(?:\.[A-Z])?[.:,
                              r"|\b[A-Z]\.(?=\s)", re.I)
 
 
+# 25 characters of capitals, with at least three letters, so "ITEM 5. OPERATING
+# AND FINANCIAL" qualifies and an acronym in ordinary prose does not.
+_SHOUTED = re.compile(r"(?:[A-Z0-9][^a-z]{0,3}){3,}[^a-z]*$")
+
+
 def _is_heading(text, pos):
     """
     Whether a match is the heading itself rather than prose referring to it.
@@ -393,6 +398,14 @@ def _is_heading(text, pos):
     sits inside Item 5 itself, and taking it for a heading rejects the real
     section for containing its own heading.
     """
+    # A heading set in capitals needs no evidence from what precedes it. The
+    # rule below reads the word before, and a heading that follows a one-line
+    # stub section follows prose: Marker Therapeutics' Item 5 comes straight
+    # after "ITEM 4A. UNRESOLVED STAFF COMMENTS Not applicable", so the word
+    # before the heading is "applicable" and the whole management discussion
+    # was thrown away. Running prose is not written in capitals.
+    if _SHOUTED.match(text[pos:pos + 25]):
+        return True
     before = text[max(0, pos - 80):pos].rstrip()
     if not before:
         return True
