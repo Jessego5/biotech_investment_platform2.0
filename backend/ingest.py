@@ -184,11 +184,20 @@ def write_company(db, row, trials, financials, trial_totals=None):
             masking=t.get("masking"),
         ))
 
-    # add the financial rows, but only the metrics that actually came back
+    # add the financial rows, but only the metrics that actually came back.
+    # One row per metric per fiscal year, not one per metric: the whole series
+    # already arrived in the same companyfacts response, and keeping only the
+    # newest made every question about a company a question about one instant.
+    # "Is the runway shortening" is not answerable from a single figure.
     if financials.get("available"):
+        history = financials.get("history") or {}
         for metric in FINANCIAL_METRICS:
-            entry = financials.get(metric)
-            if entry:
+            rows = history.get(metric) or []
+            # a company whose history could not be read still gets its latest
+            # figure stored, so this never loses what the old shape captured
+            if not rows and financials.get(metric):
+                rows = [financials[metric]]
+            for entry in rows:
                 company.financials.append(Financial(
                     metric=metric, value=entry["value"],
                     fiscal_year=entry["fiscal_year"],

@@ -904,6 +904,81 @@ def _latest_balance(facts, tags, as_of=None):
     return best
 
 
+# How many fiscal years of history to keep. A companyfacts response goes back
+# further than this for older companies, and the point of the series is the
+# trend rather than the archive: ten years covers a company's whole life for
+# most of this universe and still bounds the table at roughly 60,000 rows.
+HISTORY_YEARS = 10
+
+
+def _annual_series(facts, tags, as_of=None, years=HISTORY_YEARS):
+    """
+    Every annual value, newest first, one per fiscal year.
+
+    Same rules as _latest_annual, which is this function's first element: the
+    period must cover a year, and where a year was reported more than once the
+    most recently filed version wins. A 10-K restates the two prior years as
+    comparatives, so without that a company's 2023 revenue would appear three
+    times with whatever value the iteration happened to end on.
+    """
+    best = {}
+    for tag in tags:
+        for e in _entries_for(facts, tag):
+            if e.get("fp") != "FY" or e.get("form") not in ANNUAL_FORMS:
+                continue
+            if not _was_public_by(e, as_of):
+                continue
+            start, end = e.get("start"), e.get("end")
+            if not _covers_a_year(start, end):
+                continue
+            year = int(end[:4])
+            key = (end, e.get("filed") or "")
+            if year not in best or key > best[year]["_key"]:
+                best[year] = {"value": e["val"], "fiscal_year": year,
+                              "fiscal_period": "FY", "period_end": end,
+                              "tag": tag, "_key": key}
+    out = [best[y] for y in sorted(best, reverse=True)[:years]]
+    for row in out:
+        del row["_key"]
+    return out
+
+
+def _balance_series(facts, tags, as_of=None, years=HISTORY_YEARS):
+    """
+    One balance per fiscal year, newest first: the last one reported in each.
+
+    A balance is a value on a date and a company reports one every quarter, so a
+    raw series would mix year ends with quarter ends and a year-on-year
+    comparison would be against whatever quarter happened to be last. Taking the
+    latest balance within each year makes the years comparable. This is why the
+    first element here can differ from _latest_balance, which deliberately takes
+    the newest balance of any form so that runway is computed from the freshest
+    cash figure rather than the last year end.
+    """
+    best = {}
+    for tag in tags:
+        for e in _entries_for(facts, tag):
+            if e.get("start") is not None:
+                continue
+            if e.get("form") not in ANNUAL_FORMS:
+                continue
+            if not _was_public_by(e, as_of):
+                continue
+            end = e.get("end")
+            if not end:
+                continue
+            year = int(end[:4])
+            key = (end, e.get("filed") or "")
+            if year not in best or key > best[year]["_key"]:
+                best[year] = {"value": e["val"], "fiscal_year": year,
+                              "fiscal_period": "FY", "period_end": end,
+                              "tag": tag, "_key": key}
+    out = [best[y] for y in sorted(best, reverse=True)[:years]]
+    for row in out:
+        del row["_key"]
+    return out
+
+
 def fetch_financials(ticker, cik=None, as_of=None):
     """
     Return real financials for a public company, or a reason it's unavailable.
@@ -961,4 +1036,22 @@ def fetch_financials(ticker, cik=None, as_of=None):
             "reason": "no annual figures found under us-gaap or ifrs-full",
         }
 
-    return {"available": True, "cik": cik, **figures}
+    # The same facts response, read as a series rather than a point. It costs no
+    # further request: everything a company has ever reported already arrived.
+    # Kept under its own key so the shape callers already read is unchanged, and
+    # a metric's newest entry stays exactly what it was.
+    history = {metric: _annual_series(facts, tags, as_of) for metric, tags in (
+        ("rd_expense", RD_TAGS),
+        ("operating_cash_flow", OPERATING_CASH_FLOW_TAGS),
+        ("net_income", NET_INCOME_TAGS),
+        ("revenue", REVENUE_TAGS),
+    )}
+    history.update({metric: _balance_series(facts, tags, as_of)
+                    for metric, tags in (
+        ("cash", CASH_TAGS),
+        ("marketable_securities", SECURITIES_TAGS),
+        ("debt", DEBT_TAGS),
+        ("shares_outstanding", SHARES_TAGS),
+    )})
+
+    return {"available": True, "cik": cik, "history": history, **figures}

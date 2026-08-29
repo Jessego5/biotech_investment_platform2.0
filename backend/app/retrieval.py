@@ -35,9 +35,35 @@ def metrics_from_db(company):
     carries the period it covers, because the two are not the same kind of number:
     R&D is a total over a full year, cash is a balance on a date.
     """
+    # The table holds a row per fiscal year, so "the figure" has to be chosen
+    # rather than taken. Sorting by period end and letting the last write win
+    # makes it the newest; without that the dict comprehension kept whatever
+    # row the iteration happened to end on, which is a different year for
+    # different companies and no error anywhere to say so.
     return {f.metric: {"value": int(f.value), "fiscal_year": f.fiscal_year,
                        "fiscal_period": f.fiscal_period, "period_end": f.period_end}
-            for f in company.financials}
+            for f in sorted(company.financials, key=_period_key)}
+
+
+def _period_key(f):
+    """Order financial rows oldest first, so the last one read is the newest."""
+    return (f.period_end or "", f.fiscal_year or 0)
+
+
+def history_from_db(company):
+    """
+    {metric: [figure, ...]} newest first — the series behind the single figure.
+
+    Kept separate from metrics_from_db rather than replacing it: everything that
+    reads a company's cash wants one number, and only the questions about a
+    trend want the list.
+    """
+    out = {}
+    for f in sorted(company.financials, key=_period_key, reverse=True):
+        out.setdefault(f.metric, []).append(
+            {"value": int(f.value), "fiscal_year": f.fiscal_year,
+             "fiscal_period": f.fiscal_period, "period_end": f.period_end})
+    return out
 
 
 def financials_from_db(company):
@@ -128,7 +154,9 @@ def _financials_by_ticker(db):
     from .models import Financial
 
     out = {}
-    for f in db.query(Financial).all():
+    # ordered oldest first so the last row written for a metric is the newest,
+    # the same rule metrics_from_db follows
+    for f in sorted(db.query(Financial).all(), key=_period_key):
         out.setdefault(f.company_ticker, {})[f.metric] = {
             "value": int(f.value), "fiscal_year": f.fiscal_year,
             "fiscal_period": f.fiscal_period, "period_end": f.period_end}
