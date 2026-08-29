@@ -233,7 +233,8 @@ _TENK_BOUNDS = {
         #
         # It is safe here in a way it is not in a 20-F, because a 10-K's section
         # must sit before Item 1A and a 20-F has no Item 1A to bound against.
-        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|PATENTS|Patents)\b",
+        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|PATENTS|Patents|"
+        r"PROPRIETARY\s+RIGHTS|Proprietary\s+Rights)\b",
         [r"Government(?:al)?\s*Regulation", r"Competition",
          r"Manufacturing", r"Human\s*Capital", r"Employees",
          r"Sales\s*and\s*Marketing", r"Commerciali[sz]ation",
@@ -432,7 +433,11 @@ def _is_contents_entry(text, pos, span=130):
 
 # a heading followed by its page number, which is what a contents line looks
 # like once the layout is gone: "Patents 3 Trademarks 3 Seasonality 3"
-_PAGE_NUMBERED = re.compile(r"^[^\n]{0,60}?\s\d{1,3}\s+[A-Z]")
+# A contents line LISTS things: name, page, name, page. One page number after a
+# heading is a page break landing there — Vericel's real "Patents and
+# Proprietary Rights" is followed by "9 Table of Contents" — so two pairs are
+# required before calling it a contents line.
+_PAGE_NUMBERED = re.compile(r"\s\d{1,3}\s+[A-Z][A-Za-z]")
 
 
 def _is_contents_line(text, pos, span=90):
@@ -446,7 +451,7 @@ def _is_contents_line(text, pos, span=90):
     and the "Patents" in it is followed by a page number and the next entry. A
     real heading is followed by prose.
     """
-    return bool(_PAGE_NUMBERED.match(text[pos:pos + span]))
+    return len(_PAGE_NUMBERED.findall(text[pos:pos + span])) >= 2
 
 
 def _real_headings(text, pattern):
