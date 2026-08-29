@@ -522,3 +522,17 @@ def test_a_20f_finds_its_ip_section_inside_item_4():
     got = extract_sections(text, "20-F")
     assert got["intellectual_property"].startswith("Intellectual Property We own")
     assert "unable to obtain" not in got["intellectual_property"]
+
+
+def test_patents_is_a_heading_too():
+    # Johnson & Johnson heads the section "Patents", not "Intellectual
+    # Property" — its contents page reads "Raw materials 3  Patents 3
+    # Trademarks 3". Looking only for the biotech convention read one of the
+    # most patent-dependent companies in the universe as having no patent
+    # disclosure at all.
+    body = ("Patents The Company's subsidiaries have made a practice of obtaining "
+            "patent protection on their products and processes where possible. " * 20
+            + "Trademarks The Company owns many trademarks. " * 60)
+    got = extract_sections(_tenk(body), "10-K")
+    assert got["intellectual_property"].startswith("Patents The Company")
+    assert "Trademarks The Company owns" not in got["intellectual_property"]

@@ -223,10 +223,22 @@ _TENK_BOUNDS = {
         # The word boundary matters too: inline XBRL writes
         # "IntellectualPropertyMember2025-01-01..." and without it CRISPR
         # extracted three thousand characters of tag soup.
-        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property)\b",
+        # "Patents" belongs here and its absence was a real gap. Johnson &
+        # Johnson heads the section that way — its own contents page reads
+        # "Raw materials 3  Patents 3  Trademarks 3" — and so do Theravance,
+        # Vericel and Gyre. "Intellectual Property" is the clinical-stage
+        # convention; the older and more diversified filers write "Patents", and
+        # looking only for the former read those companies as having no patent
+        # disclosure at all, which for J&J is plainly false.
+        #
+        # It is safe here in a way it is not in a 20-F, because a 10-K's section
+        # must sit before Item 1A and a 20-F has no Item 1A to bound against.
+        r"(?-i:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|PATENTS|Patents)\b",
         [r"Government(?:al)?\s*Regulation", r"Competition",
          r"Manufacturing", r"Human\s*Capital", r"Employees",
          r"Sales\s*and\s*Marketing", r"Commerciali[sz]ation",
+         # what follows Patents in the older layout
+         r"Trademarks", r"Seasonality", r"Raw\s+Materials",
          r"Item\s*1A[.:\s\-–—]*Risk\s*Factors"],
         # and it has to sit inside Item 1. The phrase appears far more often in
         # the risk factors than in the business section — "the intellectual
