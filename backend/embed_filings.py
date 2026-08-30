@@ -122,10 +122,50 @@ def main():
     ap.add_argument("--oversized-section", metavar="NAME:CHARS",
                     help="re-read filings whose NAME section exceeds CHARS, "
                          "which is how a bad boundary shows itself")
+    ap.add_argument("--stamp-periods", action="store_true",
+                    help="fill in period_end and fiscal_year for filings stored "
+                         "before those were recorded, without re-reading them")
     args = ap.parse_args()
 
     init_db()
     db = SessionLocal()
+
+    # The filings read before the history existed carry no period, so a question
+    # naming a year cannot reach the most recent report of all. Stamping them
+    # needs the submissions feed and not the documents: one request per company
+    # against three thousand multi-megabyte fetches to learn the same thing.
+    if args.stamp_periods:
+        rows = db.query(Filing).filter(Filing.fiscal_year.is_(None)).all()
+        by_ticker = {}
+        for f in rows:
+            by_ticker.setdefault(f.company_ticker, []).append(f)
+        print(f"Stamping {len(rows)} filings across {len(by_ticker)} companies...\n")
+        stamped = missing = 0
+        for n, (ticker, filings_) in enumerate(sorted(by_ticker.items()), 1):
+            company = db.get(Company, ticker)
+            if company is None or not company.cik:
+                continue
+            try:
+                known = {m["accession"]: m for m in annual_filings(company.cik, 12)}
+            except Exception as e:
+                print(f"  [{n:>3}] {ticker:6} FAILED: {e}")
+                continue
+            for f in filings_:
+                meta = known.get(f.accession)
+                if meta is None:
+                    # the filing is stored but no longer among the recent ones,
+                    # which is a fact worth seeing rather than a silent skip
+                    missing += 1
+                    continue
+                f.period_end = meta["period_end"]
+                f.fiscal_year = meta["fiscal_year"]
+                stamped += 1
+            db.commit()
+            time.sleep(0.05)
+        db.close()
+        print(f"\nDONE. {stamped} stamped, {missing} not found in the "
+              f"submissions feed.")
+        return
 
     # already done, so a re-run costs nothing
     done = {t for (t,) in db.query(Filing.company_ticker).all()}
