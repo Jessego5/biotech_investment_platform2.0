@@ -20,6 +20,7 @@ import sys
 import time
 
 import numpy as np
+from sqlalchemy import func
 
 try:
     from dotenv import load_dotenv
@@ -165,8 +166,16 @@ def main():
         companies = [c for c in db.query(Company).order_by(Company.ticker).all()
                      if c.cik and c.ticker not in have]
     else:
+        # "Already stored" means a company has as many years as was asked for,
+        # not that it has any at all. With --history 5 the default test skipped
+        # every company in the database, because each had the one filing it was
+        # given before the history existed, and the run reported success having
+        # read eleven.
+        counts = dict(db.query(Filing.company_ticker, func.count(Filing.id))
+                        .group_by(Filing.company_ticker).all())
         companies = [c for c in db.query(Company).order_by(Company.ticker).all()
-                     if c.cik and (args.refresh or c.ticker not in done)]
+                     if c.cik and (args.refresh
+                                   or counts.get(c.ticker, 0) < args.history)]
     if not companies:
         print("Every company already has a filing stored. Nothing to do.")
         db.close()
