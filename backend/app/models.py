@@ -203,6 +203,13 @@ class Filing(Base):
     filed = Column(String)           # ISO date the filing was submitted
     accession = Column(String)       # EDGAR's id for it, unique per filing
     document = Column(String)        # the primary document's filename
+    # the period the report covers, and the year that period belongs to. Both,
+    # because they are not derivable from each other: a 52/53-week year ends in
+    # the first days of January, so Johnson & Johnson's 2022 report ends
+    # 2023-01-01. The period is what makes two rows the same report; the year is
+    # what a person asking "the 2022 10-K" means.
+    period_end = Column(String)
+    fiscal_year = Column(Integer, index=True)
     text_chars = Column(Integer)     # size of the whole filing once stripped to text
     # which sections were found, comma separated, empty when none were. a filing
     # can incorporate its risk factors by reference or use headings the reader

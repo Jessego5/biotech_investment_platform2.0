@@ -72,6 +72,59 @@ def latest_annual_filing(cik):
     return None
 
 
+def _fiscal_year(period_end):
+    """
+    The year a reporting period belongs to, which is not always the year it
+    ends in. A 52/53-week fiscal year ending in the first days of January
+    belongs to the year before: Johnson & Johnson's 2022 ended 2023-01-01.
+    """
+    year, month = int(period_end[:4]), int(period_end[5:7])
+    return year - 1 if month == 1 else year
+
+
+def annual_filings(cik, limit=5):
+    """
+    The most recent `limit` annual reports, newest first.
+
+    One per fiscal year. A company files more than one 10-K for a year more
+    often than it looks — an amendment, or a re-filing a fortnight later — and
+    both carry the same period, so taking them in order would spend two of the
+    five slots on the same year and silently shorten the history. The one filed
+    latest is the one that stands.
+
+    The submissions feed's "recent" block holds a thousand filings, which is
+    five to seventeen annual reports for every company in this universe, so the
+    older archive files it also lists are never needed.
+    """
+    r = _sec_get(SEC_SUBMISSIONS.format(cik=cik))
+    if r.status_code == 404:
+        return []
+    r.raise_for_status()
+    recent = r.json().get("filings", {}).get("recent", {})
+    forms = recent.get("form", [])
+    by_period = {}
+    for i, form in enumerate(forms):
+        if form not in ANNUAL_FORMS:
+            continue
+        filed = recent["filingDate"][i]
+        # keyed by the period the report covers, not by a fiscal year worked
+        # out from it. A 52/53-week year does not end on the 31st of December:
+        # Johnson & Johnson's 2022 ended on the 1st of January 2023, so calling
+        # it "2023" collided with the year that really was 2023 and the later
+        # filing won — the 2022 annual report disappeared from a five-year
+        # history without anything to say it had. Two filings sharing a period
+        # are an amendment or a re-filing, and there the latest one stands.
+        period = (recent.get("reportDate") or [None] * len(forms))[i] or filed
+        entry = {"form": form, "filed": filed,
+                 "accession": recent["accessionNumber"][i],
+                 "document": recent["primaryDocument"][i],
+                 "period_end": period,
+                 "fiscal_year": _fiscal_year(period)}
+        if period not in by_period or filed > by_period[period]["filed"]:
+            by_period[period] = entry
+    return [by_period[p] for p in sorted(by_period, reverse=True)[:limit]]
+
+
 def filing_url(cik, accession, document):
     """Where the filing's primary document lives in EDGAR's archive."""
     # the archive path drops the zero padding from the CIK and the dashes from

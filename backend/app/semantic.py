@@ -189,12 +189,42 @@ def _filing_hit(chunk, filing, score):
         "section": chunk.section,
         "form": filing.form,
         "filed": filing.filed,
+        # which year this passage is FROM. Without it a 2021 risk factor and a
+        # 2025 one are the same sentence to anyone reading the answer.
+        "fiscal_year": filing.fiscal_year,
+        "period_end": filing.period_end,
         "text": chunk.text,
         "score": score,
     }
 
 
-def search_filings(query, k=6, ticker=None):
+def _scope_years(db, query_, year, all_years):
+    """Narrow a filing query to one year, or to the newest report."""
+    from sqlalchemy import and_
+    if all_years:
+        return query_
+    if year is not None:
+        return query_.filter(Filing.fiscal_year == int(year))
+    newest = _newest_filing_join(db)
+    return query_.join(newest, and_(Filing.company_ticker == newest.c.ticker,
+                                    Filing.filed == newest.c.filed))
+
+
+def _newest_filing_join(db):
+    """
+    A subquery selecting each company's most recently filed annual report.
+
+    Joined on the filing date rather than the fiscal year because the year is
+    only populated for filings read since the history was added, and a filter
+    on a column that is NULL for most rows drops them silently.
+    """
+    from sqlalchemy import func
+    return (db.query(Filing.company_ticker.label("ticker"),
+                     func.max(Filing.filed).label("filed"))
+              .group_by(Filing.company_ticker).subquery())
+
+
+def search_filings(query, k=6, ticker=None, year=None, all_years=False):
     """
     Search the narrative sections of annual reports, which is where a company
     says in its own words what could go wrong. Pass a ticker to ask what one
@@ -203,7 +233,15 @@ def search_filings(query, k=6, ticker=None):
     Separate from the trial search rather than merged with it: a risk factor and
     a trial description answer different questions, and mixing them would let a
     trial outrank the passage that actually addresses "what are its risks".
+
+    Searches the most recent annual report only, unless a year is named or
+    all_years is set. Once several years of a filing are stored, "what does this
+    company say about its risks" would otherwise return whichever year happened
+    to score best — a 2021 passage and a 2025 passage read identically, and the
+    answer would be about a company as it was four years ago with nothing to
+    say so. Asking across years has to be a choice, not the default.
     """
+    from sqlalchemy import and_
     q = _embed_query(query)[0]
 
     db = SessionLocal()
@@ -215,6 +253,7 @@ def search_filings(query, k=6, ticker=None):
                         .filter(FilingChunk.embedding.isnot(None)))
             if ticker:
                 query_ = query_.filter(Filing.company_ticker == ticker)
+            query_ = _scope_years(db, query_, year, all_years)
             rows = query_.order_by(distance).limit(k).all()
             hits = [_filing_hit(c, f, 1.0 - float(d)) for c, f, d in rows]
         else:
@@ -227,6 +266,7 @@ def search_filings(query, k=6, ticker=None):
                         .filter(FilingChunk.embedding.isnot(None)))
             if ticker:
                 query_ = query_.filter(Filing.company_ticker == ticker)
+            query_ = _scope_years(db, query_, year, all_years)
             rows = query_.all()
             if not rows:
                 return []

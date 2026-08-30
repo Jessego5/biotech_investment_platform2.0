@@ -29,7 +29,7 @@ except ImportError:
 
 from app.database import SessionLocal, init_db
 from app.models import Company, Filing, FilingChunk
-from app.filings import (latest_annual_filing, fetch_filing_text,
+from app.filings import (latest_annual_filing, annual_filings, fetch_filing_text,
                          extract_sections, chunk_text)
 
 EMBED_MODEL = "text-embedding-3-small"
@@ -69,7 +69,12 @@ def store_filing(db, company, meta, text, sections):
     Replaces whatever this company already had, so a refresh run swaps one
     company at a time and the table is never missing a filing it used to hold.
     """
-    old = db.query(Filing).filter(Filing.company_ticker == company.ticker).all()
+    # Keyed on the accession, not the company. Deleting every filing a company
+    # has was right when it had exactly one; with a history it would throw away
+    # the four other years each time a fifth was written, and the run would end
+    # with one filing per company again and no error to say why.
+    old = db.query(Filing).filter(Filing.accession == meta["accession"],
+                                  Filing.company_ticker == company.ticker).all()
     if old:
         ids = [f.id for f in old]
         db.query(FilingChunk).filter(FilingChunk.filing_id.in_(ids)).delete(
@@ -81,6 +86,7 @@ def store_filing(db, company, meta, text, sections):
     filing = Filing(
         company_ticker=company.ticker, form=meta["form"], filed=meta["filed"],
         accession=meta["accession"], document=meta["document"],
+        period_end=meta.get("period_end"), fiscal_year=meta.get("fiscal_year"),
         text_chars=len(text),
         # empty string means the filing was read and yielded nothing, which is
         # different from never having been read
@@ -109,6 +115,9 @@ def main():
                     help="re-read only filings that yielded no NAME section")
     ap.add_argument("--tickers", metavar="LIST",
                     help="re-read only these companies, comma separated")
+    ap.add_argument("--history", type=int, metavar="N", default=1,
+                    help="read the N most recent annual reports per company "
+                         "rather than only the latest (default 1)")
     ap.add_argument("--oversized-section", metavar="NAME:CHARS",
                     help="re-read filings whose NAME section exceeds CHARS, "
                          "which is how a bad boundary shows itself")
@@ -171,40 +180,60 @@ def main():
 
     for n, company in enumerate(companies, 1):
         try:
-            meta = latest_annual_filing(company.cik)
-            if meta is None:
+            metas = (annual_filings(company.cik, args.history)
+                     if args.history > 1 else
+                     [m for m in [latest_annual_filing(company.cik)] if m])
+            if not metas:
                 print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} "
                       f"no annual filing on EDGAR")
                 continue
-            # the form decides how the filing is read, not just how it is
-            # parsed: a 40-F keeps its narrative in exhibits, so fetching the
-            # primary document alone returns a few pages of certifications
-            text = fetch_filing_text(company.cik, meta["accession"],
-                                     meta["document"], meta["form"])
-            sections = extract_sections(text, meta['form'])
         except Exception as e:
-            # a failed fetch is not recorded, so the next run tries again rather
-            # than treating this company as read and empty
             print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} FAILED: {e}")
             continue
 
-        chunks = store_filing(db, company, meta, text, sections)
+        # already stored, so a resumed history run pays only for what is left
+        have = {a for (a,) in db.query(Filing.accession)
+                  .filter(Filing.company_ticker == company.ticker).all()}
+        if not args.refresh and not args.missing_section:
+            metas = [m for m in metas if m["accession"] not in have]
+        if not metas:
+            continue
 
-        # embed in batches, committing as it goes so an interruption keeps what
-        # it has already paid for
-        for i in range(0, len(chunks), BATCH):
-            batch = chunks[i:i + BATCH]
-            resp = embed(client, [c.text for c in batch])
-            for chunk, item in zip(batch, resp.data):
-                chunk.embedding = np.asarray(item.embedding, dtype=np.float32)
+        for meta in metas:
+            try:
+                # the form decides how the filing is read, not just how it is
+                # parsed: a 40-F keeps its narrative in exhibits, so fetching the
+                # primary document alone returns a few pages of certifications
+                text = fetch_filing_text(company.cik, meta["accession"],
+                                         meta["document"], meta["form"])
+                sections = extract_sections(text, meta['form'])
+            except Exception as e:
+                # a failed fetch is not recorded, so the next run tries again
+                # rather than treating this filing as read and empty. One bad
+                # year does not cost the other four.
+                print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} "
+                      f"FY{meta.get('fiscal_year', '?')} FAILED: {e}")
+                continue
+
+            chunks = store_filing(db, company, meta, text, sections)
+
+            # embed in batches, committing as it goes so an interruption keeps
+            # what it has already paid for
+            for i in range(0, len(chunks), BATCH):
+                batch = chunks[i:i + BATCH]
+                resp = embed(client, [c.text for c in batch])
+                for chunk, item in zip(batch, resp.data):
+                    chunk.embedding = np.asarray(item.embedding, dtype=np.float32)
+                db.commit()
+
             db.commit()
-
-        db.commit()
-        found = ", ".join(f"{k}={len(v) // 1000}k" for k, v in sorted(sections.items()))
-        print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} "
-              f"{meta['form']:5} {meta['filed']}  "
-              f"{found or 'no sections found':30} chunks={len(chunks)}")
-        time.sleep(PAUSE)
+            found = ", ".join(f"{k}={len(v) // 1000}k"
+                              for k, v in sorted(sections.items()))
+            print(f"  [{n:>3}/{len(companies)}] {company.ticker:6} "
+                  f"FY{meta.get('fiscal_year', '?')} {meta['form']:5} "
+                  f"{meta['filed']}  {found or 'no sections found':30} "
+                  f"chunks={len(chunks)}")
+            time.sleep(PAUSE)
 
     total = db.query(FilingChunk).count()
     without = db.query(Filing).filter(

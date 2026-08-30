@@ -105,7 +105,9 @@ TOOLS = [
                        "about its risks, competition, regulation, or its own results.",
         "parameters": {"type": "object", "properties": {
             "query": {"type": "string"},
-            "company": {"type": "string", "description": "optional, to narrow to one company's filing"}},
+            "company": {"type": "string", "description": "optional, to narrow to one company's filing"},
+            "year": {"type": "integer", "description": "optional fiscal year, e.g. 2022. Defaults to the most recent annual report."},
+            "all_years": {"type": "boolean", "description": "optional. Search every stored year at once, for questions about what changed."}},
             "required": ["query"]}}},
     {"type": "function", "function": {
         "name": "patent_protection",
@@ -358,12 +360,17 @@ def _run_tool(name, args, db, as_of):
         if not query:
             return "No search terms were given, so nothing was searched.", []
         ticker = _resolve_company(args.get("company"), db) if args.get("company") else None
-        passages = search_filings(query, k=6, ticker=ticker)
+        passages = search_filings(query, k=6, ticker=ticker,
+                                  year=args.get("year"),
+                                  all_years=bool(args.get("all_years")))
         if not passages:
             return "No filing passages matched that.", []
+        # the year is in the header of every passage, not only in the tool call,
+        # so a passage from 2021 cannot be read as current
         lines = ["Passages from annual report narrative:", ""]
         for pg in passages:
-            lines.append(f"{pg['ticker']} {pg['form']} filed {pg['filed']} "
+            year = f"FY{pg['fiscal_year']} " if pg.get("fiscal_year") else ""
+            lines.append(f"{pg['ticker']} {year}{pg['form']} filed {pg['filed']} "
                          f"({pg['section']}):\n  {pg['text'][:600]}")
         return "\n".join(lines), list(dict.fromkeys(
             pg["ticker"] for pg in passages if pg["ticker"]))
