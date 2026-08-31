@@ -1,9 +1,10 @@
-# Readout
+# Readbase
 
 **Grounded question answering over SEC filings, clinical trials and FDA data.**
 
-A readout is the moment the data arrives and settles an argument, which is the
-only thing this is for. It is not an agent: the model picks among nine typed
+The readouts, and where they came from. A readout is the moment data arrives and
+settles an argument; the base is the 787 companies, 30,823 trials and 3,614
+annual reports it is settled against. It is not an agent: the model picks among nine typed
 accessors in a bounded loop and narrates what they return, and it cannot add a
 figure of its own. What makes it worth using is that every number traces to a
 filing, an NCT id or an FDA record — and that it says so when it does not have
