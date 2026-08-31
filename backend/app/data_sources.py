@@ -6,6 +6,7 @@ companies since those are the ones with real filings.
 
 import os
 import re
+from functools import lru_cache
 import unicodedata
 import threading
 import time
@@ -329,9 +330,15 @@ def _registry_names():
 _registry_names.cache = None
 
 
+@lru_cache(maxsize=4096)
 def sponsor_names_for(company_name):
     """
     What this company is actually called in the registry.
+
+    Cached, because it walks all 30,000 distinct registry sponsor names and
+    _leads calls it for every study it judges. Uncached it is the reason a scan
+    of the universe against the registry does not finish; the answer for a given
+    company name cannot change within a run, so the walk is paid once.
 
     A company does not register trials under the name it files under. Abbott
     Laboratories appears as "Abbott", "Abbott Medical Devices" and "Abbott

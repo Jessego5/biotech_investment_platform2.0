@@ -142,7 +142,12 @@ class Trial(Base):
     # thrown away, which left the pipeline able to say "Phase 3, recruiting" and
     # not "Phase 3, atopic dermatitis, reading out in Q2 2026" — the second being
     # the fact anyone actually wants.
-    conditions = Column(Text, index=True)
+    # Not indexed. A btree cannot hold a value over about 2,700 bytes, and
+    # Illumina's condition lists are longer than that, so the index refused the
+    # insert and the trial could not be stored at all. Nothing filters on this
+    # column — it is read and displayed — so the index bought nothing and cost a
+    # ceiling on what a trial was allowed to be about.
+    conditions = Column(Text)
     # a date carries whether it happened. An estimated completion is when a
     # readout is expected, an actual one is when it arrived, and reporting the
     # first as the second would invent the history this project exists to avoid.

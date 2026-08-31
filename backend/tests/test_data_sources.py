@@ -829,8 +829,15 @@ def test_squashing_does_not_merge_two_companies():
 
 
 def registry(monkeypatch, *names):
-    """Pin what the registry table holds, without touching a database."""
+    """
+    Pin what the registry table holds, without touching a database.
+
+    sponsor_names_for is derived from this and caches its answers, so changing
+    what the registry holds has to discard them. In a real run the registry is
+    read once and never changes; only a test moves it underneath.
+    """
     monkeypatch.setattr(data_sources._registry_names, "cache", set(names))
+    data_sources.sponsor_names_for.cache_clear()
 
 
 # - the name a company registers trials under
