@@ -37,7 +37,7 @@ from sqlalchemy import func
 from app.database import SessionLocal, init_db
 from app.models import Company, Trial, RegistryTrial
 from app.data_sources import (fetch_trials_raw, fetch_studies_by_nct,
-                              parse_trials, _leads, _norm)
+                              parse_trials, _leads, _norm, _traded_names)
 
 PAUSE = 0.2
 
@@ -47,15 +47,21 @@ def index_by_first_word(sponsors):
     Registry sponsor names grouped by their first normalised word.
 
     Comparing every company against all 30,000 distinct sponsor names is
-    millions of calls into the matching rules and does not finish. Every rule
-    they use requires the first word to agree — each is a prefix comparison, an
-    equality, or a lookup — so grouping on it costs nothing in recall.
+    millions of calls into the matching rules and does not finish, so they are
+    grouped by a word every rule needs to agree on.
+
+    A sponsor goes in under its trading names as well as its own. That was the
+    hole in the first version of this: "TheRas, Inc., d/b/a BBOT (BridgeBio
+    Oncology Therapeutics)" filed under "theras", BridgeBio looked under
+    "bridgebio", and the rule written to join those two never got the chance.
+    An index is only as good as its claim about what it is allowed to skip.
     """
     index = {}
     for sp in sponsors:
-        words = _norm(sp).split()
-        if words:
-            index.setdefault(words[0], []).append(sp)
+        for name in [sp] + _traded_names(sp):
+            words = _norm(name).split()
+            if words:
+                index.setdefault(words[0], []).append(sp)
     return index
 
 
