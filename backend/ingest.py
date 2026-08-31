@@ -28,7 +28,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from app.database import SessionLocal, init_db
 from app.models import Company, Trial, Financial, FINANCIAL_METRICS
-from app.data_sources import fetch_trials_raw, parse_trials, fetch_financials
+from app.data_sources import (fetch_trials_raw, parse_trials, fetch_financials,
+                              SPONSOR_OVERRIDES)
 from backfill_financials import _rows_for
 from app.raw_store import get_store, raw_key, snapshot_date
 
@@ -113,7 +114,9 @@ def fetch_company(row):
     """
     try:
         # search ClinicalTrials.gov by the override name if there is one, else the real name
-        search_name = row.get("search_name", row["name"])
+        search_name = (row.get("search_name")
+                       or SPONSOR_OVERRIDES.get(row["ticker"])
+                       or row["name"])
         raw_trials = fetch_trials_raw(search_name)
         # hand over the CIK the universe already recorded, so a company that has
         # since dropped out of SEC's ticker file still resolves
@@ -201,6 +204,11 @@ def parse_args():
                         help="which slice of the universe this run handles")
     parser.add_argument("--of", type=int, default=None, dest="shard_count",
                         help="how many slices the universe is split into")
+    parser.add_argument("--tickers", metavar="LIST",
+                        help="re-ingest only these companies, comma separated. "
+                             "A matching-rule change affects a handful of "
+                             "companies and re-fetching all 787 to reach them "
+                             "costs an hour and a snapshot nobody asked for.")
     parser.add_argument("--snapshot-only", action="store_true",
                         help="archive what the APIs return without writing to the "
                              "database, so history can be captured without "
@@ -222,7 +230,17 @@ def main():
     date = snapshot_date()
 
     universe = select_shard(load_universe(), shard_index, shard_count)
-    where = f"shard {shard_index} of {shard_count}" if shard_count else "full universe"
+    if args.tickers:
+        wanted = {t.strip().upper() for t in args.tickers.split(",") if t.strip()}
+        universe = [r for r in universe if r["ticker"] in wanted]
+        missing = wanted - {r["ticker"] for r in universe}
+        if missing:
+            # named and not in the universe file is worth saying out loud, since
+            # the alternative is a run that quietly does less than was asked
+            print(f"Not in companies.json, skipped: {', '.join(sorted(missing))}")
+    where = (f"{len(universe)} named" if args.tickers else
+             f"shard {shard_index} of {shard_count}" if shard_count else
+             "full universe")
     print(f"Ingesting {len(universe)} companies ({where}, "
           f"{WORKERS} fetches at a time, snapshot {date})...\n")
 

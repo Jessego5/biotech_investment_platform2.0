@@ -29,7 +29,7 @@ from pydantic import BaseModel
 from .database import SessionLocal, init_db
 from .models import (Company, Trial, RegistryTrial, ApprovedProduct, Filing)
 from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
-                           fetch_financials, company_name)
+                           fetch_financials, company_name, SPONSOR_OVERRIDES)
 from .analysis import build_assessment
 from .narrative import generate_narrative
 from .exclusivity import protection_for
@@ -53,10 +53,7 @@ init_db()
 
 # a few companies register trials under a name that doesn't match their SEC legal
 # name, so searching the legal name finds nothing. override the search name for those.
-SPONSOR_OVERRIDES = {
-    "MRNA": "ModernaTX",
-    "SDGR": "Schrödinger",
-}
+# defined in data_sources so the ingest can use the same list
 
 # built-in fallback names for the live path in case companies.json isn't present
 FALLBACK_COMPANIES = {

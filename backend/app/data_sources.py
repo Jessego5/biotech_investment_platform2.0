@@ -102,6 +102,10 @@ def _sec_get(url, params=None):
 # "Merck & Co., Inc." and exactly the collision the rule exists to prevent.
 _SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
              "llc", "ltd", "limited", "plc", "ag", "sa", "nv", "holdings",
+             # singular as well as plural. Scholar Rock files as "Scholar Rock
+             # Holding Corp" and runs its trials as "Scholar Rock, Inc.", and
+             # with only the plural listed the two came out a word apart.
+             "holding",
              "gmbh", "bv", "pty", "ab", "oy", "srl", "spa", "aps", "sas"}
 
 
@@ -118,7 +122,11 @@ _SUFFIXES = {"inc", "incorporated", "corp", "corporation", "co", "company",
 # the search fell back to asking for "VERTEX PHARMACEUTICALS INC MA", found
 # nothing, and a company with no trials is dropped from the universe outright.
 # two letters are required after the slash, so the Danish "A/S" is left alone
-_STATE_MARKER = re.compile(r"/\s*[A-Za-z]{2}/?\s*$")
+# EDGAR writes the separator both ways: "Inc./NV" and "Viridian Therapeutics,
+# Inc.\DE". With only the forward slash matched, the backslash form survived and
+# "DE" joined the name, so the company came out as "viridian therapeutics incde"
+# and matched nothing at all.
+_STATE_MARKER = re.compile(r"[/\\]\s*[A-Za-z]{2}[/\\]?\s*$")
 
 
 def _core_name(name):
@@ -141,6 +149,12 @@ def _search_term(name):
     suffixes. The ", Inc." on a SEC legal name makes the sponsor search miss
     (e.g. "Fate Therapeutics, Inc." finds nothing, "Fate Therapeutics" finds it).
     """
+    # the incorporation marker goes first, exactly as in _core_name. It was
+    # fixed there and not here, so the comparison name was clean while the name
+    # actually sent to the registry still asked for "VERTEX PHARMACEUTICALS INC
+    # MA" — and a search that returns nothing is a company with an empty
+    # pipeline, which reads as a fact about the company.
+    name = _STATE_MARKER.sub("", (name or "").strip())
     # strip punctuation from each word but keep the original casing this time
     words = [re.sub(r"[^A-Za-z0-9]", "", w) for w in name.split()]
     # drop any words that came out empty
@@ -150,6 +164,17 @@ def _search_term(name):
         words.pop()
     # fall back to the original name if stripping left us with nothing
     return " ".join(words) or name
+
+# What to search the registry for when the filing name will not find it. This is
+# for the cases no spelling rule can reach, not for near misses: a company that
+# renamed itself is not a variant of its old name. GSK plc was GlaxoSmithKline
+# until 2022 and the registry still runs 3,223 studies under the old name, which
+# shares not one word with the new one.
+SPONSOR_OVERRIDES = {
+    "MRNA": "ModernaTX",
+    "SDGR": "Schrödinger",
+    "GLAXF": "GlaxoSmithKline",
+}
 
 CT_BASE = "https://clinicaltrials.gov/api/v2/studies"
 SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
@@ -442,6 +467,42 @@ def _alias_index():
     return _alias_index_cache
 
 
+# Words that say what a company does rather than which company it is. A name
+# that differs only by these is the same company under a fuller or shorter form
+# of its own name; a name that differs by anything else may not be.
+#
+# This is an allowlist and not a blocklist on purpose. "Merck" against "Merck
+# KGaA" and "Nova" against "Nova Scotia" are the two matches that did real
+# damage here, and what makes them wrong is not that KGaA and Scotia are known
+# to be dangerous — it is that they are not known to be harmless. Anything
+# unrecognised stays rejected.
+_DESCRIPTORS = {
+    "pharma", "pharmaceutical", "pharmaceuticals", "therapeutic", "therapeutics",
+    "science", "sciences", "bioscience", "biosciences", "biopharma",
+    "biopharmaceutical", "biopharmaceuticals", "biotechnology", "biotechnologies",
+    "biotech", "bio", "laboratory", "laboratories", "labs", "medical",
+    "medicine", "medicines", "health", "healthcare", "oncology", "diagnostics",
+    "technology", "technologies", "research", "operations", "innovations",
+    "treasury", "group", "international", "global", "worldwide",
+}
+
+
+def _descriptor_gap(mine, theirs):
+    """
+    Whether two normalised names differ only by descriptor words.
+
+    "EyePoint" against "EyePoint Pharmaceuticals" and "Capricor Therapeutics"
+    against "Capricor" are the same company writing its name at two lengths.
+    "Merck" against "Merck KGaA" is not, and the difference is that "KGaA" is
+    not in the list above.
+    """
+    short, long_ = sorted((mine, theirs), key=len)
+    if not short or long_[:len(short)] != short:
+        return False
+    extra = long_[len(short):]
+    return bool(extra) and all(w in _DESCRIPTORS for w in extra)
+
+
 def _leads(sponsor_name, lead):
     """
     Whether this trial is led by the company we asked about.
@@ -463,6 +524,8 @@ def _leads(sponsor_name, lead):
     3. a spelling the registry itself uses for this company, which is what
        reaches "Abbott" from "Abbott Laboratories"
     4. a subsidiary the company listed in its own Exhibit 21
+    5. the same name written at a different length, where everything that
+       differs is a word describing what the company does
     """
     if identity(sponsor_name, lead) == "exact":
         return True
@@ -475,7 +538,16 @@ def _leads(sponsor_name, lead):
     if any(_fold(name) == folded for name in sponsor_names_for(sponsor_name)):
         return True
 
-    return _norm(lead) in _alias_index().get(_norm(sponsor_name), ())
+    if _norm(lead) in _alias_index().get(_norm(sponsor_name), ()):
+        return True
+
+    # 5. the same name at a different length, where the difference is only what
+    #    the company does. Exhibit 21 is the better mechanism and does not
+    #    reach these: Telix, QIAGEN and Capricor have no alias rows at all, and
+    #    EyePoint's 38 list its subsidiaries but not the name it runs trials
+    #    under. Without this the registry holds their trials and the app shows
+    #    an empty pipeline, which reads as a fact about the company.
+    return _descriptor_gap(_norm(sponsor_name).split(), _norm(lead).split())
 
 
 
