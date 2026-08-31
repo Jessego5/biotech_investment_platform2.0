@@ -240,10 +240,21 @@ def html_to_text(html):
 # and the heading of whatever comes next.
 _TENK_BOUNDS = {
     "risk_factors": (
-        r"Item\s*1A[.:\s\-–—]*Risk\s*Factors",
+        # Tried in order. The item number is the reliable anchor where there is
+        # one, and there is not always one: Illumina reorganised its 10-K into
+        # named sections and heads this a bare "RISK FACTORS" under "Business
+        # Market Information", and CEL-SCI numbers it Item 1B rather than 1A.
+        # Both lost every year of their risk factors to a pattern that insisted
+        # on "Item 1A". The bare form goes second because "risk factors" is also
+        # an ordinary phrase, and a filing refers to its own by name constantly.
+        [r"Item\s*1A[.:\s\-–—]*Risk\s*Factors",
+         r"(?-i:RISK\s+FACTORS|Risk\s+Factors)"],
         # 1B is often absent (it is usually "none"), so Item 2 is the fallback end
         [r"Item\s*1B[.:\s\-–—]*Unresolved", r"Item\s*1C[.:\s\-–—]*Cyber",
-         r"Item\s*2[.:\s\-–—]*Propert"],
+         r"Item\s*2[.:\s\-–—]*Propert",
+         # a filing with no item numbers needs an end with none either
+         r"(?-i:LEGAL\s+PROCEEDINGS|Legal\s+Proceedings)",
+         r"(?-i:UNRESOLVED\s+STAFF\s+COMMENTS|Unresolved\s+Staff\s+Comments)"],
     ),
     "mdna": (
         r"Item\s*7[.:\s\-–—]*Management.{0,3}s\s*Discussion",
@@ -319,9 +330,21 @@ _TENK_BOUNDS = {
 # the cross-references later in the document have no closing heading after them.
 _TWENTYF_BOUNDS = {
     "risk_factors": (
-        r"Risk\s*Factors",
+        # Case matters here. Matched case-insensitively this also finds the
+        # phrase in prose — Haleon's "the Company's risk factors and viability
+        # are set out on page 58" — which is not a heading and started the
+        # section in the middle of a directors' report.
+        r"(?-i:RISK\s*FACTORS|Risk\s*[Ff]actors)",
+        # A foreign issuer may file its own annual report as the 20-F and carry
+        # no item numbers at all: GSK and Haleon both do, so nothing closed the
+        # section and it was dropped entirely. These are the headings that
+        # follow it in that layout.
         [r"Item\s*4[.:\s\-–—]*Information\s*on\s*the\s*Company",
-         r"Item\s*4[.:\s\-–—]*Information"],
+         r"Item\s*4[.:\s\-–—]*Information",
+         r"(?-i:INFORMATION\s+ON\s+THE\s+COMPANY|Information\s+on\s+the\s+Company)",
+         r"(?-i:FINANCIAL\s+REVIEW|Financial\s+Review)",
+         r"(?-i:DIRECTORS.{0,3}\s*REPORT|Directors.{0,3}\s*Report)",
+         r"(?-i:CORPORATE\s+GOVERNANCE|Corporate\s+Governance)"],
     ),
     "mdna": (
         r"Item\s*5[.:\s\-–—]*Operating\s*and\s*Financial",
@@ -564,7 +587,13 @@ def _is_contents_entry(text, pos, span=130):
 # its contents entries, so what follows the page number is "5.D" and not a
 # capital letter. Takeda and Galapagos both had their contents line read as the
 # section because of it.
-_PAGE_NUMBERED = re.compile(r"\s\d{1,3}\s+(?:[A-Z][A-Za-z]|\d+\.[A-Z]|[A-Z]\.)")
+# A page range counts too. GSK's 20-F carries an index mapping each item to the
+# pages it covers — "D. Risk Factors 248 - 251, 260 - 268 4 Information on the
+# Company" — and with only whole page numbers counted there was one marker where
+# two were needed, so the index read as the section and took 220,000 characters.
+_PAGE_NUMBERED = re.compile(
+    r"\s\d{1,3}\s*[-–—]\s*\d{1,3}\b"
+    r"|\s\d{1,3}\s+(?:[A-Z][A-Za-z]|\d+\.[A-Z]|[A-Z]\.)")
 
 
 def _is_contents_line(text, pos, span=90):
@@ -583,9 +612,17 @@ def _is_contents_line(text, pos, span=90):
 
 # A heading phrase running on into "below" or "above": capitalised words, with
 # the small joining words a title is allowed, and then the direction.
+# ...and what comes after the direction word decides whether it was pointing.
+# "Item 1A. Risk Factors Provided below is a cautionary discussion" is a real
+# heading followed by a real sentence: "Provided" is capitalised, so it reads as
+# part of the title, and 3M lost its risk factors in all five years to that.
+# A reference stops there — "Risk Factors below." — or carries on with a
+# preposition — "elsewhere in this Annual Report". It does not continue into a
+# verb, because the direction is then part of the predicate and not a pointer.
 _POINTS_ELSEWHERE = re.compile(
     r"[A-Z][\w,.]*(?:\s+(?:and|or|of|the|to|in|this|[A-Z0-9][\w,.]*)){0,16}"
-    r"\s+(?:below|above|elsewhere)\b")
+    r"\s+(?:below|above|elsewhere)\b(?!\s+(?:is|are|was|were|will|would|can|"
+    r"could|may|might|shall|should|sets|provides|describes|summari[sz]es)\b)")
 
 
 # The heading's own words, then a comma and ordinary prose. Novartis writes
@@ -596,10 +633,19 @@ _TITLE_RUN = re.compile(r"^\S+(?:\s+(?:and|or|of|the|to|[A-Z0-9][^\s,]*))*")
 _RUNS_INTO_SENTENCE = re.compile(r"^,\s+[a-z]")
 
 
+# The heading, then a page reference. GSK writes "Risk factors - see pages 260",
+# which points at the section the same way "below" does and is not it.
+# Searched in a short window rather than anchored after the title, because the
+# title run stops at a lowercase word and "Risk factors" has one.
+_POINTS_TO_PAGE = re.compile(r"[-–—]\s*(?:see|refer\s+to)\s+pages?\s+\d", re.I)
+
+
 def _runs_into_sentence(text, pos):
     """Whether the heading's words continue into a clause instead of stopping."""
     after = text[pos:pos + 200]
-    return bool(_RUNS_INTO_SENTENCE.match(after[_TITLE_RUN.match(after).end():]))
+    rest = after[_TITLE_RUN.match(after).end():]
+    return bool(_RUNS_INTO_SENTENCE.match(rest)
+                or _POINTS_TO_PAGE.search(text[pos:pos + 60]))
 
 
 def _points_elsewhere(text, pos):
@@ -701,6 +747,13 @@ def _find_section(text, start_pattern, end_patterns, limit=None,
     return None
 
 
+# The heading, then a sentence declining to fill it in. Smaller reporting
+# companies are permitted to omit risk factors and say so in the Item itself.
+_DECLINED = re.compile(
+    r"^.{0,220}?\b(?:not\s+required\s+to\s+provide|are\s+not\s+required\s+to|"
+    r"is\s+not\s+(?:applicable|required))\b", re.S | re.I)
+
+
 def extract_sections(text, form="10-K"):
     """
     Pull the narrative sections out of a filing's text, using the headings that
@@ -773,6 +826,14 @@ def extract_sections(text, form="10-K"):
         if found is None:
             continue
         body = text[found[0]:found[1]].strip()
+        # A filing that says it is not providing the section does not have one.
+        # Electromed heads Item 1A and then declines it — "As a smaller
+        # reporting company, we are not required to provide the information
+        # required by this Item" — and what follows is Item 1B and the
+        # cybersecurity disclosure, stored as though it were risk factors. A
+        # missing section is better than a wrong one.
+        if _DECLINED.match(body):
+            continue
         # too short to be the section itself, so this was a contents line
         if len(body) >= floor:
             sections[name] = body
