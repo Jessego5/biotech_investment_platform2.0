@@ -1,7 +1,7 @@
 # Pipeline
 
-How this database is built, in the order it has to happen, with what each stage
-costs and what it gets wrong. Rebuilding from nothing takes about six hours,
+How Provenance's database is built, in the order it has to happen, with what
+each stage costs and what it gets wrong. Rebuilding from nothing takes about six hours,
 most of it waiting on SEC and OpenAI.
 
 Everything runs through the `ingest` service in `docker-compose.yml`, which is

@@ -1,4 +1,12 @@
-# AI-Assisted Biotech Investment Platform
+# Provenance
+
+**Grounded question answering over SEC filings, clinical trials and FDA data.**
+
+Named for what it is rather than what it runs on. It is not an agent: the model
+picks among nine typed accessors in a bounded loop and narrates what they
+return, and it cannot add a figure of its own. What makes it worth using is that
+every number traces to a filing, an NCT id or an FDA record — and that it says
+so when it does not have one.
 
 A full-stack web app for browsing public biotech companies by pipeline stage and
 financials, where every figure traces back to a primary source. It holds 787
