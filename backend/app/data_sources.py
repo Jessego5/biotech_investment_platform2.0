@@ -452,17 +452,33 @@ def _alias_index():
     Built from the alias table, which is mostly Exhibit 21 to the 10-K: the
     company's own annual statement of what it owns. Empty when that table has
     not been built, which makes the sponsor test stricter rather than broken.
+
+    Only the most recent Exhibit 21 for each company counts, because ownership
+    is as of today and Exhibit 21 is a statement about one year. Illumina listed
+    GRAIL through 2024 and spun it off; its 2026 exhibit does not mention it,
+    and GRAIL files its own 10-K here under GRAL. Reading every year at once
+    gave Illumina eight trials that belong to a company it no longer owns, and
+    counted them twice across the universe. 264 companies have an alias that has
+    since dropped out of their own latest filing.
     """
     global _alias_index_cache
     if _alias_index_cache is None:
         index = {}
         try:
+            from sqlalchemy import func
             from .database import SessionLocal
             from .models import Alias, Company
             db = SessionLocal()
             try:
+                newest = (db.query(Alias.company_ticker.label("ticker"),
+                                   func.max(Alias.fiscal_year).label("year"))
+                            .group_by(Alias.company_ticker).subquery())
                 rows = (db.query(Company.name, Alias.alias_key)
-                          .join(Alias, Alias.company_ticker == Company.ticker).all())
+                          .join(Alias, Alias.company_ticker == Company.ticker)
+                          .join(newest,
+                                (Alias.company_ticker == newest.c.ticker)
+                                & (Alias.fiscal_year == newest.c.year))
+                          .all())
             finally:
                 db.close()
             for name, key in rows:
@@ -492,6 +508,19 @@ _DESCRIPTORS = {
     "technology", "technologies", "research", "operations", "innovations",
     "treasury", "group", "international", "global", "worldwide",
 }
+
+
+def _distinctive(normalised):
+    """
+    Whether a company name is particular enough that another name starting with
+    all of it is the same company.
+
+    Two words, or one long one. "Nova" took 355 studies from a Canadian health
+    authority and a Portuguese university, and "Merck" took 61 from a German
+    company of the same name on another continent; both are one short word.
+    """
+    words = normalised.split()
+    return len(words) >= 2 or (len(words) == 1 and len(words[0]) >= 8)
 
 
 def _descriptor_gap(mine, theirs):
@@ -548,7 +577,22 @@ def _leads(sponsor_name, lead):
     if _norm(lead) in _alias_index().get(_norm(sponsor_name), ()):
         return True
 
-    # 5. the same name at a different length, where the difference is only what
+    # 5. a sponsor whose name begins with the whole of the company's own,
+    #    where the company's name is distinctive enough to carry it. "Medtronic
+    #    France SAS" and "Matinas BioPharma Nanotechnologies" are the parent's
+    #    beyond doubt, and they need no exhibit to say so: what Exhibit 21 is
+    #    for is the subsidiary you cannot recognise by name, which is also the
+    #    one where as-of-today ownership matters. A subsidiary can drop off an
+    #    exhibit for being too small to report rather than for being sold.
+    #
+    #    The threshold is what keeps this away from "Nova" and "Merck". Four
+    #    and five letters collide with anything, and both did.
+    if _distinctive(_norm(sponsor_name)):
+        mine, theirs = _norm(sponsor_name).split(), _norm(lead).split()
+        if len(theirs) > len(mine) and theirs[:len(mine)] == mine:
+            return True
+
+    # 6. the same name at a different length, where the difference is only what
     #    the company does. Exhibit 21 is the better mechanism and does not
     #    reach these: Telix, QIAGEN and Capricor have no alias rows at all, and
     #    EyePoint's 38 list its subsidiaries but not the name it runs trials
