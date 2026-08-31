@@ -1,15 +1,23 @@
 # AI-Assisted Biotech Investment Platform
 
 A full-stack web app for browsing public biotech companies by pipeline stage and
-financials, where every figure traces back to a primary source. It holds 746
-companies, 22,706 trials, 112,812 industry-sponsored interventional studies from
-the wider registry, and 732 annual reports split into 71,872 embedded passages,
-behind 362 tests. The data comes from two places:
+financials, where every figure traces back to a primary source. It holds 787
+companies, 30,823 trials, 112,812 industry-sponsored interventional studies from
+the wider registry, and 3,614 annual reports — five years each — split into
+334,624 embedded passages, behind 436 tests. The data comes from five places:
 
 - Clinical trials from the [ClinicalTrials.gov v2 API](https://clinicaltrials.gov/data-api/api)
 - Financials from [SEC EDGAR](https://www.sec.gov/edgar/sec-api-documentation):
   R&D expense, cash, marketable securities, debt, operating cash flow, net
-  income, revenue, and shares outstanding
+  income, revenue, and shares outstanding — ten years of each, not just the last
+- Annual report narrative from EDGAR: risk factors, management's discussion, and
+  the intellectual property section, five years per company
+- Corporate structure from Exhibit 21, which is how a company's trials are found
+  when it registers them under a subsidiary's name
+- Patents and exclusivity from the FDA Orange Book and Purple Book
+
+[PIPELINE.md](PIPELINE.md) is the runbook: the order the stages have to run in,
+what each costs, and the failure modes worth knowing before you hit them.
 
 ## Why this exists
 
