@@ -374,6 +374,37 @@ def sponsor_names_for(company_name):
     return sorted(hits, key=lambda n: (_fold(n) != core, len(_fold(n).split()), len(n)))
 
 
+def fetch_studies_by_nct(nct_ids, page_size=100):
+    """
+    Fetch specific studies by their NCT id, in the shape fetch_trials_raw returns.
+
+    The sponsor search is a text search and it is not always reachable. Asking
+    it for "Bio-Path Holdings, Inc." returns two studies belonging to LS
+    BioPath, and asking for "Schrödinger, Inc." returns none at all, while the
+    registry plainly holds studies under both names. When we already know which
+    studies a company ran — and registry_trials does know, by id — searching for
+    them by name is guessing at something we have.
+    """
+    studies = []
+    ids = list(nct_ids)
+    for start in range(0, len(ids), page_size):
+        batch = ids[start:start + page_size]
+        r = _sec_ct_get(CT_BASE, {
+            "filter.ids": ",".join(batch),
+            "pageSize": page_size,
+            "format": "json",
+        })
+        if r.status_code != 200:
+            continue
+        studies.extend(r.json().get("studies", []))
+    return {"studies": studies, "totalCount": len(studies), "truncated": False}
+
+
+def _sec_ct_get(url, params):
+    """A plain registry GET with the same retry policy as everything else."""
+    return _get_with_retry(url, params=params, timeout=30)
+
+
 def fetch_trials_raw(sponsor_name, page_size=100,
                      max_studies=MAX_STUDIES_PER_SPONSOR):
     """
@@ -511,6 +542,25 @@ _DESCRIPTORS = {
 }
 
 
+# A sponsor trading under another name states both. "TheRas, Inc., d/b/a BBOT
+# (BridgeBio Oncology Therapeutics)" is the registered entity, the trading name
+# and the full name in one string, and only the last of the three is what the
+# company files under.
+_TRADES_AS = re.compile(r"\b(?:d/?b/?a|doing\s+business\s+as|formerly)\b(.*)",
+                        re.I)
+
+
+def _traded_names(candidate):
+    """The names a sponsor says it also goes by: after "d/b/a", and in brackets."""
+    names = []
+    m = _TRADES_AS.search(candidate)
+    if m:
+        names.append(m.group(1))
+    names.extend(re.findall(r"\(([^)]{4,})\)", candidate))
+    # a bracket inside the d/b/a tail is one name, not two joined
+    return [n.strip(" .,;-()") for n in names if n.strip(" .,;-()")]
+
+
 def _distinctive(normalised):
     """
     Whether a company name is particular enough that another name starting with
@@ -576,6 +626,12 @@ def _leads(sponsor_name, lead):
 
     named = parent_named_in(lead)
     if named and identity(sponsor_name, named) == "exact":
+        return True
+
+    # a sponsor stating the name it trades under, which is the name the company
+    # files with the SEC: BridgeBio Oncology Therapeutics registers its studies
+    # as "TheRas, Inc., d/b/a BBOT (BridgeBio Oncology Therapeutics)"
+    if any(identity(sponsor_name, alt) == "exact" for alt in _traded_names(lead)):
         return True
 
     folded = _fold(lead)

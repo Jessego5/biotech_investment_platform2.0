@@ -36,20 +36,41 @@ from sqlalchemy import func
 
 from app.database import SessionLocal, init_db
 from app.models import Company, Trial, RegistryTrial
-from app.data_sources import fetch_trials_raw, parse_trials, _leads
+from app.data_sources import (fetch_trials_raw, fetch_studies_by_nct,
+                              parse_trials, _leads, _norm)
 
 PAUSE = 0.2
 
 
-def sponsors_for(company, registry_sponsors):
+def index_by_first_word(sponsors):
+    """
+    Registry sponsor names grouped by their first normalised word.
+
+    Comparing every company against all 30,000 distinct sponsor names is
+    millions of calls into the matching rules and does not finish. Every rule
+    they use requires the first word to agree — each is a prefix comparison, an
+    equality, or a lookup — so grouping on it costs nothing in recall.
+    """
+    index = {}
+    for sp in sponsors:
+        words = _norm(sp).split()
+        if words:
+            index.setdefault(words[0], []).append(sp)
+    return index
+
+
+def sponsors_for(company, index):
     """
     The registry's names for this company, other than the one already searched.
 
     Ordered longest first only so the output reads sensibly; every one is
     fetched.
     """
-    return sorted((sp for sp in registry_sponsors if _leads(company.name, sp)),
-                  key=len, reverse=True)
+    words = _norm(company.name).split()
+    if not words:
+        return []
+    return sorted((sp for sp in index.get(words[0], [])
+                   if _leads(company.name, sp)), key=len, reverse=True)
 
 
 def main():
@@ -66,9 +87,9 @@ def main():
     init_db()
     db = SessionLocal()
 
-    registry_sponsors = [s for (s,) in db.query(RegistryTrial.sponsor)
-                           .filter(RegistryTrial.sponsor.isnot(None))
-                           .distinct().all()]
+    registry_sponsors = index_by_first_word(
+        s for (s,) in db.query(RegistryTrial.sponsor)
+                        .filter(RegistryTrial.sponsor.isnot(None)).distinct().all())
     held = dict(db.query(Trial.company_ticker, func.count(Trial.id))
                   .group_by(Trial.company_ticker).all())
 
@@ -81,7 +102,7 @@ def main():
                      if held.get(c.ticker, 0) <= args.max_trials]
 
     print(f"Checking {len(companies)} companies against "
-          f"{len(registry_sponsors)} registry sponsor names...\n")
+          f"{sum(len(v) for v in registry_sponsors.values())} sponsor names...\n")
 
     added = skipped = 0
     for n, company in enumerate(companies, 1):
@@ -97,6 +118,16 @@ def main():
                 continue
             try:
                 raw = fetch_trials_raw(name)
+                got = {s["protocolSection"]["identificationModule"]["nctId"]
+                       for s in raw.get("studies", [])}
+                # The sponsor search is a text search and can miss its own
+                # sponsor entirely. We already know which studies these are, so
+                # fall back to asking for them by id rather than accepting the
+                # search's answer as the company's pipeline.
+                wanted = {i for (i,) in db.query(RegistryTrial.nct_id)
+                            .filter(RegistryTrial.sponsor == name).all()}
+                if wanted - got:
+                    raw = fetch_studies_by_nct(sorted(wanted - got))
             except Exception as e:
                 print(f"  [{n:>3}] {company.ticker:6} {name[:34]:34} FAILED: {e}")
                 continue
