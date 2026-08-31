@@ -1,6 +1,6 @@
 # Pipeline
 
-How Provenance's database is built, in the order it has to happen, with what
+How Readout's database is built, in the order it has to happen, with what
 each stage costs and what it gets wrong. Rebuilding from nothing takes about six hours,
 most of it waiting on SEC and OpenAI.
 
