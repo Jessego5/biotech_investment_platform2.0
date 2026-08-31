@@ -503,7 +503,8 @@ _DESCRIPTORS = {
     "pharma", "pharmaceutical", "pharmaceuticals", "therapeutic", "therapeutics",
     "science", "sciences", "bioscience", "biosciences", "biopharma",
     "biopharmaceutical", "biopharmaceuticals", "biotechnology", "biotechnologies",
-    "biotech", "bio", "laboratory", "laboratories", "labs", "medical",
+    "biotech", "biotherapeutics", "therapeutix", "bio", "biologics",
+    "laboratory", "laboratories", "labs", "medical",
     "medicine", "medicines", "health", "healthcare", "oncology", "diagnostics",
     "technology", "technologies", "research", "operations", "innovations",
     "treasury", "group", "international", "global", "worldwide",
@@ -515,12 +516,19 @@ def _distinctive(normalised):
     Whether a company name is particular enough that another name starting with
     all of it is the same company.
 
-    Two words, or one long one. "Nova" took 355 studies from a Canadian health
-    authority and a Portuguese university, and "Merck" took 61 from a German
-    company of the same name on another continent; both are one short word.
+    Two words, or one of at least six letters. "Nova" took 355 studies from a
+    Canadian health authority and a Portuguese university, and "Merck" took 61
+    from a German company of the same name on another continent; they are four
+    and five letters, and so is every name that has caused trouble here.
+
+    Six rather than eight because eight was guesswork and six is measured. The
+    band between them is 30 sponsor pairs across the whole registry — Stryker's
+    divisions, Incyte Biosciences, Grifols Biologicals, uniQure Biopharma,
+    Arvinas Androgen Receptor, Immutep Australia — and every one of them is the
+    company it was matched to.
     """
     words = normalised.split()
-    return len(words) >= 2 or (len(words) == 1 and len(words[0]) >= 8)
+    return len(words) >= 2 or (len(words) == 1 and len(words[0]) >= 6)
 
 
 def _descriptor_gap(mine, theirs):
