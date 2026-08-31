@@ -9,6 +9,7 @@ is pinned first. Run them with pytest.
 
 import pytest
 
+from app import changes
 from app.changes import (trial_changes, financial_changes, compare, load_pair,
                          MATERIAL_CHANGE)
 
@@ -286,3 +287,58 @@ def test_a_different_date_pair_is_computed_separately():
     b = compare_universe(store, {"AAA": SPONSOR}, "2026-08-07", "2026-08-20")
 
     assert a["to"] == "2026-08-19" and b["to"] == "2026-08-20"
+
+
+# - what produced a snapshot, and whether two of them are comparable
+
+def manifest(date, version, full=True):
+    return {f"manifest/{date}.json": {"date": date, "code_version": version,
+                                      "full_run": full}}
+
+
+def test_two_snapshots_from_different_code_are_flagged(monkeypatch):
+    # Church & Dwight appeared to register 34 trials in four days, one of them a
+    # benzocaine study from 2007. It had always run them; the matching rules had
+    # changed. A diff that cannot say this reports our own changes as events.
+    store = FakeStore({**manifest("2026-08-27", "aaaaaaa"),
+                       **manifest("2026-08-31", "bbbbbbb")})
+    monkeypatch.setattr(changes, "get_store", lambda: store)
+
+    p = changes.snapshot_provenance("2026-08-27", "2026-08-31")
+
+    assert p["same_code"] is False
+    assert "rather than a change in the world" in p["caveat"]
+
+
+def test_two_snapshots_from_the_same_code_carry_no_caveat(monkeypatch):
+    store = FakeStore({**manifest("2026-08-27", "aaaaaaa"),
+                       **manifest("2026-08-31", "aaaaaaa")})
+    monkeypatch.setattr(changes, "get_store", lambda: store)
+
+    p = changes.snapshot_provenance("2026-08-27", "2026-08-31")
+
+    assert p["same_code"] is True
+    assert p["caveat"] is None
+
+
+def test_a_snapshot_with_no_manifest_does_not_claim_to_be_comparable(monkeypatch):
+    # the snapshots taken before any of this was recorded must not read as
+    # verified-comparable just because there is nothing to contradict them
+    store = FakeStore({})
+    monkeypatch.setattr(changes, "get_store", lambda: store)
+
+    assert changes.snapshot_provenance("2026-08-27", "2026-08-31")["same_code"] is False
+
+
+def test_a_partial_run_is_not_used_as_the_newest_snapshot(monkeypatch):
+    # a targeted re-ingest of 48 companies is a repair, not a period of time.
+    # Comparing everything against it reported 739 companies as "not in both".
+    store = FakeStore({**manifest("2026-08-31", "bbbbbbb", full=False),
+                       **manifest("2026-08-27", "aaaaaaa", full=True),
+                       **manifest("2026-08-19", "aaaaaaa", full=True)})
+    monkeypatch.setattr(changes, "get_store", lambda: store)
+    monkeypatch.setattr(changes, "snapshot_coverage",
+                        lambda: [("2026-08-31", 48), ("2026-08-27", 787),
+                                 ("2026-08-19", 780)])
+
+    assert changes.latest_pair(store) == ("2026-08-19", "2026-08-27")

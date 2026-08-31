@@ -36,7 +36,8 @@ from .exclusivity import protection_for
 from .retrieval import (trials_from_db, financials_from_db, history_from_db,
                         query_companies, derived_figures, upcoming_readouts)
 from .chat import answer_question
-from .changes import compare, compare_universe, latest_pair
+from .changes import (compare, compare_universe, latest_pair,
+                      snapshot_provenance)
 from .raw_store import get_store, snapshot_coverage
 
 app = FastAPI(title="Biotech Agent API", version="0.3.0")
@@ -358,7 +359,10 @@ def universe_changes(since: str = None, until: str = None):
                 "reason": "need two snapshots covering a comparable set of companies"}
 
     names = {t: SPONSOR_OVERRIDES.get(t, n) for t, n in COMPANY_NAMES.items()}
-    return compare_universe(store, names, pair[0], pair[1])
+    result = compare_universe(store, names, pair[0], pair[1])
+    # what produced each end, so a rule change is not read as an event
+    result["provenance"] = snapshot_provenance(pair[0], pair[1])
+    return result
 
 
 @app.get("/company/{ticker}/changes")

@@ -31,7 +31,8 @@ from app.models import Company, Trial, Financial, FINANCIAL_METRICS
 from app.data_sources import (fetch_trials_raw, parse_trials, fetch_financials,
                               SPONSOR_OVERRIDES)
 from backfill_financials import _rows_for
-from app.raw_store import get_store, raw_key, snapshot_date
+from app.raw_store import (get_store, raw_key, snapshot_date,
+                           manifest_key, code_version)
 
 COMPANIES_PATH = os.path.join(os.path.dirname(__file__), "companies.json")
 
@@ -230,6 +231,7 @@ def main():
     date = snapshot_date()
 
     universe = select_shard(load_universe(), shard_index, shard_count)
+    full_run = not (args.tickers or shard_count)
     if args.tickers:
         wanted = {t.strip().upper() for t in args.tickers.split(",") if t.strip()}
         universe = [r for r in universe if r["ticker"] in wanted]
@@ -243,6 +245,19 @@ def main():
              "full universe")
     print(f"Ingesting {len(universe)} companies ({where}, "
           f"{WORKERS} fetches at a time, snapshot {date})...\n")
+
+    # Recorded before the run rather than after, so an interrupted run still
+    # says what it was and what produced it. A partial snapshot is legitimate —
+    # a targeted re-ingest archives only what it touched — but a comparison has
+    # to know that it is partial rather than read 739 absent companies as 739
+    # companies that disappeared.
+    store.put(manifest_key(date), {
+        "date": date,
+        "code_version": code_version(),
+        "companies_expected": len(universe),
+        "full_run": full_run,
+        "tickers": sorted(r["ticker"] for r in universe) if not full_run else None,
+    })
 
     done = 0
     # fetch everything in parallel, but archive and write one at a time as results

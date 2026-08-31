@@ -12,7 +12,7 @@ number in this project can.
 """
 
 from .data_sources import parse_trials
-from .raw_store import raw_key, snapshot_coverage
+from .raw_store import get_store, raw_key, snapshot_coverage, manifest_key
 
 # statuses worth calling out when a trial arrives in one, since they are the
 # outcomes a reader is watching for rather than routine progress
@@ -189,11 +189,55 @@ def latest_pair(store):
     coverage = snapshot_coverage()
     if len(coverage) < 2:
         return None
-    (newest, newest_count), rest = coverage[0], coverage[1:]
+
+    # The coverage rule guarded the baseline and not the newest end, so a
+    # targeted re-ingest of 48 companies became the thing everything else was
+    # compared against and 739 companies came back as "not in both". A run that
+    # says it was partial is not a period of time, it is a repair.
+    full = [(d, c) for d, c in coverage if _was_full_run(d) is not False]
+    usable = full if len(full) >= 2 else coverage
+
+    (newest, newest_count), rest = usable[0], usable[1:]
     for date, count in rest:
         if count >= newest_count * MIN_BASELINE_COVERAGE:
             return date, newest
     return None
+
+
+def _was_full_run(date):
+    """
+    Whether that date's run covered the whole universe: True, False, or None
+    when the run left no manifest and cannot say.
+    """
+    try:
+        return bool(get_store().get(manifest_key(date)).get("full_run"))
+    except Exception:
+        return None
+
+
+def snapshot_provenance(earlier, later):
+    """
+    What produced each end of a comparison, and whether they are comparable.
+
+    Two snapshots taken by different code are not measuring the same thing. When
+    the matching rules changed, Church & Dwight appeared to register 34 trials
+    in four days, one of them a benzocaine study from 2007; it had always run
+    them and we had only started recognising its name. A diff that cannot say
+    this will report rule changes as events.
+    """
+    out = {}
+    for label, date in (("from", earlier), ("to", later)):
+        try:
+            out[label] = get_store().get(manifest_key(date))
+        except Exception:
+            out[label] = {"date": date, "code_version": None, "full_run": None}
+    versions = {out[k].get("code_version") for k in ("from", "to")}
+    out["same_code"] = (len(versions) == 1 and None not in versions)
+    out["caveat"] = None if out["same_code"] else (
+        "These snapshots were taken by different or unrecorded versions of the "
+        "extraction code, so a difference here may be a change in what we "
+        "recognise rather than a change in the world.")
+    return out
 
 
 # a comparison already made, keyed by the two dates and how many companies were

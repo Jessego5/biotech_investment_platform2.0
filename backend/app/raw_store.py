@@ -35,6 +35,32 @@ def snapshot_date(when=None):
     return (when or datetime.now(timezone.utc)).strftime("%Y-%m-%d")
 
 
+def code_version():
+    """
+    The commit the running code is at, or "unknown" outside a checkout.
+
+    A snapshot is only comparable to another taken by the same rules. When the
+    matching rules changed, Church & Dwight appeared to register thirty-four
+    trials in four days — one of them a benzocaine study from 2007. It had
+    always run them; we had only just started recognising its name. A diff
+    cannot tell the world changing from us changing unless the snapshot says
+    which code produced it.
+    """
+    import subprocess
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                             cwd=os.path.dirname(os.path.dirname(__file__)),
+                             capture_output=True, text=True, timeout=5)
+        return out.stdout.strip() or "unknown"
+    except Exception:
+        return "unknown"
+
+
+def manifest_key(date):
+    """Where a run records what produced it, alongside that run's companies."""
+    return f"manifest/{date}.json"
+
+
 def raw_key(source, ticker, date):
     """
     Where one company's snapshot lives, as source/date/ticker.
