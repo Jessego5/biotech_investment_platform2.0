@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.biotechagent.snapshot</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/path/to/repo/snapshot.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/path/to/repo</string>
+
+  <!-- Mondays at 07:00 local. Weekly because about 1% of this universe's
+       trials start in a month; a daily run mostly archives yesterday again. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key><integer>1</integer>
+    <key>Hour</key><integer>7</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <!-- If the laptop was asleep at 07:00 on Monday, run when it wakes. A
+       snapshot missed entirely is a week-long hole in the history. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/path/to/repo/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/path/to/repo/logs/launchd.err.log</string>
+</dict>
+</plist>

@@ -37,3 +37,4 @@ backend/raw/
 
 # logs
 *.log
+logs/

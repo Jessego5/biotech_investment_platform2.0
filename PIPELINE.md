@@ -126,6 +126,67 @@ because extraction is the part that keeps being wrong:
 
 ---
 
+## Snapshots, and taking them on a schedule
+
+A snapshot is what the APIs returned on a date. Two of them taken by the same
+code are the only thing that can answer "what changed"; nothing else produces
+that, and no amount of re-reading today's data will.
+
+```bash
+./snapshot.sh          # take one if today has none
+./snapshot.sh --force  # take one regardless
+```
+
+It runs `ingest.py --snapshot-only`, which archives without writing to the
+database, so a scheduled run can never disturb what the app is serving.
+
+**Weekly, not daily.** About 1% of the trials in this universe start in a given
+month — 334 of 30,823 in August. A daily run spends roughly 1,574 API requests
+to capture almost nothing and fills the archive with dates that differ from each
+other by rounding. `snapshot.plist` is a launchd job for Mondays at 07:00:
+
+```bash
+cp snapshot.plist ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
+launchctl load ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
+```
+
+The AWS path already exists and is not deployed: `infra/cloudformation/
+pipeline.yaml` carries an EventBridge schedule, `rate(7 days)` DISABLED for dev
+and `cron(0 6 * * ? *)` ENABLED for prod.
+
+### What the script refuses to do quietly
+
+An unattended run that fails silently is worse than no run, because the gap
+looks like a quiet week. So it exits non-zero, loudly, when:
+
+- `SEC_USER_AGENT` is missing or short. It contains a space, and reading it
+  through an `xargs` pipeline truncates it to the first word — after which every
+  SEC request 403s while the run exits 0.
+- fewer than 700 of about 787 companies were archived. A run that exits 0 having
+  fetched almost nothing is the failure this project keeps meeting: silent, and
+  shaped like success.
+
+It also refuses to take a second snapshot of the same day unless forced. Two
+snapshots hours apart are not a period of time.
+
+### Every run writes a manifest
+
+Written before fetching, so an interrupted run still says what it was: the
+commit, the company count, and whether it covered the whole universe.
+
+This exists because a diff cannot otherwise tell the world changing from us
+changing. Comparing the first two snapshots reported Church & Dwight registering
+34 trials in four days, one of them a benzocaine study from 2007 — it had always
+run them, and the matching rules had changed. `/changes` reports the provenance
+and says plainly when two ends are not comparable.
+
+`latest_pair` also skips partial runs when choosing the newest snapshot. A
+targeted `--tickers` re-ingest archives only what it touched, and comparing the
+universe against 48 companies reported 739 as "not in both". A run that says it
+was partial is a repair, not a period of time.
+
+---
+
 ## Deploying to Postgres
 
 `migrate_to_postgres.py` copies the tables that are correct and expensive to
