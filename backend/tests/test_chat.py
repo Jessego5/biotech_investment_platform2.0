@@ -9,6 +9,7 @@ and two of those are not tickers at all. Resolution happens here instead, agains
 the companies actually held. Run them with pytest.
 """
 
+from app import chat
 from app.chat import (_resolve_company, _sector_labels, _run_tool, TOOLS,
                       strip_invalid_citations)
 
@@ -146,3 +147,38 @@ def test_valid_citations_survive():
 def test_an_answer_with_no_evidence_keeps_no_citations():
     assert strip_invalid_citations("I don't have data on that [1].", 0) \
         == "I don't have data on that."
+
+
+# - a citation has to name the document, not the archive
+
+def test_a_filing_citation_carries_the_document_a_reader_can_open():
+    # "SEC EDGAR" names the kind of source. It does not let anyone open the
+    # filing and disagree with us, which is the only check that matters.
+    cite = chat._filing_citation({
+        "ticker": "NONOF", "fiscal_year": 2025, "form": "20-F",
+        "section": "intellectual_property", "filed": "2026-02-04",
+        "url": "https://www.sec.gov/Archives/edgar/data/353278/x/nvo.htm",
+        "chunk_id": 293976, "accession": "0000353278-26-000012",
+    })
+
+    assert cite["label"] == "NONOF FY2025 20-F"
+    assert cite["url"].startswith("https://www.sec.gov/Archives/")
+    # the exact passage is fetchable, not merely attributed
+    assert cite["chunk_id"] == 293976
+
+
+def test_a_trial_citation_points_at_the_registry_record():
+    cite = chat._trial_citation({"nct_id": "NCT05155605", "ticker": "ILMN",
+                                 "phase": "NA", "status": "COMPLETED"})
+
+    assert cite["url"] == "https://clinicaltrials.gov/study/NCT05155605"
+
+
+def test_a_filing_with_no_cik_cites_without_inventing_a_url():
+    # a company we hold no CIK for cannot be linked to EDGAR, and a broken link
+    # is worse than none: it looks checked and fails when checked
+    cite = chat._filing_citation({"ticker": "AAA", "form": "10-K", "url": None,
+                                  "section": "risk_factors", "filed": "2026-01-01"})
+
+    assert cite["url"] is None
+    assert cite["label"] == "AAA 10-K"

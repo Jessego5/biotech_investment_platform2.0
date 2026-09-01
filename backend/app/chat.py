@@ -273,6 +273,41 @@ def _company_block(db, named):
     return "\n".join(lines), [facts["ticker"]]
 
 
+def _filing_citation(passage):
+    """
+    One filing passage, as something a reader can open and check.
+
+    The document rather than the archive: a reader told "SEC EDGAR" has been
+    told the kind of source and not which one, and cannot go and disagree.
+    """
+    year = f"FY{passage['fiscal_year']}" if passage.get("fiscal_year") else None
+    return {
+        "kind": "filing",
+        "ticker": passage.get("ticker"),
+        "label": " ".join(x for x in [passage.get("ticker"), year,
+                                      passage.get("form")] if x),
+        "detail": f"{passage.get('section', '')} · filed {passage.get('filed', '')}",
+        "url": passage.get("url"),
+        # the passage we actually read, fetchable in full rather than truncated
+        # into the answer and then unavailable
+        "chunk_id": passage.get("chunk_id"),
+        "accession": passage.get("accession"),
+    }
+
+
+def _trial_citation(trial):
+    """One study, as the registry record it came from."""
+    nct = trial.get("nct_id")
+    return {
+        "kind": "trial",
+        "ticker": trial.get("ticker"),
+        "label": nct,
+        "detail": f"{trial.get('phase', '')} · {trial.get('status', '')}".strip(" ·"),
+        "url": f"https://clinicaltrials.gov/study/{nct}" if nct else None,
+        "nct_id": nct,
+    }
+
+
 def _run_tool(name, args, db, as_of):
     """
     Execute one tool. Returns (facts_text, sources).
@@ -323,8 +358,9 @@ def _run_tool(name, args, db, as_of):
             snippet = (t["summary"] or "").replace("\n", " ")[:320]
             lines.append(f"{t['nct_id']} ({t['ticker']}): {t['title']} | "
                          f"{t['phase']} | {t['status']}\n  {snippet}")
-        return "\n".join(lines), list(dict.fromkeys(
-            t["ticker"] for t in trials if t["ticker"]))
+        return ("\n".join(lines),
+                list(dict.fromkeys(t["ticker"] for t in trials if t["ticker"])),
+                [_trial_citation(t) for t in trials])
 
     if name == "financial_history":
         ticker = _resolve_company(args.get("company"), db)
@@ -367,13 +403,16 @@ def _run_tool(name, args, db, as_of):
             return "No filing passages matched that.", []
         # the year is in the header of every passage, not only in the tool call,
         # so a passage from 2021 cannot be read as current
+        # the year is in the header of every passage, not only in the tool call,
+        # so a passage from 2021 cannot be read as current
         lines = ["Passages from annual report narrative:", ""]
         for pg in passages:
             year = f"FY{pg['fiscal_year']} " if pg.get("fiscal_year") else ""
             lines.append(f"{pg['ticker']} {year}{pg['form']} filed {pg['filed']} "
                          f"({pg['section']}):\n  {pg['text'][:600]}")
-        return "\n".join(lines), list(dict.fromkeys(
-            pg["ticker"] for pg in passages if pg["ticker"]))
+        return ("\n".join(lines),
+                list(dict.fromkeys(pg["ticker"] for pg in passages if pg["ticker"])),
+                [_filing_citation(pg) for pg in passages])
 
     if name == "patent_protection":
         ticker = _resolve_company(args.get("company"), db)
@@ -518,7 +557,13 @@ def answer_question(question, db, as_of=None):
                                       "runway, patents, or expected readouts.",
                             "sources": [], "tools_used": called}
 
-                text, srcs = _run_tool(name, args, db, as_of)
+                # a tool may also return the documents behind its answer. Most
+                # compute a figure and have none to give; the two that read
+                # source text do, and those are the ones a reader most wants to
+                # go and check.
+                result = _run_tool(name, args, db, as_of)
+                text, srcs = result[0], result[1]
+                cites = result[2] if len(result) > 2 else []
                 if text:
                     facts.append(text)
                     evidence.append({
@@ -528,6 +573,12 @@ def answer_question(question, db, as_of=None):
                         "source": TOOL_SOURCES.get(name, "database"),
                         "text": text,
                         "tickers": srcs,
+                        # deduplicated: six passages from one 10-K are one
+                        # document to open, not six
+                        "documents": list({
+                            (c.get("url") or c.get("label")): c
+                            for c in cites if c.get("url") or c.get("label")
+                        }.values()),
                     })
                 sources += srcs
                 messages.append({"role": "tool", "tool_call_id": call.id,

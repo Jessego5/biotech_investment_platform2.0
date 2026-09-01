@@ -27,7 +27,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .database import SessionLocal, init_db
-from .models import (Company, Trial, RegistryTrial, ApprovedProduct, Filing)
+from .models import (Company, Trial, RegistryTrial, ApprovedProduct,
+                     Filing, FilingChunk)
 from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
                            fetch_financials, company_name, SPONSOR_OVERRIDES)
 from .analysis import build_assessment
@@ -35,6 +36,7 @@ from .narrative import generate_narrative
 from .exclusivity import protection_for
 from .retrieval import (trials_from_db, financials_from_db, history_from_db,
                         query_companies, derived_figures, upcoming_readouts)
+from .filings import filing_url
 from .chat import answer_question
 from .changes import (compare, compare_universe, latest_pair,
                       snapshot_provenance)
@@ -336,6 +338,53 @@ def list_snapshots():
     """
     coverage = snapshot_coverage()
     return {"snapshots": [{"date": d, "companies": n} for d, n in coverage]}
+
+
+@app.get("/source/chunk/{chunk_id}")
+def source_chunk(chunk_id: int):
+    """
+    The exact passage a citation was drawn from, with the document it sits in.
+
+    An answer quotes 600 characters and the rest is gone. This returns the whole
+    chunk as stored, which is what the model was actually allowed to read, plus
+    a link to the filing on EDGAR. The two are different kinds of check: one
+    shows what we read, the other shows whether we read it correctly.
+    """
+    db = SessionLocal()
+    try:
+        row = (db.query(FilingChunk, Filing, Company)
+                 .join(Filing, FilingChunk.filing_id == Filing.id)
+                 .join(Company, Company.ticker == Filing.company_ticker)
+                 .filter(FilingChunk.id == chunk_id).first())
+        if row is None:
+            raise HTTPException(status_code=404,
+                                detail=f"No stored passage with id {chunk_id}.")
+        chunk, filing, company = row
+        # how many pieces the section was split into, so a reader can see this
+        # is one passage of many rather than the whole of what the filing says
+        total = (db.query(FilingChunk)
+                   .filter(FilingChunk.filing_id == filing.id,
+                           FilingChunk.section == chunk.section).count())
+        return {
+            "chunk_id": chunk.id,
+            "text": chunk.text,
+            "section": chunk.section,
+            "ordinal": chunk.ordinal,
+            "of": total,
+            "company": {"ticker": company.ticker, "name": company.name,
+                        "cik": company.cik},
+            "filing": {
+                "form": filing.form, "filed": filing.filed,
+                "fiscal_year": filing.fiscal_year,
+                "period_end": filing.period_end,
+                "accession": filing.accession,
+                "document": filing.document,
+                "url": (filing_url(company.cik, filing.accession, filing.document)
+                        if company.cik else None),
+            },
+        }
+    finally:
+        db.close()
 
 
 @app.get("/changes")

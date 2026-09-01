@@ -26,7 +26,8 @@ except ImportError:
     pass
 
 from .database import SessionLocal, engine
-from .models import Trial, Filing, FilingChunk
+from .models import Trial, Filing, FilingChunk, Company
+from .filings import filing_url
 
 EMBED_MODEL = "text-embedding-3-small"
 
@@ -182,8 +183,16 @@ def semantic_search(query, k=8):
 
 # - filing narrative
 
-def _filing_hit(chunk, filing, score):
-    """One matching passage, with enough context to be checkable."""
+def _filing_hit(chunk, filing, score, cik=None):
+    """
+    One matching passage, with enough context to be checkable.
+
+    "Checkable" has to mean by the reader and not only by us. Saying a claim
+    came from SEC EDGAR names the kind of source; it does not let anyone open
+    the document and find the sentence. The accession and document name are what
+    turn that into a URL, and chunk_id is what lets the exact passage we read be
+    fetched back rather than paraphrased.
+    """
     return {
         "ticker": filing.company_ticker,
         "section": chunk.section,
@@ -195,6 +204,13 @@ def _filing_hit(chunk, filing, score):
         "period_end": filing.period_end,
         "text": chunk.text,
         "score": score,
+        "chunk_id": chunk.id,
+        "accession": filing.accession,
+        "document": filing.document,
+        # where this sits in the section, so a passage can be found in a
+        # 300,000 character document rather than merely attributed to it
+        "ordinal": chunk.ordinal,
+        "url": filing_url(cik, filing.accession, filing.document) if cik else None,
     }
 
 
@@ -280,6 +296,16 @@ def search_filings(query, k=6, ticker=None, year=None, all_years=False):
 
         # a floor of its own, measured on this corpus, so an off-topic question
         # gets an honest "no data" rather than the least bad passage
-        return [h for h in hits if h["score"] >= MIN_FILING_SCORE]
+        hits = [h for h in hits if h["score"] >= MIN_FILING_SCORE]
+        # the CIK is the last piece of the EDGAR path, looked up once for the
+        # handful of companies that actually matched
+        if hits:
+            ciks = dict(db.query(Company.ticker, Company.cik)
+                          .filter(Company.ticker.in_({h["ticker"] for h in hits})).all())
+            for h in hits:
+                cik = ciks.get(h["ticker"])
+                h["url"] = (filing_url(cik, h["accession"], h["document"])
+                            if cik and h["accession"] and h["document"] else None)
+        return hits
     finally:
         db.close()
