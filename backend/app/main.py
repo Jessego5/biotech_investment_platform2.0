@@ -9,6 +9,7 @@ ingestion.
 """
 
 import datetime
+import re
 import json
 import os
 
@@ -163,7 +164,12 @@ def stats():
         led = db.query(Trial).filter(Trial.role != "collaborator").count()
         return {
             "companies": db.query(Company).count(),
+            # two counts, because they answer different questions: how many
+            # studies we hold, and how many of them a company is running rather
+            # than collaborating on. A banner describing the corpus wants the
+            # first; a company's own pipeline wants the second.
             "trials": led,
+            "trials_total": db.query(Trial).count(),
             "registry_trials": db.query(RegistryTrial).count(),
             "upcoming_readouts": db.query(Trial).filter(
                 Trial.completion_date_type == "ESTIMATED",
@@ -229,6 +235,82 @@ def ask(q: Question):
         return answer_question(question, db)
     finally:
         db.close()
+
+
+# arms that are not a candidate: a control tells you how the trial was designed,
+# not what the company is developing.
+_CONTROL = re.compile(
+    r"^(placebo|matching placebo|saline|normal saline|vehicle|sham|"
+    r"standard of care|best supportive care|no intervention|observation|"
+    r"usual care|control)\b", re.I)
+
+_PHASE_RANK = {"PHASE4": 4, "PHASE3": 3, "PHASE2": 2, "PHASE1": 1}
+
+
+def _furthest_phase(phase):
+    """The most advanced phase named in a registry phase string."""
+    best, label = 0, None
+    for part in (phase or "").upper().replace(" ", "").split(","):
+        rank = _PHASE_RANK.get(part, 0)
+        if rank > best:
+            best, label = rank, part
+    return best, label
+
+
+def studied_interventions(db, ticker):
+    """
+    What this company's trials are testing, grouped by the name the registry
+    gives it.
+
+    This is deliberately not a programme list. One candidate appears under
+    several names — ivacaftor is filed as "IVA", "Ivacaftor" and "VX-770" — and
+    nothing in the registry states that those are the same thing. Merging them
+    would mean deciding it on their behalf, and being wrong quietly. So each
+    name stands as its own row, and where a name matches the ingredient of an
+    approved product, that link is shown because the FDA states it.
+
+    Lead-sponsored trials only: a study the company collaborates on is real
+    involvement at a different level of control, and counting it here would
+    overstate what the company is developing.
+    """
+    trials = (db.query(Trial)
+                .filter(Trial.company_ticker == ticker,
+                        Trial.role == "lead",
+                        Trial.interventions.isnot(None)).all())
+
+    marketed = {}
+    for p in db.query(ApprovedProduct).filter(
+            ApprovedProduct.company_ticker == ticker).all():
+        for part in (p.ingredient or "").replace(";", ",").split(","):
+            key = part.strip().casefold()
+            if key and p.trade_name:
+                marketed.setdefault(key, p.trade_name)
+
+    grouped = {}
+    for t in trials:
+        for raw in (t.interventions or "").split(";"):
+            name = raw.strip()
+            if not name or _CONTROL.match(name):
+                continue
+            entry = grouped.setdefault(name.casefold(), {
+                "name": name, "trials": 0, "phase": None, "phase_rank": 0,
+                "lead_nct": None, "conditions": set(),
+                "approved_as": marketed.get(name.casefold()),
+            })
+            entry["trials"] += 1
+            rank, label = _furthest_phase(t.phase)
+            if rank > entry["phase_rank"]:
+                entry["phase_rank"], entry["phase"] = rank, label
+                entry["lead_nct"] = t.nct_id
+            if entry["lead_nct"] is None:
+                entry["lead_nct"] = t.nct_id
+            for c in (t.conditions or "").split(";"):
+                if c.strip():
+                    entry["conditions"].add(c.strip())
+
+    out = [{**v, "conditions": sorted(v["conditions"])[:3]} for v in grouped.values()]
+    out.sort(key=lambda e: (-e["phase_rank"], -e["trials"], e["name"]))
+    return out
 
 
 def company_filings(db, ticker):
@@ -384,6 +466,9 @@ def analyze_company(ticker: str):
         # trials cannot show these — a marketed drug has stopped being a trial
         # — and showing only trials would make an approved portfolio look empty.
         "approved_products": approved_products(db, ticker) if company is not None else [],
+        # what the trials test, grouped by the registry's own name for it. Not
+        # a programme list — see studied_interventions.
+        "interventions": studied_interventions(db, ticker) if company is not None else [],
     }
 
 

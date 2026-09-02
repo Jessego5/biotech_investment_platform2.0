@@ -842,6 +842,15 @@ def parse_trials(payload, sponsor_name):
             # condition means the same thing in both
             "conditions": "; ".join(ps.get("conditionsModule", {})
                                       .get("conditions") or []) or None,
+            # What the study is actually testing. The registry states this as
+            # a structured list, and it was being folded into the embedding
+            # text and then thrown away — which left the candidate a company is
+            # developing recorded nowhere except inside a trial's title.
+            "interventions": "; ".join(
+                i.get("name", "").strip()
+                for i in (ps.get("armsInterventionsModule", {})
+                            .get("interventions") or [])
+                if i.get("name")) or None,
             "start_date": start,
             "start_date_type": start_type,
             "completion_date": done,

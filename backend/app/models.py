@@ -148,6 +148,12 @@ class Trial(Base):
     # column — it is read and displayed — so the index bought nothing and cost a
     # ceiling on what a trial was allowed to be about.
     conditions = Column(Text)
+    # What is actually being tested, as the registry's structured list, "; "
+    # joined. This is the closest the data comes to naming the candidate a
+    # company is developing — a programme has no record of its own, only the
+    # trials testing it. Text rather than String and unindexed for the same
+    # reason as conditions: combination arms make these long.
+    interventions = Column(Text)
     # a date carries whether it happened. An estimated completion is when a
     # readout is expected, an actual one is when it arrived, and reporting the
     # first as the second would invent the history this project exists to avoid.
