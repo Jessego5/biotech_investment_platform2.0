@@ -25,8 +25,9 @@ async function corpusLine(): Promise<string> {
     return [
       `${n(s.companies)} companies`,
       `${n(s.filings)} annual reports`,
-      `${n(s.trials)} trials`,
-      `${n(s.registry_trials)} registry studies`,
+      // the held count, not the lead-sponsored subset: this line says what the
+      // corpus contains, not what any one company is running
+      `${n(s.trials_total ?? s.trials)} trials`,
     ].join(" · ");
   } catch {
     // the chrome is not the place to fail loudly, but it must not assert a

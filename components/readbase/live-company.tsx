@@ -76,6 +76,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
   const filings = data.filings ?? [];
   // the registry spells the same bucket more than one way — "N/A" and "NA" are
   // one absence, not two — so they are merged on the label they display under
+  const interventions = data.interventions ?? [];
   const byPhase = Object.entries(
     Object.entries(data.pipeline?.by_phase ?? {}).reduce<Record<string, number>>(
       (acc, [phase, n]) => {
@@ -173,6 +174,90 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                 Nothing approved. Most issuers in this corpus have no marketed
                 product, which is a fact about the company rather than a gap in
                 the data.
+              </p>
+            )}
+          </Section>
+
+          <Section
+            id="interventions"
+            title="Interventions studied"
+            period="grouped by the name the registry gives it · lead-sponsored trials"
+          >
+            {interventions.length ? (
+              <>
+                <Table className="w-full caption-bottom border-collapse text-[13.5px]">
+                  <TableHeader>
+                    <TableRow className="border-b border-border">
+                      {["Intervention", "Indications", "Furthest phase", "Lead trial", "Trials"].map(
+                        (h, i) => (
+                          <TableHead
+                            key={h}
+                            className={`h-auto whitespace-normal border-b border-border px-0 pb-[7px] pr-[10px] align-middle font-mono text-[9.5px] font-normal uppercase tracking-[0.11em] text-muted-foreground ${
+                              i === 4 ? "pr-0 text-right" : "text-left"
+                            }`}
+                          >
+                            {h}
+                          </TableHead>
+                        ),
+                      )}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {interventions.slice(0, 12).map((iv) => (
+                      <TableRow key={iv.name} className="border-b border-border">
+                        <TableCell className="whitespace-normal px-0 py-2 pr-[10px] align-middle">
+                          <span className="font-mono text-[12px]">{iv.name}</span>
+                          {iv.approved_as && (
+                            <span className="mt-[2px] block font-mono text-[10px] text-muted-foreground">
+                              marketed as {iv.approved_as}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="whitespace-normal px-0 py-2 pr-[10px] align-middle text-[13.5px]">
+                          {iv.conditions.join(", ") || "—"}
+                        </TableCell>
+                        <TableCell className="px-0 py-2 pr-[10px] align-middle">
+                          {phaseLevel(iv.phase) ? (
+                            <PhaseBar
+                              phase={phaseLevel(iv.phase)!}
+                              label={phaseLabel(iv.phase)}
+                            />
+                          ) : (
+                            <span className="font-mono text-[10.5px] text-muted-foreground">
+                              {phaseLabel(iv.phase)}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-0 py-2 pr-[10px] align-middle font-mono text-[12px] tabular-nums">
+                          {iv.lead_nct ?? "—"}
+                        </TableCell>
+                        <TableCell className="px-0 py-2 text-right align-middle font-mono text-[12px] tabular-nums">
+                          {iv.trials}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="mt-3 max-w-[80ch] space-y-2 font-mono text-[10px] leading-[1.6] text-muted-foreground">
+                  <p>
+                    This is what the trials test, not a programme list. One
+                    candidate can appear more than once: the registry files the
+                    same drug under a code and a generic name — ivacaftor is
+                    entered as IVA, Ivacaftor and VX-770 — and nothing states
+                    that those are the same thing, so they are not merged here.
+                  </p>
+                  <p>
+                    An arm is also not always the sponsor&rsquo;s own candidate.
+                    A comparator, a combination partner or a device arm is
+                    listed the same way, and the registry does not say who owns
+                    what. Where a name matches an approved product&rsquo;s
+                    ingredient, the FDA states that link and it is shown.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="max-w-[62ch] text-[14px] leading-[1.6] text-ink-2">
+                No trial held for this company records what it tested.
               </p>
             )}
           </Section>

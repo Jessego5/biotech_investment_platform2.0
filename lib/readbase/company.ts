@@ -55,6 +55,14 @@ export type CompanyResponse = {
     sections: string[];
     url: string | null;
   }[];
+  interventions: {
+    name: string;
+    trials: number;
+    phase: string | null;
+    lead_nct: string | null;
+    conditions: string[];
+    approved_as: string | null;
+  }[];
   approved_products: {
     trade_name: string | null;
     ingredient: string | null;
