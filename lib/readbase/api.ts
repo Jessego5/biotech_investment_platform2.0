@@ -1,0 +1,183 @@
+/**
+ * The live Readbase API — the Python service in backend/.
+ *
+ * The response shapes here mirror what that service actually returns; they are
+ * not a hopeful contract. Where the API and these screens disagree, the API is
+ * the fact.
+ */
+import type { AnswerNode } from "@/lib/readbase/types";
+import type { PassageSection } from "@/lib/readbase/passages";
+
+export const API_BASE =
+  process.env.READBASE_API_URL ?? "http://127.0.0.1:8000";
+
+/** One document behind a retrieval, as the service names it. */
+export type CitedDoc = {
+  kind: "filing" | "trial";
+  ticker?: string | null;
+  label?: string | null;
+  detail?: string | null;
+  url?: string | null;
+  chunk_id?: number | null;
+  accession?: string | null;
+  nct_id?: string | null;
+};
+
+/** One numbered block the model was given, and was told to cite by number. */
+export type EvidenceBlock = {
+  n: number;
+  tool: string;
+  label: string;
+  source: string;
+  text: string;
+  tickers: string[];
+  documents: CitedDoc[];
+};
+
+export type AskResponse = {
+  answer: string;
+  sources?: string[];
+  match_count?: number;
+  tools_used?: string[] | null;
+  /** Markers the model wrote against blocks that never existed. */
+  dropped_citations?: number;
+  retrieved?: string;
+  evidence?: EvidenceBlock[];
+  error?: string;
+};
+
+export type ChunkResponse = {
+  chunk_id: number;
+  text: string;
+  section: string;
+  /** 0-indexed within the section — display position, not this. */
+  ordinal: number;
+  of: number;
+  section_chunk_ids: number[];
+  company: { ticker: string; name: string; cik: string | null };
+  filing: {
+    form: string;
+    filed: string;
+    fiscal_year: number | null;
+    period_end: string | null;
+    accession: string;
+    document: string;
+    url: string | null;
+  };
+  error?: string;
+};
+
+/** Bracketed citation the model wrote, matching the service's own regex. */
+const MARKER = /\[(\d{1,3})\]/g;
+
+/**
+ * The answer arrives as prose with `[n]` markers indexing the evidence blocks.
+ * This turns it into the nodes the answer components already render, so the
+ * live answer and the fixtures go through exactly the same typography.
+ */
+export function toAnswerNodes(answer: string): AnswerNode[][] {
+  return answer
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, li) => {
+      const nodes: AnswerNode[] = [];
+      let cursor = 0;
+      let chip = 0;
+      for (const m of line.matchAll(MARKER)) {
+        const at = m.index ?? 0;
+        if (at > cursor) nodes.push({ kind: "text", text: line.slice(cursor, at) });
+        nodes.push({ kind: "chip", id: `p${li}c${chip++}`, source: Number(m[1]) });
+        cursor = at + m[0].length;
+      }
+      if (cursor < line.length) nodes.push({ kind: "text", text: line.slice(cursor) });
+      return nodes;
+    });
+}
+
+/**
+ * A fetched passage, as a section the panel can show and step through.
+ *
+ * Only the fetched passage carries text; its siblings are known by id and load
+ * when stepped to. `ordinal` is 0-indexed in the service, so position comes
+ * from the sibling list rather than from the ordinal.
+ */
+export function sectionFromChunk(chunk: ChunkResponse): {
+  section: PassageSection;
+  index: number;
+} {
+  // Older builds of the service return the section length but not its member
+  // ids. The length is still true, so it is still shown — but the passages
+  // cannot be stepped to, and the panel has to say that rather than pretend
+  // the section is one passage long.
+  const indexed = Boolean(chunk.section_chunk_ids?.length);
+  const total = indexed ? chunk.section_chunk_ids.length : Math.max(chunk.of, 1);
+  const ids = indexed ? chunk.section_chunk_ids : [];
+  const position = indexed
+    ? Math.max(ids.indexOf(chunk.chunk_id), 0) + 1
+    : Math.min(Math.max(chunk.ordinal + 1, 1), total);
+  const year = chunk.filing.fiscal_year ? `FY${chunk.filing.fiscal_year}` : null;
+
+  const url = chunk.filing.url;
+  return {
+    index: position,
+    section: {
+      id: `chunk-section-${chunk.filing.accession}-${chunk.section}`,
+      original: {
+        url,
+        displayUrl: url ? url.replace(/^https?:\/\/(www\.)?/, "") : "not on EDGAR",
+        fields: [
+          ["CIK", chunk.company.cik ?? "—"],
+          ["Accession", chunk.filing.accession],
+          [
+            "Form",
+            [chunk.filing.form, chunk.filing.period_end && `period ended ${chunk.filing.period_end}`]
+              .filter(Boolean)
+              .join(" · "),
+          ],
+          ["Document", chunk.filing.document],
+        ] as [string, string][],
+      },
+      header: [
+        chunk.company.ticker,
+        chunk.filing.form,
+        year,
+        `filed ${chunk.filing.filed}`,
+        chunk.section.replace(/_/g, " "),
+      ].filter(Boolean) as string[],
+      total,
+      indexUnavailable: !indexed,
+      passages: Array.from({ length: total }, (_, i) => ({
+        index: i + 1,
+        chunkId: indexed ? ids[i] : undefined,
+        ...((indexed ? ids[i] === chunk.chunk_id : i + 1 === position)
+          ? {
+              characters: `${chunk.text.length.toLocaleString()} characters`,
+              provenance: "stored verbatim · no summarisation",
+              paragraphs: splitPassage(chunk.text),
+            }
+          : {}),
+      })),
+    },
+  };
+}
+
+/** Stored text is one blob; paragraph breaks are the only thing added. */
+export function splitPassage(text: string): string[] {
+  const parts = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  return parts.length ? parts : [text.trim()];
+}
+
+export async function ask(question: string): Promise<AskResponse> {
+  const res = await fetch("/api/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question }),
+  });
+  return res.json();
+}
+
+export async function fetchChunk(chunkId: number): Promise<ChunkResponse> {
+  const res = await fetch(`/api/source/chunk/${chunkId}`);
+  return res.json();
+}
