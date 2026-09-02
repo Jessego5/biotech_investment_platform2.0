@@ -24,7 +24,7 @@ export default function WhatChangedPage() {
   return (
     <div className="min-h-svh bg-card text-foreground">
       <Chrome
-        crumb={["companies", company.name, "what changed", "FY2024 → FY2025"]}
+        crumb={["companies", "fixture", company.name, "what changed", "FY2024 → FY2025"]}
       />
 
       <div className="px-[30px] pb-[34px] pt-[26px]">

@@ -55,8 +55,11 @@ export const pipeline: Programme[] = [
 export type Series = {
   name: string;
   unit: string;
-  /** Ten fiscal years, FY2016–FY2025, in US$ billions. */
+  /** Fiscal years in US$ billions, oldest first. */
   values: number[];
+  /** The years themselves. Live series carry their own; not every issuer
+   *  reports ten. Falls back to the fixture window when absent. */
+  years?: number[];
   /** Endpoints stated at their own precision, as the filings report them. */
   first: string;
   last: string;

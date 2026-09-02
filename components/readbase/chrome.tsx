@@ -1,4 +1,4 @@
-import { corpus } from "@/lib/readbase/moderna";
+import { API_BASE } from "@/lib/readbase/api";
 
 /** The wordmark. The D carries the one piece of colour in the chrome. */
 export function Wordmark() {
@@ -10,10 +10,37 @@ export function Wordmark() {
 }
 
 /**
+ * What the corpus actually holds, counted at request time.
+ *
+ * This line was a constant, and the constant drifted: it claimed a trial count
+ * the database had never had. A figure describing the data has to come from
+ * the data.
+ */
+async function corpusLine(): Promise<string> {
+  try {
+    const res = await fetch(`${API_BASE}/stats`, { cache: "no-store" });
+    if (!res.ok) return "corpus size unavailable";
+    const s = await res.json();
+    const n = (v: number) => v.toLocaleString("en-US");
+    return [
+      `${n(s.companies)} companies`,
+      `${n(s.filings)} annual reports`,
+      `${n(s.trials)} trials`,
+      `${n(s.registry_trials)} registry studies`,
+    ].join(" · ");
+  } catch {
+    // the chrome is not the place to fail loudly, but it must not assert a
+    // number it could not read
+    return "corpus size unavailable";
+  }
+}
+
+/**
  * Top bar, 52px. `crumb` is the path; segments are separated by the muted
  * slash the canvas uses rather than by a glyph inside the strings.
  */
-export function Chrome({ crumb }: { crumb: string[] }) {
+export async function Chrome({ crumb }: { crumb: string[] }) {
+  const corpus = await corpusLine();
   return (
     <div className="flex h-[52px] items-center gap-[22px] border-b border-border bg-secondary px-[22px]">
       <Wordmark />

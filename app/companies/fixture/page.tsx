@@ -39,10 +39,15 @@ const TABS: { label: string; target?: string }[] = [
   { label: "Filings", target: "filings" },
 ];
 
-export default function CompanyPage() {
+/**
+ * Artboard 3 as drawn, on the Moderna fixture. The live company page is at
+ * /companies/[ticker]; this is kept as the canvas reference, and because its
+ * programme table shows a shape the corpus cannot yet produce.
+ */
+export default function CompanyFixturePage() {
   return (
     <div id="top" className="min-h-full bg-card text-foreground scroll-mt-0">
-      <Chrome crumb={["companies", company.name]} />
+      <Chrome crumb={["companies", "fixture", company.name]} />
 
       {/* ------------------------------------------------------------ head */}
       <div className="border-b border-border bg-secondary px-[30px] pt-6">

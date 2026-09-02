@@ -31,6 +31,7 @@ function plot(values: number[]) {
  * rather than a substitute for them.
  */
 export function Sparkline({ series }: { series: Series }) {
+  const years = series.years ?? fiscalYears;
   const { points, zeroY } = plot(series.values);
   const reduce = useReducedMotion();
   const peak = points[series.peakIndex];
@@ -114,11 +115,14 @@ export function Sparkline({ series }: { series: Series }) {
 
       {/* 13px, not 7: preflight makes <svg> a block, so the gap the canvas
           gets from the inline descender has to be stated explicitly. */}
-      <div className="mt-[13px] grid grid-cols-10 border-t border-border pt-[6px]">
+      <div
+        className="mt-[13px] grid border-t border-border pt-[6px]"
+        style={{ gridTemplateColumns: `repeat(${series.values.length}, minmax(0, 1fr))` }}
+      >
         {series.values.map((v, i) => (
-          <div key={fiscalYears[i]} className="flex flex-col items-center gap-[2px]">
+          <div key={years[i]} className="flex flex-col items-center gap-[2px]">
             <span className="font-mono text-[8.5px] tracking-[0.02em] text-muted-foreground">
-              &rsquo;{String(fiscalYears[i]).slice(2)}
+              &rsquo;{String(years[i]).slice(2)}
             </span>
             <span
               className={`font-mono text-[10px] tabular-nums ${
