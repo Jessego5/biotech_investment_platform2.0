@@ -231,6 +231,56 @@ def ask(q: Question):
         db.close()
 
 
+def company_filings(db, ticker):
+    """Every annual report held for a company, newest fiscal year first."""
+    rows = db.query(Filing).filter(Filing.company_ticker == ticker).all()
+    # sorted here rather than in SQL: a filing stored before periods were
+    # recorded has no fiscal year, and the ordering must put those last
+    # without depending on how a given backend sorts nulls.
+    rows.sort(key=lambda f: (f.fiscal_year or -1, f.filed or ""), reverse=True)
+    company = db.get(Company, ticker)
+    cik = company.cik if company else None
+    return [{
+        "form": f.form,
+        "filed": f.filed,
+        "fiscal_year": f.fiscal_year,
+        "period_end": f.period_end,
+        "accession": f.accession,
+        "document": f.document,
+        "sections": (f.sections_found or "").split(",") if f.sections_found else [],
+        "url": filing_url(cik, f.accession, f.document) if cik else None,
+    } for f in rows]
+
+
+def approved_products(db, ticker):
+    """
+    One row per marketed product rather than per Orange Book application: a
+    drug listed under four dosage forms is one thing a reader recognises, and
+    the earliest approval is the date it reached patients.
+    """
+    rows = (db.query(ApprovedProduct)
+              .filter(ApprovedProduct.company_ticker == ticker).all())
+    grouped = {}
+    for r in rows:
+        key = (r.trade_name or r.ingredient or "").strip()
+        if not key:
+            continue
+        entry = grouped.setdefault(key, {
+            "trade_name": r.trade_name,
+            "ingredient": r.ingredient,
+            "approval_date": r.approval_date,
+            "applications": set(),
+        })
+        entry["applications"].add(r.appl_no)
+        # the earliest approval, which is when the product actually arrived
+        if r.approval_date and (entry["approval_date"] is None
+                                or r.approval_date < entry["approval_date"]):
+            entry["approval_date"] = r.approval_date
+    out = [{**v, "applications": sorted(a for a in v["applications"] if a)}
+           for v in grouped.values()]
+    return sorted(out, key=lambda p: p["approval_date"] or "", reverse=True)
+
+
 @app.get("/company/{ticker}")
 def analyze_company(ticker: str):
     """Full grounded assessment + LLM narrative. DB-first, live fallback."""
@@ -325,6 +375,15 @@ def analyze_company(ticker: str):
         # a readout the company does not run is not its catalyst to report.
         "readouts": readouts,
         "trials": trials[:20],
+        # The filings this company's answers can be drawn from, newest first.
+        # The count is the point as much as the list: five years per issuer is
+        # the window, so a question about an earlier year has no source here
+        # and should be refused rather than answered from the nearest filing.
+        "filings": company_filings(db, ticker) if company is not None else [],
+        # What is actually approved, as the FDA lists it. A pipeline built from
+        # trials cannot show these — a marketed drug has stopped being a trial
+        # — and showing only trials would make an approved portfolio look empty.
+        "approved_products": approved_products(db, ticker) if company is not None else [],
     }
 
 
