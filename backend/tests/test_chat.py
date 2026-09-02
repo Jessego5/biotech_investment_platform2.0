@@ -11,7 +11,7 @@ the companies actually held. Run them with pytest.
 
 from app import chat
 from app.chat import (_resolve_company, _sector_labels, _run_tool, TOOLS,
-                      strip_invalid_citations)
+                      strip_invalid_citations, count_invalid_citations)
 
 from conftest import add_company
 
@@ -182,3 +182,19 @@ def test_a_filing_with_no_cik_cites_without_inventing_a_url():
 
     assert cite["url"] is None
     assert cite["label"] == "AAA 10-K"
+
+
+def test_counts_invalid_citations_so_the_removal_is_not_silent():
+    # the marker is stripped from the prose, but the drop is reported: a
+    # citation that vanishes without trace is its own kind of failure
+    answer = "Cash is $6.6B [1] and runway is n/a [4]."
+    assert strip_invalid_citations(answer, 2) == "Cash is $6.6B [1] and runway is n/a."
+    assert count_invalid_citations(answer, 2) == 1
+
+
+def test_counts_nothing_when_every_citation_resolves():
+    assert count_invalid_citations("A [1] and B [2].", 2) == 0
+
+
+def test_counts_every_citation_when_there_are_no_blocks():
+    assert count_invalid_citations("I don't have data on that [1].", 0) == 1

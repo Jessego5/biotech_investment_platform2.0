@@ -475,6 +475,20 @@ def strip_invalid_citations(answer, count):
         lambda m: m.group(0) if 1 <= int(m.group(1)) <= count else "", answer)
 
 
+def count_invalid_citations(answer, count):
+    """
+    How many markers pointed at blocks that do not exist.
+
+    Stripping them keeps a dead link out of the prose, which is right. But a
+    citation that simply disappears is its own failure: the reader is left with
+    a sentence that looks unsourced and no way to tell whether it was never
+    cited or cited wrongly. Counting them lets the answer say so, so the drop is
+    visible somewhere rather than nowhere.
+    """
+    return sum(1 for m in _CITATION.finditer(answer)
+               if not 1 <= int(m.group(1)) <= count)
+
+
 def _answer(question, facts_text):
     # build the prompt, handing the model only the retrieved rows to work from
     prompt = (
@@ -591,9 +605,15 @@ def answer_question(question, db, as_of=None):
     # also see: the evidence pane shows these same blocks under these numbers
     facts_text = "\n\n".join(
         f"[{e['n']}] {e['label']} ({e['source']})\n{e['text']}" for e in evidence)
-    answer = strip_invalid_citations(_answer(question, facts_text), len(evidence))
+    drafted = _answer(question, facts_text)
+    dropped = count_invalid_citations(drafted, len(evidence))
+    answer = strip_invalid_citations(drafted, len(evidence))
     # "retrieved" is the exact text the answer was allowed to use. the eval
     # suite checks every claim in the answer against it (groundedness).
     return {"answer": answer, "sources": list(dict.fromkeys(sources)),
             "match_count": len(sources), "tools_used": called,
+            # markers the model wrote against blocks that were never returned.
+            # Removed from the prose above, but reported so the removal is not
+            # itself silent.
+            "dropped_citations": dropped,
             "retrieved": facts_text, "evidence": evidence}

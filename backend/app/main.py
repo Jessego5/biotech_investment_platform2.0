@@ -362,15 +362,23 @@ def source_chunk(chunk_id: int):
         chunk, filing, company = row
         # how many pieces the section was split into, so a reader can see this
         # is one passage of many rather than the whole of what the filing says
-        total = (db.query(FilingChunk)
-                   .filter(FilingChunk.filing_id == filing.id,
-                           FilingChunk.section == chunk.section).count())
+        siblings = [
+            cid for (cid,) in
+            db.query(FilingChunk.id)
+              .filter(FilingChunk.filing_id == filing.id,
+                      FilingChunk.section == chunk.section)
+              .order_by(FilingChunk.ordinal).all()]
+        total = len(siblings)
         return {
             "chunk_id": chunk.id,
             "text": chunk.text,
             "section": chunk.section,
             "ordinal": chunk.ordinal,
             "of": total,
+            # every passage of this section, in order, so a reader can step
+            # through the section rather than only see the one cited. Without
+            # these the "1 of 71" is a fact you are told and cannot act on.
+            "section_chunk_ids": siblings,
             "company": {"ticker": company.ticker, "name": company.name,
                         "cik": company.cik},
             "filing": {
