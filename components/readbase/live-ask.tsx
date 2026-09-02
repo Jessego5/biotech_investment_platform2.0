@@ -160,7 +160,7 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
 
               {result?.answer && (
                 <AnswerProse
-                  paragraphs={toAnswerNodes(result.answer)}
+                  paragraphs={toAnswerNodes(result.answer, evidence.length)}
                   className="text-[19px] leading-[1.7]"
                   paragraphClassName="mb-5 max-w-[70ch] last:mb-0"
                 />

@@ -31,6 +31,18 @@ export function AnswerProse({
                     {node.text}
                   </span>
                 );
+              case "unresolved":
+                // deliberately not the citation palette: the warm chip means
+                // provenance, and this is the absence of it
+                return (
+                  <span
+                    key={j}
+                    title={node.reason}
+                    className="mx-px whitespace-nowrap border border-warn px-[4px] py-[1px] align-[1.5px] font-mono text-[10.5px] leading-none text-warn"
+                  >
+                    {node.n} unsourced
+                  </span>
+                );
               case "figure":
                 return (
                   <span key={j} className="font-mono tabular-nums">

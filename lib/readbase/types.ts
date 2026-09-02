@@ -8,7 +8,11 @@ export type AnswerNode =
   | { kind: "figure"; text: string }
   /** `id` is per-chip, not per-source: the same source can be cited twice and
    *  only the chip actually clicked is the open one. */
-  | { kind: "chip"; id: string; source: number };
+  | { kind: "chip"; id: string; source: number }
+  /** A marker pointing at a block that was never returned. Shown, not hidden:
+   *  a figure that looks sourced and is not is the one thing that must never
+   *  pass silently. */
+  | { kind: "unresolved"; n: number; reason: string };
 
 /** A source in the compact index under an answer (artboard 1). */
 export type Source = {

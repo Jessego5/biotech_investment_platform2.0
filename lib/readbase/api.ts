@@ -7,6 +7,7 @@
  */
 import type { AnswerNode } from "@/lib/readbase/types";
 import type { PassageSection } from "@/lib/readbase/passages";
+import { parseCitationMarkers, resolveCitation } from "@/lib/readbase/citations";
 
 export const API_BASE =
   process.env.READBASE_API_URL ?? "http://127.0.0.1:8000";
@@ -67,15 +68,16 @@ export type ChunkResponse = {
   error?: string;
 };
 
-/** Bracketed citation the model wrote, matching the service's own regex. */
-const MARKER = /\[(\d{1,3})\]/g;
-
 /**
  * The answer arrives as prose with `[n]` markers indexing the evidence blocks.
  * This turns it into the nodes the answer components already render, so the
  * live answer and the fixtures go through exactly the same typography.
+ *
+ * `blocks` is how many were actually returned. A marker past that becomes an
+ * unresolved node rather than a chip, so it cannot be clicked and cannot be
+ * mistaken for a citation that leads somewhere.
  */
-export function toAnswerNodes(answer: string): AnswerNode[][] {
+export function toAnswerNodes(answer: string, blocks = Infinity): AnswerNode[][] {
   return answer
     .split(/\n+/)
     .map((line) => line.trim())
@@ -84,11 +86,17 @@ export function toAnswerNodes(answer: string): AnswerNode[][] {
       const nodes: AnswerNode[] = [];
       let cursor = 0;
       let chip = 0;
-      for (const m of line.matchAll(MARKER)) {
-        const at = m.index ?? 0;
-        if (at > cursor) nodes.push({ kind: "text", text: line.slice(cursor, at) });
-        nodes.push({ kind: "chip", id: `p${li}c${chip++}`, source: Number(m[1]) });
-        cursor = at + m[0].length;
+      for (const m of parseCitationMarkers(line)) {
+        if (m.start > cursor) {
+          nodes.push({ kind: "text", text: line.slice(cursor, m.start) });
+        }
+        const ref = resolveCitation(m.n, blocks);
+        nodes.push(
+          ref.status === "resolved"
+            ? { kind: "chip", id: `p${li}c${chip++}`, source: m.n }
+            : { kind: "unresolved", n: m.n, reason: ref.reason },
+        );
+        cursor = m.end;
       }
       if (cursor < line.length) nodes.push({ kind: "text", text: line.slice(cursor) });
       return nodes;

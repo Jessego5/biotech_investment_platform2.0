@@ -1,122 +1,58 @@
 /**
- * Citation markers → source records.
+ * Citation markers → the evidence block they point at.
  *
- * The marker format and the id-normalisation fallback are adapted from the
- * approach in miurla/morphic (Apache-2.0), reimplemented here for filings and
- * stored passages rather than web search results.
+ * The service writes `[n]`, one-indexed into the numbered blocks the model was
+ * given (see chat.py `_CITATION`). An earlier version of this file parsed
+ * `[n](#toolCallId)`, which is morphic's format and not one anything here
+ * emits; it is the real format now.
  *
- * One deliberate departure. Morphic drops a marker it cannot resolve, emitting
- * an empty string. For an answer engine over web search that is a reasonable
- * swallow. Here it is the one failure the product exists to prevent: a figure
- * that quietly loses its provenance still reads as sourced. So an unresolved
- * marker resolves to an explicit `unresolved` result that the renderer is
- * obliged to show. Nothing fails silently.
+ * The service already removes markers pointing at blocks that were never
+ * returned, and reports how many it removed. This is the second line: if one
+ * reaches the page anyway — an older service, a stripping bug — it renders as
+ * visibly unresolved rather than as a chip that opens nothing. A number that
+ * looks sourced and is not is the failure this product exists to prevent, so
+ * it is never rendered as though it were fine.
  */
 
-/** `[1](#accessorCallId)` — 1-indexed, whitespace tolerated inside the bracket. */
-const MARKER = /\[\s*(\d{1,3})\s*\]\(#([^)\s]+)\)/g;
+/** Matches the service's own pattern, minus the leading-space capture. */
+const MARKER = /\[(\d{1,3})\]/g;
 
-/** Providers prefix tool-call ids differently; compare on the bare id. */
-const ID_PREFIXES = ["toolu_", "call_", "fc_", "tool_"];
+export type CitationRef =
+  | { status: "resolved"; n: number }
+  | { status: "unresolved"; n: number; reason: string };
 
-export function normaliseCallId(id: string): string {
-  const prefix = ID_PREFIXES.find((p) => id.startsWith(p));
-  return prefix ? id.slice(prefix.length) : id;
+export function resolveCitation(n: number, blocks: number): CitationRef {
+  if (!Number.isInteger(n) || n < 1) {
+    return { status: "unresolved", n, reason: `${n} is not a block number` };
+  }
+  if (n > blocks) {
+    return {
+      status: "unresolved",
+      n,
+      reason: `cites block ${n}, and ${blocks} ${blocks === 1 ? "was" : "were"} returned`,
+    };
+  }
+  return { status: "resolved", n };
 }
 
-export type CitationMarker = {
-  /** The whole `[n](#id)` span, so a renderer can substitute in place. */
-  raw: string;
-  n: number;
-  callId: string;
-  start: number;
-  end: number;
-};
+export type ParsedMarker = { n: number; start: number; end: number };
 
-export function parseCitationMarkers(text: string): CitationMarker[] {
-  const found: CitationMarker[] = [];
+export function parseCitationMarkers(text: string): ParsedMarker[] {
+  const found: ParsedMarker[] = [];
   for (const m of text.matchAll(MARKER)) {
-    const n = Number(m[1]);
-    // 1-indexed, and an answer citing past 100 sources is a bug upstream.
-    if (!Number.isInteger(n) || n < 1 || n > 100) continue;
-    found.push({
-      raw: m[0],
-      n,
-      callId: m[2],
-      start: m.index,
-      end: m.index + m[0].length,
-    });
+    const at = m.index ?? 0;
+    found.push({ n: Number(m[1]), start: at, end: at + m[0].length });
   }
   return found;
 }
 
-/** What an accessor returned, addressable by the call that produced it. */
-export type AccessorOutput = {
-  callId: string;
-  accessor: string;
-  /** 1-indexed, matching the marker numbering the model was given. */
-  records: CitedRecord[];
-};
-
-export type CitedRecord = {
-  /** The document, named — never the archive it came from. */
-  document: string;
-  locator: string;
-  /** Absent when the record exists but its text was not stored. */
-  paragraphs?: string[];
-};
-
-export type ResolvedCitation =
-  | { status: "resolved"; n: number; accessor: string; record: CitedRecord }
-  /** The record is known but its text is not held. Say so; do not hide it. */
-  | { status: "not-stored"; n: number; accessor: string; record: CitedRecord }
-  /** The marker points at nothing we can name. The loudest state. */
-  | { status: "unresolved"; n: number; raw: string; reason: string };
-
-export function resolveMarker(
-  marker: CitationMarker,
-  outputs: AccessorOutput[],
-): ResolvedCitation {
-  const wanted = normaliseCallId(marker.callId);
-  const output =
-    outputs.find((o) => o.callId === marker.callId) ??
-    outputs.find((o) => normaliseCallId(o.callId) === wanted);
-
-  if (!output) {
-    return {
-      status: "unresolved",
-      n: marker.n,
-      raw: marker.raw,
-      reason: `no accessor call matching ${marker.callId}`,
-    };
-  }
-
-  const record = output.records[marker.n - 1];
-  if (!record) {
-    return {
-      status: "unresolved",
-      n: marker.n,
-      raw: marker.raw,
-      reason: `${output.accessor} returned ${output.records.length} records; citation asks for ${marker.n}`,
-    };
-  }
-
-  return {
-    status: record.paragraphs?.length ? "resolved" : "not-stored",
-    n: marker.n,
-    accessor: output.accessor,
-    record,
-  };
-}
-
-export function resolveCitations(
+/** Every marker in an answer that points at nothing. Empty is the happy case. */
+export function unresolvedCitations(
   text: string,
-  outputs: AccessorOutput[],
-): ResolvedCitation[] {
-  return parseCitationMarkers(text).map((m) => resolveMarker(m, outputs));
-}
-
-/** True when every marker in the text found a record we can name. */
-export function allCitationsResolve(resolved: ResolvedCitation[]): boolean {
-  return resolved.every((r) => r.status !== "unresolved");
+  blocks: number,
+): Extract<CitationRef, { status: "unresolved" }>[] {
+  return parseCitationMarkers(text)
+    .map((m) => resolveCitation(m.n, blocks))
+    .filter((r): r is Extract<CitationRef, { status: "unresolved" }> =>
+      r.status === "unresolved");
 }
