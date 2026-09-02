@@ -239,10 +239,14 @@ def ask(q: Question):
 
 # arms that are not a candidate: a control tells you how the trial was designed,
 # not what the company is developing.
+# A control arm is often named after the drug it stands in for — "VX-661 Plus
+# Ivacaftor Combination Placebo" — so the word is looked for anywhere in the
+# name rather than only at the front, where an earlier version of this missed
+# it and counted the placebo as a candidate.
 _CONTROL = re.compile(
-    r"^(placebo|matching placebo|saline|normal saline|vehicle|sham|"
-    r"standard of care|best supportive care|no intervention|observation|"
-    r"usual care|control)\b", re.I)
+    r"\b(placebos?|shams?)\b|"
+    r"^(saline|normal saline|vehicle|standard of care|best supportive care|"
+    r"no intervention|observation|usual care|control)\b", re.I)
 
 _PHASE_RANK = {"PHASE4": 4, "PHASE3": 3, "PHASE2": 2, "PHASE1": 1}
 
@@ -336,7 +340,7 @@ def studied_interventions(db, ticker):
         seen_here = set()
         for raw in (t.interventions or "").split(";"):
             name = raw.strip()
-            if not name or _CONTROL.match(name):
+            if not name or _CONTROL.search(name):
                 continue
             key = find(name.casefold())
             entry = groups.setdefault(key, {
