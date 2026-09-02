@@ -212,6 +212,11 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                               marketed as {iv.approved_as}
                             </span>
                           )}
+                          {iv.also_known_as?.length > 0 && (
+                            <span className="mt-[2px] block max-w-[34ch] font-mono text-[10px] leading-[1.5] text-muted-foreground">
+                              also filed as {iv.also_known_as.join(", ")}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="whitespace-normal px-0 py-2 pr-[10px] align-middle text-[13.5px]">
                           {iv.conditions.join(", ") || "—"}
@@ -240,11 +245,14 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                 </Table>
                 <div className="mt-3 max-w-[80ch] space-y-2 font-mono text-[10px] leading-[1.6] text-muted-foreground">
                   <p>
-                    This is what the trials test, not a programme list. One
-                    candidate can appear more than once: the registry files the
-                    same drug under a code and a generic name — ivacaftor is
-                    entered as IVA, Ivacaftor and VX-770 — and nothing states
-                    that those are the same thing, so they are not merged here.
+                    Names are merged only where the registry states they are the
+                    same thing. Ivacaftor is filed as IVA and VX-770, and
+                    ClinicalTrials.gov says so, so those rows are one — and the
+                    names it absorbed are listed under it, because a count that
+                    quietly combined three things cannot be checked. Where a
+                    sponsor never filled that field in, one drug can still
+                    appear twice, and it is left as two rows rather than guessed
+                    into one.
                   </p>
                   <p>
                     An arm is also not always the sponsor&rsquo;s own candidate.

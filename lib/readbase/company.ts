@@ -62,6 +62,9 @@ export type CompanyResponse = {
     lead_nct: string | null;
     conditions: string[];
     approved_as: string | null;
+    /** Other names the registry states are the same thing, so a merged row
+     *  can be checked rather than taken on trust. */
+    also_known_as: string[];
   }[];
   approved_products: {
     trade_name: string | null;
