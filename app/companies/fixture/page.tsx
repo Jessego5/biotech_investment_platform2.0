@@ -102,10 +102,10 @@ export default function CompanyFixturePage() {
       </div>
 
       {/* ------------------------------------------------------------ body */}
-      <div className="grid grid-cols-[1fr_1px_356px]">
-        <div className="px-[30px] pb-[34px] pt-[26px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_356px]">
+        <div className="min-w-0 px-[30px] pb-[34px] pt-[26px]">
           <Section id="pipeline" title="Pipeline by phase" period={pipelineAsOf}>
-            <Table className="w-full caption-bottom border-collapse text-[13.5px]">
+            <Table className="w-full min-w-[640px] caption-bottom border-collapse text-[13.5px]">
               <TableHeader>
                 <TableRow className="border-b border-border">
                   {[
@@ -165,10 +165,10 @@ export default function CompanyFixturePage() {
           </Section>
         </div>
 
-        <div className="bg-border" />
+        <div className="hidden bg-border lg:block" />
 
         {/* ------------------------------------------------------------ rail */}
-        <aside className="bg-secondary px-6 pb-[34px] pt-[26px]">
+        <aside className="border-t border-border bg-secondary px-6 pb-[34px] pt-[26px] lg:border-t-0">
           <Section id="patents" title="Patent protection" period="Orange Book 2026-08">
             <PatentStates />
           </Section>
@@ -184,7 +184,7 @@ export default function CompanyFixturePage() {
       </div>
 
       <footer className="border-t border-border px-[30px] py-4">
-        <PeriodLabel>
+        <PeriodLabel className="whitespace-normal">
           Fixture data carried from design/readbase-canvas.html · identifiers are
           unverified
         </PeriodLabel>

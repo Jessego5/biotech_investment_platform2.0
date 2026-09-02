@@ -118,8 +118,8 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_1px_356px]">
-        <div className="px-[30px] pb-[34px] pt-[26px]">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_356px]">
+        <div className="min-w-0 px-[30px] pb-[34px] pt-[26px]">
           {/* Approved products, then trials. Deliberately two sections: the
               database records what is marketed and what is being studied, and
               has no record of the programme in between. Presenting trials as a
@@ -130,7 +130,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
             period="FDA Orange Book and Purple Book · earliest approval per product"
           >
             {products.length ? (
-              <Table className="w-full caption-bottom border-collapse text-[13.5px]">
+              <Table className="w-full min-w-[640px] caption-bottom border-collapse text-[13.5px]">
                 <TableHeader>
                   <TableRow className="border-b border-border">
                     {["Product", "Ingredient", "Status", "Approved", "Applications"].map(
@@ -181,11 +181,11 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
           <Section
             id="interventions"
             title="Interventions studied"
-            period="grouped by the name the registry gives it · lead-sponsored trials"
+            period={`${Math.min(12, interventions.length)} of ${interventions.length} · furthest phase first · lead-sponsored trials`}
           >
             {interventions.length ? (
               <>
-                <Table className="w-full caption-bottom border-collapse text-[13.5px]">
+                <Table className="w-full min-w-[640px] caption-bottom border-collapse text-[13.5px]">
                   <TableHeader>
                     <TableRow className="border-b border-border">
                       {["Intervention", "Indications", "Furthest phase", "Lead trial", "Trials"].map(
@@ -245,7 +245,10 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                 </Table>
                 <div className="mt-3 max-w-[80ch] space-y-2 font-mono text-[10px] leading-[1.6] text-muted-foreground">
                   <p>
-                    Names are merged only where the registry states they are the
+                    Grouped by the name the registry gives it, and cut to the
+                    twelve furthest along — the count in the heading says how
+                    many there are, so a short table is not read as a short
+                    pipeline. Names are merged only where the registry states they are the
                     same thing. Ivacaftor is filed as IVA and VX-770, and
                     ClinicalTrials.gov says so, so those rows are one — and the
                     names it absorbed are listed under it, because a count that
@@ -273,7 +276,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
           <Section
             id="trials"
             title="Registered trials"
-            period={`${data.pipeline?.total_trials ?? 0} studies · ClinicalTrials.gov · 20 most recent shown`}
+            period={`${Math.min(20, (data.trials ?? []).length)} of ${data.pipeline?.total_trials ?? 0} studies · ClinicalTrials.gov`}
           >
             <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2">
               {byPhase.map(([label, n]) => (
@@ -290,7 +293,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
               ))}
             </div>
 
-            <Table className="w-full caption-bottom border-collapse text-[13.5px]">
+            <Table className="w-full min-w-[640px] caption-bottom border-collapse text-[13.5px]">
               <TableHeader>
                 <TableRow className="border-b border-border">
                   {["Study", "Condition", "Phase", "Status", "Completion"].map((h) => (
@@ -363,9 +366,9 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
           )}
         </div>
 
-        <div className="bg-border" />
+        <div className="hidden bg-border lg:block" />
 
-        <aside className="bg-secondary px-6 pb-[34px] pt-[26px]">
+        <aside className="border-t border-border bg-secondary px-6 pb-[34px] pt-[26px] lg:border-t-0">
           <Section id="patents" title="Patent protection" period="Orange Book · Purple Book">
             <div className="border-b border-border py-[11px] last:border-b-0">
               <div className="flex flex-wrap items-baseline justify-between gap-x-[10px] gap-y-[6px] text-[13.5px]">
@@ -416,7 +419,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       </div>
 
       <footer className="border-t border-border px-[30px] py-4">
-        <PeriodLabel>
+        <PeriodLabel className="whitespace-normal">
           Live from the Readbase corpus · figures as the filings and registry
           state them
         </PeriodLabel>

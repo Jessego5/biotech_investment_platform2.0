@@ -3,9 +3,13 @@ import { PeriodLabel } from "@/components/readbase/period-label";
 /** Section head: a title against the heavier rule, with its period on the right. */
 export function SectionHead({ title, period }: { title: string; period: string }) {
   return (
-    <div className="mb-[14px] flex items-baseline justify-between border-b border-line-hi pb-[7px]">
+    <div className="mb-[14px] flex flex-wrap items-baseline justify-between gap-x-4 border-b border-line-hi pb-[7px]">
       <h3 className="text-[16px] font-normal tracking-[0.01em]">{title}</h3>
-      <PeriodLabel>{period}</PeriodLabel>
+      {/* .period is nowrap so a date never breaks mid-figure; a whole sentence
+          of provenance has to be allowed to wrap on a narrow screen */}
+      <PeriodLabel className="whitespace-normal lg:whitespace-nowrap">
+        {period}
+      </PeriodLabel>
     </div>
   );
 }
