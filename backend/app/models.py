@@ -154,6 +154,13 @@ class Trial(Base):
     # trials testing it. Text rather than String and unindexed for the same
     # reason as conditions: combination arms make these long.
     interventions = Column(Text)
+    # The registry's own statement that two names are the same thing, as JSON
+    # {name: [other names]}. Sponsors file one candidate under a code and a
+    # generic name — ivacaftor is entered as IVA, Ivacaftor and VX-770 — and
+    # this is the only field that says so. Stored raw, exactly as given: an
+    # entry is often several aliases crammed into one string, and repairing
+    # that at write time would lose what the registry actually said.
+    intervention_aliases = Column(Text)
     # a date carries whether it happened. An estimated completion is when a
     # readout is expected, an actual one is when it arrived, and reporting the
     # first as the second would invent the history this project exists to avoid.

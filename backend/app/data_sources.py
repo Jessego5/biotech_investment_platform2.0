@@ -4,6 +4,7 @@ ClinicalTrials.gov and the financials from SEC EDGAR. It only works for public
 companies since those are the ones with real filings.
 """
 
+import json
 import os
 import re
 from functools import lru_cache
@@ -846,6 +847,13 @@ def parse_trials(payload, sponsor_name):
             # a structured list, and it was being folded into the embedding
             # text and then thrown away — which left the candidate a company is
             # developing recorded nowhere except inside a trial's title.
+            # {name: [other names]} exactly as filed. See Trial.intervention_aliases.
+            "intervention_aliases": json.dumps({
+                i["name"].strip(): i["otherNames"]
+                for i in (ps.get("armsInterventionsModule", {})
+                            .get("interventions") or [])
+                if i.get("name") and i.get("otherNames")
+            }) or None,
             "interventions": "; ".join(
                 i.get("name", "").strip()
                 for i in (ps.get("armsInterventionsModule", {})

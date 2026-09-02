@@ -257,17 +257,44 @@ def _furthest_phase(phase):
     return best, label
 
 
+def _alias_edges(trials):
+    """
+    Pairs of names the registry says are the same thing.
+
+    An `otherNames` entry is often several aliases in one string — "VX-770, IVA"
+    — so it is split on commas here rather than at write time, where splitting
+    would have destroyed what the sponsor actually filed. A name containing a
+    comma is split wrongly by this, which is the cost of reading a field that
+    was filled in by hand.
+    """
+    for t in trials:
+        if not t.intervention_aliases:
+            continue
+        try:
+            stated = json.loads(t.intervention_aliases)
+        except (ValueError, TypeError):
+            continue
+        for name, others in (stated or {}).items():
+            for other in (others or []):
+                for part in str(other).split(","):
+                    part = part.strip()
+                    if part:
+                        yield name.strip().casefold(), part.casefold()
+
+
 def studied_interventions(db, ticker):
     """
-    What this company's trials are testing, grouped by the name the registry
-    gives it.
+    What this company's trials are testing, with names the registry itself
+    states are the same thing merged into one row.
 
-    This is deliberately not a programme list. One candidate appears under
-    several names — ivacaftor is filed as "IVA", "Ivacaftor" and "VX-770" — and
-    nothing in the registry states that those are the same thing. Merging them
-    would mean deciding it on their behalf, and being wrong quietly. So each
-    name stands as its own row, and where a name matches the ingredient of an
-    approved product, that link is shown because the FDA states it.
+    A candidate is filed under a code and a generic name — ivacaftor appears as
+    "IVA", "Ivacaftor" and "VX-770" — and counting the strings counts one drug
+    three times. ClinicalTrials.gov records the equivalence in `otherNames`, so
+    the merge is the registry's claim rather than ours; where it says nothing,
+    nothing is merged, and two rows for one drug is the honest outcome.
+
+    Every merge is reported in `also_known_as`, because a row that quietly
+    absorbed three names is a figure the reader cannot check.
 
     Lead-sponsored trials only: a study the company collaborates on is real
     involvement at a different level of control, and counting it here would
@@ -278,6 +305,24 @@ def studied_interventions(db, ticker):
                         Trial.role == "lead",
                         Trial.interventions.isnot(None)).all())
 
+    # union-find over the names, joined only where the registry joins them
+    parent = {}
+
+    def find(x):
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    for a, b in _alias_edges(trials):
+        union(a, b)
+
     marketed = {}
     for p in db.query(ApprovedProduct).filter(
             ApprovedProduct.company_ticker == ticker).all():
@@ -286,29 +331,48 @@ def studied_interventions(db, ticker):
             if key and p.trade_name:
                 marketed.setdefault(key, p.trade_name)
 
-    grouped = {}
+    groups = {}
     for t in trials:
+        seen_here = set()
         for raw in (t.interventions or "").split(";"):
             name = raw.strip()
             if not name or _CONTROL.match(name):
                 continue
-            entry = grouped.setdefault(name.casefold(), {
-                "name": name, "trials": 0, "phase": None, "phase_rank": 0,
-                "lead_nct": None, "conditions": set(),
-                "approved_as": marketed.get(name.casefold()),
+            key = find(name.casefold())
+            entry = groups.setdefault(key, {
+                "trials": 0, "phase": None, "phase_rank": 0, "lead_nct": None,
+                "conditions": set(), "names": {},
             })
-            entry["trials"] += 1
+            # a trial testing two names of one drug is one trial for that drug
+            if key not in seen_here:
+                seen_here.add(key)
+                entry["trials"] += 1
+            entry["names"][name] = entry["names"].get(name, 0) + 1
             rank, label = _furthest_phase(t.phase)
-            if rank > entry["phase_rank"]:
-                entry["phase_rank"], entry["phase"] = rank, label
-                entry["lead_nct"] = t.nct_id
-            if entry["lead_nct"] is None:
+            if rank > entry["phase_rank"] or entry["lead_nct"] is None:
+                if rank > entry["phase_rank"]:
+                    entry["phase_rank"], entry["phase"] = rank, label
                 entry["lead_nct"] = t.nct_id
             for c in (t.conditions or "").split(";"):
                 if c.strip():
                     entry["conditions"].add(c.strip())
 
-    out = [{**v, "conditions": sorted(v["conditions"])[:3]} for v in grouped.values()]
+    out = []
+    for entry in groups.values():
+        names = entry.pop("names")
+        # the name to show: one the FDA lists as an ingredient if there is one,
+        # else the one the sponsor used most, then the longest — a generic name
+        # is usually longer than the code it replaced
+        display = max(names, key=lambda n: (n.casefold() in marketed,
+                                            names[n], len(n)))
+        out.append({
+            **entry,
+            "name": display,
+            "also_known_as": sorted(n for n in names if n != display),
+            "approved_as": next((marketed[n.casefold()] for n in names
+                                 if n.casefold() in marketed), None),
+            "conditions": sorted(entry["conditions"])[:3],
+        })
     out.sort(key=lambda e: (-e["phase_rank"], -e["trials"], e["name"]))
     return out
 
