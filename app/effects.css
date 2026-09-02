@@ -1,0 +1,33 @@
+/* ---------------------------------------------------------------------------
+   Readbase — effects layer.
+   Kept out of globals.css, which is the theme layer and nothing else.
+
+   Motion here demonstrates provenance rather than decorating. There is
+   deliberately no count-up on figures: a rolling digit reads as the system
+   being unsure of the value, which is the opposite of what these screens
+   promise.
+   --------------------------------------------------------------------------- */
+
+/* The chip → passage transition morphs one named element. Without this the
+   browser also cross-fades the whole document, which reads as a page flash
+   and buries the thing we actually want followed. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-group(rdb-cite) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Kill the morph outright rather than shortening it: the panel still
+     changes, it just changes at once. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

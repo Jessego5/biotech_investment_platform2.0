@@ -1,0 +1,347 @@
+/* ---------------------------------------------------------------------------
+   Readbase — app/globals.css
+   Drop-in replacement for the file `shadcn@latest init` generates.
+   Tailwind v4 (CSS-first config). No tailwind.config.js needed.
+   --------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* `dark:` utilities must fire for both routes into the dark palette: the
+   explicit .dark class, and the reader's system setting (unless .light opts
+   out). Without the second arm the tokens would switch while every dark:
+   utility stayed put. */
+@custom-variant dark {
+  &:is(.dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:not(.light *) {
+      @slot;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   1. shadcn's own tokens, repointed at the Readbase palette.
+   Every shadcn component reads these, so restyling them here restyles
+   Table, Tabs, Dialog, Badge, etc. all at once.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* corners are near-sharp; the design has no pill shapes */
+  --radius: 0.125rem;
+
+  --background: #f2f1ed;          /* plane   */
+  --foreground: #1a1a18;          /* ink     */
+
+  --card: #ffffff;                /* surface */
+  --card-foreground: #1a1a18;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a18;
+
+  /* primary = the filled action, e.g. "Read passage" */
+  --primary: #0f6e56;             /* accent-ink */
+  --primary-foreground: #ffffff;
+
+  --secondary: #fafaf9;           /* surf-2 */
+  --secondary-foreground: #1a1a18;
+
+  --muted: #fafaf9;
+  --muted-foreground: #8a8983;    /* muted */
+
+  /* accent = the tinted state (highlighted sentence, active row) */
+  --accent: #e1f5ee;              /* tint */
+  --accent-foreground: #085041;   /* accent-deep */
+
+  --destructive: #a32d2d;         /* warn */
+  --destructive-foreground: #ffffff;
+
+  --border: #e3e2de;              /* line    */
+  --input: #c9c8c3;               /* line-hi */
+  --ring: #1d9e75;                /* accent  */
+
+  /* charts: the phase ramp, in order, so <Chart> inherits it */
+  --chart-1: #9fe1cb;
+  --chart-2: #5dcaa5;
+  --chart-3: #1d9e75;
+  --chart-4: #0f6e56;
+  --chart-5: #d3d1c7;
+
+  --sidebar: #fafaf9;
+  --sidebar-foreground: #1a1a18;
+  --sidebar-primary: #0f6e56;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e1f5ee;
+  --sidebar-accent-foreground: #085041;
+  --sidebar-border: #e3e2de;
+  --sidebar-ring: #1d9e75;
+
+  /* -------------------------------------------------------------------------
+     2. Readbase-specific tokens. shadcn has no concept of these.
+     ------------------------------------------------------------------------- */
+
+  --ink-2: #5f5e5a;               /* secondary prose, metadata */
+  --line-hi: #c9c8c3;             /* the heavier rule, e.g. section heads */
+  --accent-mid: #1d9e75;
+  --accent-deep: #085041;
+  --tint: #e1f5ee;
+
+  --phase-1: #9fe1cb;
+  --phase-2: #5dcaa5;
+  --phase-3: #1d9e75;
+  --phase-4: #0f6e56;
+  --phase-na: #d3d1c7;
+
+  --cite: #faeeda;                /* citation chip background */
+  --cite-ink: #854f0b;            /* citation chip text      */
+
+  --good: #0f6e56;
+  --warn: #a32d2d;
+
+  /* the passage-highlight fill; separate token because it inverts in dark */
+  --highlight: #e1f5ee;
+}
+
+.dark {
+  --background: #0e1013;
+  --foreground: #e6e6e2;
+
+  --card: #1a1d22;
+  --card-foreground: #e6e6e2;
+  --popover: #1a1d22;
+  --popover-foreground: #e6e6e2;
+
+  /* accent-ink lightens; foreground flips to the surface colour so filled
+     controls stay legible instead of going white-on-mint */
+  --primary: #5dcaa5;
+  --primary-foreground: #1a1d22;
+
+  --secondary: #15181d;
+  --secondary-foreground: #e6e6e2;
+
+  --muted: #15181d;
+  --muted-foreground: rgb(230 230 226 / 0.42);
+
+  --accent: rgb(93 202 165 / 0.13);
+  --accent-foreground: #9fe1cb;
+
+  --destructive: #a32d2d;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2e35;
+  --input: #3a4049;
+  --ring: #5dcaa5;
+
+  --chart-5: #3a4049;
+
+  --sidebar: #15181d;
+  --sidebar-foreground: #e6e6e2;
+  --sidebar-primary: #5dcaa5;
+  --sidebar-primary-foreground: #1a1d22;
+  --sidebar-accent: rgb(93 202 165 / 0.13);
+  --sidebar-accent-foreground: #9fe1cb;
+  --sidebar-border: #2a2e35;
+  --sidebar-ring: #5dcaa5;
+
+  --ink-2: rgb(230 230 226 / 0.62);
+  --line-hi: #3a4049;
+  --accent-mid: #5dcaa5;
+  --accent-deep: #9fe1cb;
+  --tint: rgb(93 202 165 / 0.13);
+  --phase-na: #3a4049;
+  --highlight: rgb(93 202 165 / 0.15);
+  /* the citation chip deliberately does NOT invert — it is the one warm
+     signal in the interface and stays the same in both modes */
+}
+
+/* The palette above is switched by the `.dark` class, as in the canvas.
+   The chrome carries no theme toggle, so the class alone would leave dark
+   mode unreachable — this mirrors the same tokens onto the reader's system
+   setting. Done in CSS rather than with a pre-paint script so that it works
+   without JavaScript and cannot desynchronise from server rendering.
+   `.light` is an explicit opt-out, and `.dark` still wins on its own.
+   Keep these two blocks in step. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+  --background: #0e1013;
+  --foreground: #e6e6e2;
+
+  --card: #1a1d22;
+  --card-foreground: #e6e6e2;
+  --popover: #1a1d22;
+  --popover-foreground: #e6e6e2;
+
+  /* accent-ink lightens; foreground flips to the surface colour so filled
+     controls stay legible instead of going white-on-mint */
+  --primary: #5dcaa5;
+  --primary-foreground: #1a1d22;
+
+  --secondary: #15181d;
+  --secondary-foreground: #e6e6e2;
+
+  --muted: #15181d;
+  --muted-foreground: rgb(230 230 226 / 0.42);
+
+  --accent: rgb(93 202 165 / 0.13);
+  --accent-foreground: #9fe1cb;
+
+  --destructive: #a32d2d;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2e35;
+  --input: #3a4049;
+  --ring: #5dcaa5;
+
+  --chart-5: #3a4049;
+
+  --sidebar: #15181d;
+  --sidebar-foreground: #e6e6e2;
+  --sidebar-primary: #5dcaa5;
+  --sidebar-primary-foreground: #1a1d22;
+  --sidebar-accent: rgb(93 202 165 / 0.13);
+  --sidebar-accent-foreground: #9fe1cb;
+  --sidebar-border: #2a2e35;
+  --sidebar-ring: #5dcaa5;
+
+  --ink-2: rgb(230 230 226 / 0.62);
+  --line-hi: #3a4049;
+  --accent-mid: #5dcaa5;
+  --accent-deep: #9fe1cb;
+  --tint: rgb(93 202 165 / 0.13);
+  --phase-na: #3a4049;
+  --highlight: rgb(93 202 165 / 0.15);
+  /* the citation chip deliberately does NOT invert — it is the one warm
+     signal in the interface and stays the same in both modes */
+}
+}
+
+/* ---------------------------------------------------------------------------
+   3. Expose everything to Tailwind as utilities.
+   `bg-cite`, `text-ink-2`, `border-line-hi`, `bg-phase-3`, `font-mono` …
+   --------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-ink-2: var(--ink-2);
+  --color-line-hi: var(--line-hi);
+  --color-accent-mid: var(--accent-mid);
+  --color-accent-deep: var(--accent-deep);
+  --color-tint: var(--tint);
+  --color-phase-1: var(--phase-1);
+  --color-phase-2: var(--phase-2);
+  --color-phase-3: var(--phase-3);
+  --color-phase-4: var(--phase-4);
+  --color-phase-na: var(--phase-na);
+  --color-cite: var(--cite);
+  --color-cite-ink: var(--cite-ink);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-highlight: var(--highlight);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Two families, no sans. --font-sans is deliberately pointed at the serif
+     so any shadcn component that defaults to it inherits the reading face
+     rather than silently introducing a third typeface. */
+  --font-sans: "Iowan Old Style", "Palatino Linotype", Palatino,
+               "Book Antiqua", Georgia, serif;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino,
+                "Book Antiqua", Georgia, serif;
+  --font-mono: "SF Mono", SFMono-Regular, Menlo, Consolas,
+               "Liberation Mono", monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   4. Base layer
+   --------------------------------------------------------------------------- */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-serif;
+    -webkit-font-smoothing: antialiased;
+    /* Preflight sets line-height:1.5 on html. The canvas is drawn at the
+       browser default, and every reading register in the design states its
+       own leading, so returning to `normal` here is what makes dense mono
+       rows sit at the row heights the artboards specify. */
+    line-height: normal;
+  }
+
+  /* Figures, identifiers and accession numbers are mono and tabular
+     everywhere, so lock the numeral form globally rather than per-component. */
+  .font-mono,
+  code,
+  kbd,
+  samp {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+@layer components {
+  /* The citation chip. One class, used inline in answer prose. */
+  .cite-chip {
+    @apply font-mono text-[10.5px] leading-none align-[1.5px]
+           bg-cite text-cite-ink rounded-[2px]
+           px-[5px] pt-[3px] pb-[4px] mx-px
+           border border-transparent cursor-pointer;
+  }
+  .cite-chip[data-state="open"] {
+    @apply border-cite-ink;
+  }
+
+  /* The supported sentence, inside an answer. */
+  .cited-sentence {
+    @apply bg-highlight py-px;
+    box-shadow: -3px 0 0 0 var(--accent-mid);
+  }
+
+  /* Small uppercase system label — used for panel captions only. */
+  .sys-label {
+    @apply font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground;
+  }
+
+  /* The period stamp that accompanies every figure. */
+  .period {
+    @apply font-mono text-[10px] tracking-[0.06em] text-muted-foreground whitespace-nowrap;
+  }
+}

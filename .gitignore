@@ -38,3 +38,13 @@ backend/raw/
 # logs
 *.log
 logs/
+
+# Node / Next.js (Readbase frontend)
+node_modules/
+.next/
+next-env.d.ts
+.vercel
+*.tsbuildinfo
+
+# local database backups taken before migrations
+*.db.bak-*

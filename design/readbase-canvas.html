@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=1560">
+<title>Readbase — design canvas</title>
+<style>
+:root{
+  --plane:#f2f1ed; --surface:#ffffff; --surf2:#fafaf9;
+  --ink:#1a1a18; --ink2:#5f5e5a; --muted:#8a8983;
+  --line:#e3e2de; --line-hi:#c9c8c3;
+  --accent:#1d9e75; --accent-ink:#0f6e56; --accent-deep:#085041; --tint:#e1f5ee;
+  --p1:#9fe1cb; --p2:#5dcaa5; --p3:#1d9e75; --p4:#0f6e56; --na:#d3d1c7;
+  --chip-bg:#faeeda; --chip-ink:#854f0b;
+  --good:#0f6e56; --warn:#a32d2d;
+  --hl: var(--tint);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+.dark{
+  --plane:#0e1013; --surface:#1a1d22; --surf2:#15181d;
+  --ink:#e6e6e2; --ink2:rgba(230,230,226,.62); --muted:rgba(230,230,226,.42);
+  --line:#2a2e35; --line-hi:#3a4049;
+  --accent:#5dcaa5; --accent-ink:#5dcaa5; --accent-deep:#9fe1cb;
+  --tint:rgba(93,202,165,.13); --hl:rgba(93,202,165,.15);
+  --na:#3a4049;
+}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:#f2f1ed;color:#1a1a18;font-family:var(--serif);}
+.canvas{padding:56px 48px 120px;}
+.canvas-head{max-width:1440px;margin:0 0 56px}
+.canvas-head h1{font-size:15px;font-weight:400;letter-spacing:.34em;text-transform:uppercase;
+  font-family:var(--mono);margin:0 0 10px;color:#1a1a18}
+.canvas-head p{font-size:16.5px;line-height:1.6;color:#5f5e5a;margin:0;max-width:62ch}
+.boardwrap{margin-bottom:64px;width:1440px}
+.boardlabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:#8a8983;margin:0 0 10px;display:flex;gap:14px;align-items:baseline}
+.boardlabel b{color:#1a1a18;font-weight:400}
+.board{width:1440px;background:var(--surface);border:1px solid var(--line);
+  color:var(--ink);overflow:hidden;position:relative}
+
+/* ---------- chrome ---------- */
+.chrome{height:52px;display:flex;align-items:center;gap:22px;padding:0 22px;
+  border-bottom:1px solid var(--line);background:var(--surf2)}
+.mark{font-family:var(--mono);font-size:13px;letter-spacing:.26em;color:var(--ink);font-weight:600}
+.mark s{text-decoration:none;color:var(--accent-ink)}
+.crumb{font-family:var(--mono);font-size:11.5px;color:var(--ink2);letter-spacing:.02em}
+.crumb i{color:var(--muted);font-style:normal;padding:0 7px}
+.chrome .spacer{flex:1}
+.corpus{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em}
+
+/* ---------- generic ---------- */
+.lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.meta{font-family:var(--mono);font-size:11px;color:var(--ink2);letter-spacing:.01em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.prose{font-size:18px;line-height:1.68;color:var(--ink);max-width:66ch}
+.prose p{margin:0 0 18px}
+.period{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em;white-space:nowrap}
+
+.chip{font-family:var(--mono);font-size:10.5px;line-height:1;padding:3px 5px 4px;
+  background:var(--chip-bg);color:var(--chip-ink);border-radius:2px;vertical-align:1.5px;
+  margin:0 1px;cursor:pointer;border:1px solid transparent}
+.chip.on{border-color:var(--chip-ink)}
+.hl{background:var(--hl);box-shadow:-3px 0 0 0 var(--accent), inset 0 0 0 0 transparent;
+  padding:1px 0}
+
+/* ---------- board 1 : source inspector ---------- */
+.split{display:grid;grid-template-columns:856px 1px 583px;grid-template-rows:986px;height:986px;overflow:hidden}
+.pane-l{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.rule{background:var(--line)}
+.pane-l{padding:34px 44px 0}
+.pane-r{background:var(--surf2);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.q{font-size:23px;line-height:1.42;margin:0 0 4px;color:var(--ink);max-width:44ch}
+.qmeta{margin:0 0 26px;display:flex;gap:18px;align-items:baseline}
+.accessors{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em}
+.accessors b{color:var(--accent-ink);font-weight:400}
+
+.pr-head{padding:16px 26px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+.pr-title{font-family:var(--mono);font-size:11px;line-height:1.75;color:var(--ink);letter-spacing:.015em}
+.pr-title span{color:var(--muted)}
+.stepper{display:flex;align-items:center;gap:5px;margin-top:11px}
+.stepper .s{width:22px;height:20px;display:grid;place-items:center;font-family:var(--mono);
+  font-size:10.5px;border:1px solid var(--line-hi);color:var(--ink2);background:var(--surface)}
+.stepper .s.cur{background:var(--accent-ink);border-color:var(--accent-ink);color:var(--surface)}
+.stepper .arw{font-family:var(--mono);font-size:11px;color:var(--muted);padding:0 3px}
+.stepper .of{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:8px;letter-spacing:.06em}
+
+.pr-what{padding:11px 26px;background:var(--tint);border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-deep);
+  display:flex;justify-content:space-between}
+.pr-body{padding:22px 26px 26px;overflow:auto;flex:1;min-height:0;background:var(--surface)}
+.pr-body::-webkit-scrollbar{width:9px}
+.pr-body::-webkit-scrollbar-thumb{background:var(--line-hi)}
+.pr-body::-webkit-scrollbar-track{background:var(--surf2)}
+.pr-body p{font-size:14.5px;line-height:1.66;margin:0 0 13px;color:var(--ink);
+  max-width:58ch;text-align:justify;hyphens:auto}
+.pr-body p:last-child{margin-bottom:0}
+.pr-foot{padding:9px 26px;border-top:1px solid var(--line);background:var(--surface);
+  display:flex;justify-content:space-between;align-items:center}
+
+.orig{border-top:1px solid var(--line-hi);background:var(--plane);padding:18px 26px 20px}
+.orig .cap{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:9px}
+.orig .url{font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--accent-ink);
+  word-break:break-all;margin-bottom:12px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 16px;margin-bottom:14px}
+.kv dt{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em}
+.kv dd{font-family:var(--mono);font-size:11px;color:var(--ink2);margin:0}
+.btn-out{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;
+  padding:8px 14px;border:1px solid var(--ink2);color:var(--ink);background:transparent}
+.distinct{font-size:13px;line-height:1.55;color:var(--ink2);margin:14px 0 0;max-width:52ch}
+.usedby{margin-top:auto;border-top:1px solid var(--line);padding:14px 0 18px}
+.usedby .cap{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px}
+.usedby .u{display:grid;grid-template-columns:22px 1fr auto;gap:14px;padding:7px 0;align-items:baseline}
+.usedby .u + .u{border-top:1px solid var(--line)}
+.usedby .u.cur{background:var(--tint);margin:0 -12px;padding:7px 12px}
+.dark .usedby .u.cur{background:var(--hl)}
+.usedby .n{font-family:var(--mono);font-size:10.5px;background:var(--chip-bg);color:var(--chip-ink);
+  padding:3px 0;text-align:center;border-radius:2px}
+.usedby .t{font-family:var(--mono);font-size:11px;color:var(--ink2);line-height:1.5}
+.usedby .t b{color:var(--ink);font-weight:400}
+.usedby .st{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.06em;white-space:nowrap}
+
+/* ---------- board 2 : ask ---------- */
+.ask{padding:46px 0 52px;display:flex;flex-direction:column;align-items:center}
+.askcol{width:788px}
+.askbar{border:1px solid var(--line-hi);background:var(--surface);padding:15px 18px;
+  display:flex;align-items:center;gap:14px;margin-bottom:38px}
+.askbar .t{font-size:19px;color:var(--ink);flex:1}
+.askbar .go{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.1em}
+.answer{font-size:19px;line-height:1.7;color:var(--ink)}
+.answer p{margin:0 0 20px;max-width:70ch}
+.srcs{margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
+.src{display:grid;grid-template-columns:26px 1fr auto;gap:16px;padding:13px 0;
+  border-bottom:1px solid var(--line);align-items:start}
+.src .n{font-family:var(--mono);font-size:10.5px;background:var(--chip-bg);color:var(--chip-ink);
+  padding:3px 0;text-align:center;border-radius:2px}
+.src .d{font-size:15px;line-height:1.45;color:var(--ink)}
+.src .m{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:5px;letter-spacing:.02em}
+.src .d{display:block}
+.src .acts{display:flex;gap:8px}
+.mini{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:5px 9px;white-space:nowrap}
+.mini.read{background:var(--accent-ink);color:var(--surface)}
+.mini.open{border:1px solid var(--line-hi);color:var(--ink2)}
+
+.nodata{margin-top:44px;background:var(--surf2);border:1px solid var(--line);
+  border-left:3px solid var(--accent-ink);padding:24px 28px 26px}
+.nodata h4{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent-deep);margin:0 0 12px;font-weight:400}
+.nodata .say{font-size:19px;line-height:1.6;color:var(--ink);margin:0 0 18px;max-width:62ch}
+.checked{border-top:1px solid var(--line);padding-top:14px}
+.checked .row{display:grid;grid-template-columns:190px 1fr auto;gap:14px;padding:5px 0;
+  font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.checked .row .r{color:var(--muted)}
+.checked .cap{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:9px}
+.nodata .fix{font-size:15px;line-height:1.6;color:var(--ink2);margin:16px 0 0;max-width:62ch}
+
+/* ---------- board 3 : company ---------- */
+.co-head{padding:24px 30px 0;border-bottom:1px solid var(--line);background:var(--surf2)}
+.co-name{display:flex;align-items:baseline;gap:14px}
+.co-name h2{font-size:27px;margin:0;font-weight:400;letter-spacing:-.01em}
+.tick{font-family:var(--mono);font-size:12px;color:var(--surface);background:var(--ink);padding:3px 7px;letter-spacing:.08em}
+.co-meta{font-family:var(--mono);font-size:11px;color:var(--ink2);margin-top:8px}
+.co-meta i{color:var(--muted);font-style:normal;padding:0 6px}
+.tabs{display:flex;gap:26px;margin-top:18px}
+.tabs span{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding-bottom:11px;border-bottom:2px solid transparent}
+.tabs span.cur{color:var(--ink);border-color:var(--accent)}
+.co-body{display:grid;grid-template-columns:1fr 1px 356px}
+.co-main{padding:26px 30px 34px}
+.rail{padding:26px 24px 34px;background:var(--surf2)}
+
+.sec{margin-bottom:34px}
+.sec:last-child{margin-bottom:0}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--line-hi);padding-bottom:7px;margin-bottom:14px}
+.sechead h3{font-size:16px;margin:0;font-weight:400;letter-spacing:.01em}
+
+table{border-collapse:collapse;width:100%}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);text-align:left;font-weight:400;padding:0 10px 7px 0;border-bottom:1px solid var(--line)}
+td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;text-align:right;
+  padding-right:0;color:var(--ink)}
+th.n{text-align:right;padding-right:0}
+td .sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.pcode{font-family:var(--mono);font-size:12px;color:var(--ink)}
+
+.ph{display:inline-flex;align-items:center;gap:7px}
+.ph .bar{width:52px;height:7px;background:var(--na);position:relative}
+.ph .bar u{position:absolute;left:0;top:0;bottom:0;text-decoration:none}
+.ph .txt{font-family:var(--mono);font-size:10.5px;color:var(--ink2);letter-spacing:.03em}
+
+.fin{display:grid;grid-template-columns:1fr 1fr;gap:0 34px}
+.spark{padding:14px 0 15px;border-bottom:1px solid var(--line)}
+.spark .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.spark .nm{font-size:13.5px;color:var(--ink)}
+.spark .vals{font-family:var(--mono);font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.spark .vals b{color:var(--ink);font-weight:400}
+.spark .nm .u{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.06em;margin-left:5px}
+.svals{display:grid;grid-template-columns:repeat(10,1fr);margin-top:7px;
+  border-top:1px solid var(--line);padding-top:6px}
+.svals div{text-align:center;display:flex;flex-direction:column;gap:2px}
+.svals .y{font-family:var(--mono);font-size:8.5px;color:var(--muted);letter-spacing:.02em}
+.svals .v{font-family:var(--mono);font-size:10px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.spark .peak{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.07em;
+  margin-top:5px;text-transform:uppercase}
+
+.asof{margin-top:16px;border:1px solid var(--line-hi);border-left:3px solid var(--chip-ink);
+  background:var(--chip-bg);padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.dark .asof{background:transparent;border-color:var(--line-hi);border-left-color:var(--chip-bg)}
+.asof .l{font-size:13.5px;color:var(--ink);line-height:1.5}
+.asof .l b{font-family:var(--mono);font-size:17px;font-weight:400;letter-spacing:-.01em}
+.asof .warn2{font-family:var(--mono);font-size:10px;color:var(--chip-ink);letter-spacing:.03em;
+  margin-top:6px;line-height:1.5;max-width:46ch}
+.dark .asof .warn2{color:var(--chip-bg)}
+.asof .r{font-family:var(--mono);font-size:10px;color:var(--chip-ink);text-align:right;line-height:1.7}
+.dark .asof .r{color:var(--chip-bg)}
+
+.pstate{padding:11px 0;border-bottom:1px solid var(--line)}
+.pstate:last-child{border-bottom:0}
+.pstate .nm{font-size:13.5px;color:var(--ink);display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;align-items:baseline}
+.pstate .st{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 6px;white-space:nowrap}
+.st-a{background:var(--accent-deep);color:var(--surface)}
+.st-b{border:1px solid var(--line-hi);color:var(--ink2)}
+.st-c{border:1px dashed var(--line-hi);color:var(--muted)}
+.pstate .dt{font-family:var(--mono);font-size:10.5px;color:var(--ink2);margin-top:5px;line-height:1.6}
+.pstate .dt em{color:var(--muted);font-style:normal}
+
+.readout{display:grid;grid-template-columns:74px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.readout:last-child{border-bottom:0}
+.readout .when{font-family:var(--mono);font-size:11px;color:var(--accent-ink);letter-spacing:.02em}
+.readout .what{font-size:13px;line-height:1.45;color:var(--ink)}
+.readout .what .id{font-family:var(--mono);font-size:10px;color:var(--muted);display:block;margin-top:3px}
+
+/* ---------- board 4 : diff ---------- */
+.diff{padding:26px 30px 34px}
+.prov{border:1px solid var(--line-hi);background:var(--surf2);padding:14px 18px;margin-bottom:12px;
+  display:grid;grid-template-columns:1fr 1fr auto;gap:22px;align-items:center}
+.prov .snap .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.prov .snap .v{font-family:var(--mono);font-size:11.5px;color:var(--ink);margin-top:4px;line-height:1.55}
+.prov .snap .v em{color:var(--ink2);font-style:normal}
+.prov .verdict{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:5px 9px;background:var(--tint);color:var(--accent-deep);white-space:nowrap}
+.prov.bad{border-color:var(--warn);border-left:3px solid var(--warn)}
+.prov.bad .verdict{background:var(--warn);color:#fff}
+.provnote{border:1px solid var(--warn);border-top:0;background:var(--surface);padding:13px 18px 15px;
+  margin-bottom:26px}
+.provnote p{margin:0;font-size:14.5px;line-height:1.6;color:var(--ink);max-width:88ch}
+.provnote .who{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--warn);margin-bottom:7px}
+
+.dgroup{margin-bottom:26px}
+.dgroup .gh{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line-hi);
+  padding-bottom:7px;margin-bottom:2px}
+.dgroup .gh h3{margin:0;font-size:15px;font-weight:400}
+.dgroup .gh .ct{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.drow{display:grid;grid-template-columns:20px 1fr 150px 150px 96px;gap:16px;padding:11px 0;
+  border-bottom:1px solid var(--line);align-items:baseline}
+.mk{font-family:var(--mono);font-size:12px;line-height:1;text-align:center}
+.mk.plus{color:var(--good)} .mk.minus{color:var(--warn)} .mk.eq{color:var(--muted)}
+.drow .lbl{font-size:14px;line-height:1.45;color:var(--ink)}
+.drow .lbl .sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}
+.drow .a,.drow .b{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.drow .b{color:var(--ink)}
+.drow .delta{font-family:var(--mono);font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.delta.up{color:var(--good)} .delta.dn{color:var(--warn)} .delta.na{color:var(--muted)}
+.txtdiff{font-size:14px;line-height:1.62;color:var(--ink);max-width:92ch;margin:6px 0 0}
+.txtdiff ins{background:var(--tint);text-decoration:none;box-shadow:0 1px 0 var(--accent)}
+.txtdiff del{color:var(--muted);text-decoration:line-through}
+.legend{display:flex;gap:20px;margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.legend span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em}
+</style></head>
+<body>
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Readbase · RDB</h1>
+    <p>Grounded question answering over biotech's primary sources. Five artboards at 1440&thinsp;px. Every figure below is a real one and carries the period it covers; identifiers are shown in the form they take in the source system.</p>
+  </div>
+  
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 1</b><span>Source inspector — citation [1] opened</span></div>
+  
+<div class="board">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">Novo Nordisk A/S<i>/</i>ask<i>/</i>semaglutide patent expiry</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+
+  <div class="split">
+    <div class="pane-l">
+      <p class="q">When does patent protection on semaglutide expire, and what is being challenged?</p>
+      <div class="qmeta">
+        <span class="period">answered 2026-08-31 14:22 UTC</span>
+        <span class="accessors">read <b>filing_section</b> · <b>patent_exclusivity</b> — 6 passages returned, 4 cited</span>
+      </div>
+
+      <div class="prose">
+        <p><span class="hl">Composition-of-matter protection for semaglutide expires in the United States in 2031, subject to the pediatric exclusivity Novo Nordisk obtained in 2024, and in the principal European markets in 2031.</span><span class="chip on">1</span> Novo Nordisk holds further patents on formulations, dosing regimens, manufacturing processes and oral delivery, which run past those dates, though the filing is explicit that it cannot say whether those patents would survive a validity challenge or reach a competitor's product.<span class="chip">1</span></p>
+
+        <p>Three challenges are disclosed as pending: inter partes review petitions at the USPTO and oppositions at the EPO, both directed at patents covering semaglutide.<span class="chip">2</span> The company states that an adverse outcome could allow generic or biosimilar entry earlier than it currently expects.<span class="chip">2</span></p>
+
+        <p>Separately from the patents, semaglutide products carry regulatory exclusivity that runs on its own clock — twelve years of reference product exclusivity in the United States for biologics, and eight years of data exclusivity plus two years of market protection in the European Union.<span class="chip">3</span></p>
+
+        <p>The Orange Book listing for Ozempic records 14 unexpired patents as of the most recent monthly file, the latest of which expires 2033-03-20.<span class="chip">4</span> That table is a different source from the filing text above and the two do not agree on scope: the filing describes families, the Orange Book lists individual patents against one approved product.</p>
+      </div>
+
+      <div class="usedby">
+        <div class="cap">Sources this answer stands on</div>
+        <div class="u cur"><span class="n">1</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · intellectual property · passage 1 of 4</span>
+          <span class="st">open</span></div>
+        <div class="u"><span class="n">2</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · legal proceedings · passage 3 of 5</span>
+          <span class="st">2 sentences</span></div>
+        <div class="u"><span class="n">3</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · intellectual property · passage 4 of 4</span>
+          <span class="st">1 sentence</span></div>
+        <div class="u"><span class="n">4</span>
+          <span class="t"><b>FDA Orange Book</b> · monthly file 2026-08-01 · appl. N209637</span>
+          <span class="st">1 sentence</span></div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="pane-r">
+      <div class="pr-head">
+        <div class="pr-title">NONOF <span>·</span> 20-F <span>·</span> FY2025 <span>·</span> filed 2026-02-04 <span>·</span> intellectual property <span>·</span> passage 1 of 4</div>
+        <div class="stepper">
+          <span class="arw">&lsaquo;</span>
+          <span class="s cur">1</span><span class="s">2</span><span class="s">3</span><span class="s">4</span>
+          <span class="arw">&rsaquo;</span>
+          <span class="of">4 passages stored for this section</span>
+        </div>
+      </div>
+
+      <div class="pr-what">
+        <span>What we read</span>
+        <span>2,992 characters</span>
+      </div>
+
+      <div class="pr-body"><p>Our commercial success depends in part on our ability to obtain and maintain patent and other intellectual property protection for our products and product candidates, their formulations, methods of manufacture and methods of use, as well as our ability to operate without infringing the proprietary rights of others. We seek patent protection in the United States, Europe, Japan, China and other jurisdictions we consider commercially significant. As of 31 December 2025, our patent portfolio comprised roughly 1,100 active patent families, of which the families covering semaglutide, insulin icodec and our oral peptide delivery technology are the most material to our results of operations.</p><p>Composition-of-matter protection for semaglutide expires in the United States in 2031, subject to the pediatric exclusivity we obtained in 2024, and in the principal European markets in 2031. We hold additional patents directed to formulations, dosing regimens, manufacturing processes and delivery technologies that extend beyond those dates, but there can be no assurance that such patents would be held valid or infringed if asserted, or that they would prevent a competitor from marketing a product that does not fall within their claims.</p><p>We are party to proceedings in which third parties have challenged the validity of patents covering semaglutide, including inter partes review petitions before the United States Patent and Trademark Office and oppositions before the European Patent Office. An adverse outcome in one or more of these proceedings could permit generic or biosimilar entry earlier than we currently anticipate and would be expected to reduce sales of the affected product materially. We also rely on trade secrets and know-how, particularly in respect of our manufacturing processes, which we protect through confidentiality agreements and internal controls; such protection may be inadequate if the relevant information is independently developed or improperly disclosed.</p><p>Patent terms are limited and patent term extensions may be unavailable or shorter than we seek. Changes in patent law or its interpretation in the jurisdictions in which we operate could diminish the value of our portfolio.</p><p>In addition to patents, we rely on regulatory exclusivities that operate independently of our patent rights. In the United States, our biological products are eligible for twelve years of reference product exclusivity from the date of first licensure, and our small molecule and peptide products for periods of new chemical entity or new clinical investigation exclusivity under the Federal Food, Drug, and Cosmetic Act. In the European Union, our products are generally eligible for eight years of data exclusivity followed by two years of market protection, with the possibility of a further year for a new therapeutic indication demonstrating significant clinical benefit. These exclusivities do not prevent a competitor from developing a competing product independently.</p></div>
+
+      <div class="pr-foot">
+        <span class="lab">stored verbatim · no summarisation</span>
+        <span class="meta">sha256 4f1c9a…e0b7</span>
+      </div>
+
+      <div class="orig">
+        <div class="cap">The original document</div>
+        <div class="url">sec.gov/Archives/edgar/data/353278/000117184326001204/nonof-20f_2025.htm</div>
+        <dl class="kv">
+          <dt>CIK</dt><dd>0000353278</dd>
+          <dt>Accession</dt><dd>0001171843-26-001204</dd>
+          <dt>Form</dt><dd>20-F · fiscal year ended 2025-12-31</dd>
+          <dt>Retrieved</dt><dd>2026-02-06 · 1,184 pages</dd>
+        </dl>
+        <span class="btn-out">Open filing on sec.gov &#8599;</span>
+        <p class="distinct">These are not the same thing. The panel above is the only text the model could see. The filing is the complete document it was cut from — go there to check that the cut was fair.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 2</b><span>Ask — answer with citations, and refusal as a first-class state</span></div>
+  
+<div class="board">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">ask</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+  <div class="ask">
+    <div class="askcol">
+
+      <div class="askbar">
+        <span class="t">How much did Vertex spend on research and development last year?</span>
+        <span class="go">return</span>
+      </div>
+
+      <div class="qmeta" style="margin:-24px 0 26px">
+        <span class="period">answered 2026-08-31 09:14 UTC</span>
+        <span class="accessors">read <b>financial_series</b> · <b>filing_section</b> · <b>trial_search</b> &mdash; 9 passages returned, 3 cited</span>
+      </div>
+
+      <div class="answer">
+        <p>Vertex Pharmaceuticals reported research and development expense of <span class="num">$3.20B</span> for fiscal year 2025, against <span class="num">$3.83B</span> in fiscal 2024 &mdash; a decrease of <span class="num">16.4%</span>.<span class="chip">1</span></p>
+
+        <p>Fiscal 2024 also carried a <span class="num">$4.4B</span> acquired in-process research and development charge from the Alpine Immune Sciences acquisition. Vertex reports that on its own line, so it is in neither figure above; counting it, total research spending in fiscal 2024 was <span class="num">$8.23B</span> on the company's own presentation.<span class="chip">1</span></p>
+
+        <p>Research and development was <span class="num">28.7%</span> of total revenue of <span class="num">$11.15B</span> in fiscal 2025.<span class="chip">2</span> Vertex has 41 trials registered on ClinicalTrials.gov with a status of recruiting or active.</p>
+      </div>
+
+      <div class="srcs">
+        <div class="src">
+          <span class="n">1</span>
+          <span>
+            <span class="d">Vertex Pharmaceuticals · 10-K · FY2025 · consolidated statements of operations</span>
+            <span class="m">filed 2026-02-12 · CIK 0000875320 · accession 0000875320-26-000009 · passage 2 of 3</span>
+          </span>
+          <span class="acts"><span class="mini read">Read passage</span><span class="mini open">sec.gov &#8599;</span></span>
+        </div>
+        <div class="src">
+          <span class="n">2</span>
+          <span>
+            <span class="d">Vertex Pharmaceuticals · 10-K · FY2025 · management's discussion and analysis</span>
+            <span class="m">filed 2026-02-12 · CIK 0000875320 · accession 0000875320-26-000009 · passage 1 of 6</span>
+          </span>
+          <span class="acts"><span class="mini read">Read passage</span><span class="mini open">sec.gov &#8599;</span></span>
+        </div>
+      </div>
+
+      <div class="nodata">
+        <h4>No data for this</h4>
+        <p class="say">I don't have data on how GSK's pipeline has changed since 2021.</p>
+        <div class="checked">
+          <div class="cap">What was queried</div>
+          <div class="row"><span>filing_section</span><span class="r">GSK plc · 20-F · FY2021 — not in corpus</span><span class="r">0 rows</span></div>
+          <div class="row"><span>filing_diff</span><span class="r">needs two annual reports; earliest held is FY2023</span><span class="r">0 rows</span></div>
+          <div class="row"><span>trial_search</span><span class="r">sponsor GSK — 604 trials, no phase history before 2023-11</span><span class="r">604 rows</span></div>
+        </div>
+        <p class="fix">Annual reports go back five years per company, so FY2021 is outside the window for every issuer. Trial records reach further back but only hold current status, not the date a programme changed phase — so a pipeline comparison against 2021 isn't something I can support from these sources. I can compare GSK's FY2023 and FY2025 filings, or list the 604 registered trials by current phase.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 3</b><span>Company page — Moderna, Inc.</span></div>
+  
+<div class="board">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">companies<i>/</i>Moderna, Inc.</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+
+  <div class="co-head">
+    <div class="co-name"><h2>Moderna, Inc.</h2><span class="tick">MRNA</span></div>
+    <div class="co-meta">CIK 0001682852<i>·</i>Cambridge, MA<i>·</i>fiscal year ends 31 December<i>·</i>5 annual reports held, FY2021&ndash;FY2025<i>·</i>312 registered trials</div>
+    <div class="tabs">
+      <span class="cur">Overview</span><span>Pipeline</span><span>Financials</span>
+      <span>Trials</span><span>Patents</span><span>Filings</span>
+    </div>
+  </div>
+
+  <div class="co-body">
+    <div class="co-main">
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Pipeline by phase</h3>
+          <span class="period">status as of 2026-08-24 · ClinicalTrials.gov + FDA approvals</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:186px">Programme</th><th>Indication</th><th style="width:150px">Phase</th>
+            <th style="width:130px">Approved / lead trial</th><th class="n" style="width:64px">Trials</th>
+          </tr></thead>
+          <tbody>
+          <tr>
+            <td><span class="pcode">mRNA-1273</span><div class="sub">Spikevax</div></td>
+            <td>COVID-19, all ages</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2020-12-18</td>
+            <td class="n">182</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1283</span><div class="sub">mNEXSPIKE</div></td>
+            <td>COVID-19, 12+ and at-risk</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2025-05-31</td>
+            <td class="n">14</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1345</span><div class="sub">mRESVIA</div></td>
+            <td>RSV, adults 60+</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2024-05-31</td>
+            <td class="n">11</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-4157</span><div class="sub">intismeran autogene</div></td>
+            <td>Melanoma, adjuvant · with Merck</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05933577</td>
+            <td class="n">9</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1010</span><div class="sub"></div></td>
+            <td>Seasonal influenza</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05827068</td>
+            <td class="n">12</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1083</span><div class="sub"></div></td>
+            <td>Influenza + COVID-19 combination</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT06694389</td>
+            <td class="n">4</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1647</span><div class="sub"></div></td>
+            <td>Cytomegalovirus</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05085366</td>
+            <td class="n">7</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1468</span><div class="sub"></div></td>
+            <td>Varicella zoster</td>
+            <td><span class="ph"><span class="bar"><u style="width:50%;background:var(--p2)"></u></span>
+                <span class="txt">Phase 1/2</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05934851</td>
+            <td class="n">3</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-3927</span><div class="sub"></div></td>
+            <td>Propionic acidemia</td>
+            <td><span class="ph"><span class="bar"><u style="width:50%;background:var(--p2)"></u></span>
+                <span class="txt">Phase 1/2</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05130437</td>
+            <td class="n">2</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1195</span><div class="sub"></div></td>
+            <td>Epstein&ndash;Barr virus</td>
+            <td><span class="ph"><span class="bar"><u style="width:25%;background:var(--p1)"></u></span>
+                <span class="txt">Phase 1</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05831111</td>
+            <td class="n">1</td>
+          </tr></tbody>
+        </table>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Financial trend</h3>
+          <span class="period">FY2016&ndash;FY2025 · 10-K consolidated statements · US$</span>
+        </div>
+        <div class="fin">
+        <div class="spark">
+          <div class="top"><span class="nm">Total revenue <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $108M <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$1.9B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,38.9 56.1,38.7 107.2,38.9 158.3,39.0 209.4,37.7 260.6,6.4 311.7,5.0 362.8,27.0 413.9,33.4 465.0,35.7" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="311.7" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="35.7" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">0.1</span></div><div><span class="y">&rsquo;17</span><span class="v">0.2</span></div><div><span class="y">&rsquo;18</span><span class="v">0.1</span></div><div><span class="y">&rsquo;19</span><span class="v">0.1</span></div><div><span class="y">&rsquo;20</span><span class="v">0.8</span></div><div><span class="y">&rsquo;21</span><span class="v">18.5</span></div><div><span class="y">&rsquo;22</span><span class="v" style="color:var(--ink)">19.3</span></div><div><span class="y">&rsquo;23</span><span class="v">6.8</span></div><div><span class="y">&rsquo;24</span><span class="v">3.2</span></div><div><span class="y">&rsquo;25</span><span class="v">1.9</span></div></div>
+          <div class="peak">peak FY2022</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Research and development <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $386M <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$3.61B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,39.0 56.1,38.1 107.2,38.5 158.3,38.2 209.4,31.5 260.6,26.8 311.7,16.8 362.8,5.0 413.9,8.0 465.0,14.4" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="362.8" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="14.4" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">0.4</span></div><div><span class="y">&rsquo;17</span><span class="v">0.5</span></div><div><span class="y">&rsquo;18</span><span class="v">0.5</span></div><div><span class="y">&rsquo;19</span><span class="v">0.5</span></div><div><span class="y">&rsquo;20</span><span class="v">1.4</span></div><div><span class="y">&rsquo;21</span><span class="v">2.0</span></div><div><span class="y">&rsquo;22</span><span class="v">3.3</span></div><div><span class="y">&rsquo;23</span><span class="v" style="color:var(--ink)">4.8</span></div><div><span class="y">&rsquo;24</span><span class="v">4.5</span></div><div><span class="y">&rsquo;25</span><span class="v">3.6</span></div></div>
+          <div class="peak">peak FY2023</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Net income / (loss) <span class="u">US$B</span></span>
+            <span class="vals">FY2016 ($216M) <span style="color:var(--muted)">&rarr;</span> FY2025 <b>($2.79B)</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            <line x1="5.0" y1="29.5" x2="465.0" y2="29.5" stroke="var(--line-hi)" stroke-width="1" stroke-dasharray="2 3"/>
+            <polyline points="5.0,30.0 56.1,30.0 107.2,30.3 158.3,30.6 209.4,31.0 260.6,5.0 311.7,12.7 362.8,39.0 413.9,36.7 465.0,35.1" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="260.6" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="35.1" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">(0.2)</span></div><div><span class="y">&rsquo;17</span><span class="v">(0.3)</span></div><div><span class="y">&rsquo;18</span><span class="v">(0.4)</span></div><div><span class="y">&rsquo;19</span><span class="v">(0.5)</span></div><div><span class="y">&rsquo;20</span><span class="v">(0.7)</span></div><div><span class="y">&rsquo;21</span><span class="v" style="color:var(--ink)">12.2</span></div><div><span class="y">&rsquo;22</span><span class="v">8.4</span></div><div><span class="y">&rsquo;23</span><span class="v">(4.7)</span></div><div><span class="y">&rsquo;24</span><span class="v">(3.6)</span></div><div><span class="y">&rsquo;25</span><span class="v">(2.8)</span></div></div>
+          <div class="peak">peak FY2021</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Cash and investments, at year end <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $1.25B <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$5.92B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,39.0 56.1,38.4 107.2,38.1 158.3,39.0 209.4,31.0 260.6,6.1 311.7,5.0 362.8,14.8 413.9,22.5 465.0,29.6" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="311.7" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="29.6" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">1.2</span></div><div><span class="y">&rsquo;17</span><span class="v">1.6</span></div><div><span class="y">&rsquo;18</span><span class="v">1.7</span></div><div><span class="y">&rsquo;19</span><span class="v">1.3</span></div><div><span class="y">&rsquo;20</span><span class="v">5.2</span></div><div><span class="y">&rsquo;21</span><span class="v">17.6</span></div><div><span class="y">&rsquo;22</span><span class="v" style="color:var(--ink)">18.2</span></div><div><span class="y">&rsquo;23</span><span class="v">13.3</span></div><div><span class="y">&rsquo;24</span><span class="v">9.5</span></div><div><span class="y">&rsquo;25</span><span class="v">5.9</span></div></div>
+          <div class="peak">peak FY2022</div>
+        </div></div>
+
+        <div class="asof">
+          <div class="l">
+            Cash and cash equivalents <b>$1.723B</b>
+            <div class="warn2">Not a point on the series above. This is the quarter end, 2026-06-30, and it counts cash only — the annual line includes investments. Do not read it as FY2026.</div>
+          </div>
+          <div class="r">10-Q · Q2 2026<br>filed 2026-08-07<br>accession 0001682852-26-000073</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="rail">
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Patent protection</h3>
+          <span class="period">Orange Book 2026-08</span>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>Spikevax</span><span class="st st-a">Protected</span></div>
+          <div class="dt">Purple Book reference product exclusivity to 2032-12-18<br>
+            <em>7 patent families asserted in filing text; biologics are not Orange Book listed</em></div>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>mRESVIA</span><span class="st st-b">Approved, no listed protection</span></div>
+          <div class="dt">Approved 2024-05-31 · no exclusivity record found<br>
+            <em>Absence in our tables is not evidence of absence in fact</em></div>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>mRNA-1010</span><span class="st st-c">No approved product</span></div>
+          <div class="dt">Phase 3 · protection not assessable until approval</div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Upcoming readouts</h3>
+          <span class="period">primary completion dates</span>
+        </div>
+        <div class="readout"><span class="when">2026-11</span>
+          <span class="what">mRNA-4157 adjuvant melanoma, primary completion<span class="id">NCT05933577 · INTerpath-001</span></span></div>
+        <div class="readout"><span class="when">2026-12</span>
+          <span class="what">mRNA-1010 seasonal influenza, efficacy readout<span class="id">NCT05827068 · P304</span></span></div>
+        <div class="readout"><span class="when">2027-04</span>
+          <span class="what">mRNA-1647 cytomegalovirus, topline<span class="id">NCT05085366 · CMVictory</span></span></div>
+        <div class="readout"><span class="when">2027-06</span>
+          <span class="what">mRNA-1083 combination vaccine, immunogenicity<span class="id">NCT06694389</span></span></div>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Filings held</h3>
+          <span class="period">five years, per company</span>
+        </div>
+        <div class="readout"><span class="when">FY2025</span>
+          <span class="what">10-K &middot; filed 2026-02-20<span class="id">0001682852-26-000011 &middot; 41 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2024</span>
+          <span class="what">10-K &middot; filed 2025-02-21<span class="id">0001682852-25-000016 &middot; 40 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2023</span>
+          <span class="what">10-K &middot; filed 2024-02-23<span class="id">0001682852-24-000021 &middot; 40 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2022</span>
+          <span class="what">10-K &middot; filed 2023-02-24<span class="id">0001682852-23-000017 &middot; 38 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2021</span>
+          <span class="what">10-K &middot; filed 2022-02-25<span class="id">0001682852-22-000010 &middot; 38 sections stored</span></span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 4</b><span>What changed — FY2024 vs FY2025, both provenance states</span></div>
+  
+<div class="board">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">companies<i>/</i>Moderna, Inc.<i>/</i>what changed<i>/</i>FY2024 &rarr; FY2025</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+
+  <div class="diff">
+
+    <div class="prov">
+      <div class="snap">
+        <div class="k">Earlier snapshot</div>
+        <div class="v">10-K · FY2024 · filed 2025-02-21<br><em>accession 0001682852-25-000016 · extractor v2.4.1 · ingested 2025-03-11</em></div>
+      </div>
+      <div class="snap">
+        <div class="k">Later snapshot</div>
+        <div class="v">10-K · FY2025 · filed 2026-02-20<br><em>accession 0001682852-26-000011 · extractor v2.4.1 · ingested 2026-02-27</em></div>
+      </div>
+      <span class="verdict">Comparable</span>
+    </div>
+
+    <div class="dgroup">
+      <div class="gh"><h3>Financial statements</h3><span class="ct">5 line items compared · US$ millions</span></div>
+      <div class="drow"><span class="mk minus">&minus;</span>
+        <span class="lbl">Total revenue<div class="sub">consolidated statements of operations</div></span>
+        <span class="a">3,236</span><span class="b">1,900</span><span class="delta dn">&minus;41.3%</span></div>
+      <div class="drow"><span class="mk minus">&minus;</span>
+        <span class="lbl">Research and development<div class="sub">consolidated statements of operations</div></span>
+        <span class="a">4,453</span><span class="b">3,612</span><span class="delta dn">&minus;18.9%</span></div>
+      <div class="drow"><span class="mk plus">+</span>
+        <span class="lbl">Net loss narrowed<div class="sub">consolidated statements of operations</div></span>
+        <span class="a">(3,562)</span><span class="b">(2,792)</span><span class="delta up">+21.6%</span></div>
+      <div class="drow"><span class="mk minus">&minus;</span>
+        <span class="lbl">Cash, equivalents and investments<div class="sub">balance sheet, at 31 December</div></span>
+        <span class="a">9,483</span><span class="b">5,920</span><span class="delta dn">&minus;37.6%</span></div>
+      <div class="drow"><span class="mk minus">&minus;</span>
+        <span class="lbl">Employees<div class="sub">Item 1, human capital</div></span>
+        <span class="a">5,600</span><span class="b">4,300</span><span class="delta dn">&minus;23.2%</span></div>
+    </div>
+
+    <div class="dgroup">
+      <div class="gh"><h3>Pipeline and approvals</h3><span class="ct">3 changes</span></div>
+      <div class="drow"><span class="mk plus">+</span>
+        <span class="lbl">mRNA-1283 mNEXSPIKE<div class="sub">approved 2025-05-31 · moved out of clinical stage</div></span>
+        <span class="a">Phase 3</span><span class="b">Approved</span><span class="delta na">&mdash;</span></div>
+      <div class="drow"><span class="mk minus">&minus;</span>
+        <span class="lbl">mRNA-1073 influenza + COVID<div class="sub">no longer listed; superseded by mRNA-1083</div></span>
+        <span class="a">Phase 1/2</span><span class="b">Not listed</span><span class="delta na">&mdash;</span></div>
+      <div class="drow"><span class="mk plus">+</span>
+        <span class="lbl">mRNA-1195 Epstein&ndash;Barr virus<div class="sub">first appearance in an annual report</div></span>
+        <span class="a">&mdash;</span><span class="b">Phase 1</span><span class="delta na">&mdash;</span></div>
+    </div>
+
+    <div class="dgroup">
+      <div class="gh"><h3>Risk factors</h3><span class="ct">61 &rarr; 58 · 1 rewritten</span></div>
+      <div class="drow" style="grid-template-columns:20px 1fr">
+        <span class="mk eq">&asymp;</span>
+        <span>
+          <span class="lbl">Reliance on a concentrated customer base</span>
+          <p class="txtdiff">A substantial portion of our revenue has been derived from <del>a small number of government purchasers</del><ins>supply agreements with governments and international health organisations</ins>, and <ins>the expiry of the remaining COVID-19 supply commitments in 2026 means</ins> we <del>may not be able to</del><ins>do not expect to</ins> replace that revenue on comparable terms.</p>
+        </span>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span>Every row links to both filings · click a figure to open the passage it came from</span>
+      <span>+ increase or addition</span><span>&minus; decrease or removal</span><span>&asymp; text rewritten</span>
+    </div>
+
+    <div class="gh" style="border:0;margin:34px 0 12px"><h3 style="font-size:15px;font-weight:400">The same comparison when the snapshots disagree</h3></div>
+
+    <div class="prov bad">
+      <div class="snap">
+        <div class="k">Earlier snapshot</div>
+        <div class="v">10-K · FY2024 · filed 2025-02-21<br><em>accession 0001682852-25-000016 · extractor <b>v2.3.0</b> · ingested 2025-02-28</em></div>
+      </div>
+      <div class="snap">
+        <div class="k">Later snapshot</div>
+        <div class="v">10-K · FY2025 · filed 2026-02-20<br><em>accession 0001682852-26-000011 · extractor <b>v2.4.1</b> · ingested 2026-02-27</em></div>
+      </div>
+      <span class="verdict">Not comparable</span>
+    </div>
+    <div class="provnote">
+      <div class="who">Why this comparison is withheld</div>
+      <p>Segment normalisation changed in extractor v2.4.0: product revenue and grant revenue were reported as one line before that version and as two lines after it. A diff across this boundary would show a revenue split that the company never announced. The five financial rows are withheld until FY2024 is re-extracted; the pipeline and risk-factor rows are unaffected and are shown above.</p>
+    </div>
+
+  </div>
+</div>
+</div>
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 5a</b><span>Source inspector, dark</span></div>
+  
+<div class="board dark">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">Novo Nordisk A/S<i>/</i>ask<i>/</i>semaglutide patent expiry</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+
+  <div class="split">
+    <div class="pane-l">
+      <p class="q">When does patent protection on semaglutide expire, and what is being challenged?</p>
+      <div class="qmeta">
+        <span class="period">answered 2026-08-31 14:22 UTC</span>
+        <span class="accessors">read <b>filing_section</b> · <b>patent_exclusivity</b> — 6 passages returned, 4 cited</span>
+      </div>
+
+      <div class="prose">
+        <p><span class="hl">Composition-of-matter protection for semaglutide expires in the United States in 2031, subject to the pediatric exclusivity Novo Nordisk obtained in 2024, and in the principal European markets in 2031.</span><span class="chip on">1</span> Novo Nordisk holds further patents on formulations, dosing regimens, manufacturing processes and oral delivery, which run past those dates, though the filing is explicit that it cannot say whether those patents would survive a validity challenge or reach a competitor's product.<span class="chip">1</span></p>
+
+        <p>Three challenges are disclosed as pending: inter partes review petitions at the USPTO and oppositions at the EPO, both directed at patents covering semaglutide.<span class="chip">2</span> The company states that an adverse outcome could allow generic or biosimilar entry earlier than it currently expects.<span class="chip">2</span></p>
+
+        <p>Separately from the patents, semaglutide products carry regulatory exclusivity that runs on its own clock — twelve years of reference product exclusivity in the United States for biologics, and eight years of data exclusivity plus two years of market protection in the European Union.<span class="chip">3</span></p>
+
+        <p>The Orange Book listing for Ozempic records 14 unexpired patents as of the most recent monthly file, the latest of which expires 2033-03-20.<span class="chip">4</span> That table is a different source from the filing text above and the two do not agree on scope: the filing describes families, the Orange Book lists individual patents against one approved product.</p>
+      </div>
+
+      <div class="usedby">
+        <div class="cap">Sources this answer stands on</div>
+        <div class="u cur"><span class="n">1</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · intellectual property · passage 1 of 4</span>
+          <span class="st">open</span></div>
+        <div class="u"><span class="n">2</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · legal proceedings · passage 3 of 5</span>
+          <span class="st">2 sentences</span></div>
+        <div class="u"><span class="n">3</span>
+          <span class="t"><b>NONOF · 20-F · FY2025</b> · intellectual property · passage 4 of 4</span>
+          <span class="st">1 sentence</span></div>
+        <div class="u"><span class="n">4</span>
+          <span class="t"><b>FDA Orange Book</b> · monthly file 2026-08-01 · appl. N209637</span>
+          <span class="st">1 sentence</span></div>
+      </div>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="pane-r">
+      <div class="pr-head">
+        <div class="pr-title">NONOF <span>·</span> 20-F <span>·</span> FY2025 <span>·</span> filed 2026-02-04 <span>·</span> intellectual property <span>·</span> passage 1 of 4</div>
+        <div class="stepper">
+          <span class="arw">&lsaquo;</span>
+          <span class="s cur">1</span><span class="s">2</span><span class="s">3</span><span class="s">4</span>
+          <span class="arw">&rsaquo;</span>
+          <span class="of">4 passages stored for this section</span>
+        </div>
+      </div>
+
+      <div class="pr-what">
+        <span>What we read</span>
+        <span>2,992 characters</span>
+      </div>
+
+      <div class="pr-body"><p>Our commercial success depends in part on our ability to obtain and maintain patent and other intellectual property protection for our products and product candidates, their formulations, methods of manufacture and methods of use, as well as our ability to operate without infringing the proprietary rights of others. We seek patent protection in the United States, Europe, Japan, China and other jurisdictions we consider commercially significant. As of 31 December 2025, our patent portfolio comprised roughly 1,100 active patent families, of which the families covering semaglutide, insulin icodec and our oral peptide delivery technology are the most material to our results of operations.</p><p>Composition-of-matter protection for semaglutide expires in the United States in 2031, subject to the pediatric exclusivity we obtained in 2024, and in the principal European markets in 2031. We hold additional patents directed to formulations, dosing regimens, manufacturing processes and delivery technologies that extend beyond those dates, but there can be no assurance that such patents would be held valid or infringed if asserted, or that they would prevent a competitor from marketing a product that does not fall within their claims.</p><p>We are party to proceedings in which third parties have challenged the validity of patents covering semaglutide, including inter partes review petitions before the United States Patent and Trademark Office and oppositions before the European Patent Office. An adverse outcome in one or more of these proceedings could permit generic or biosimilar entry earlier than we currently anticipate and would be expected to reduce sales of the affected product materially. We also rely on trade secrets and know-how, particularly in respect of our manufacturing processes, which we protect through confidentiality agreements and internal controls; such protection may be inadequate if the relevant information is independently developed or improperly disclosed.</p><p>Patent terms are limited and patent term extensions may be unavailable or shorter than we seek. Changes in patent law or its interpretation in the jurisdictions in which we operate could diminish the value of our portfolio.</p><p>In addition to patents, we rely on regulatory exclusivities that operate independently of our patent rights. In the United States, our biological products are eligible for twelve years of reference product exclusivity from the date of first licensure, and our small molecule and peptide products for periods of new chemical entity or new clinical investigation exclusivity under the Federal Food, Drug, and Cosmetic Act. In the European Union, our products are generally eligible for eight years of data exclusivity followed by two years of market protection, with the possibility of a further year for a new therapeutic indication demonstrating significant clinical benefit. These exclusivities do not prevent a competitor from developing a competing product independently.</p></div>
+
+      <div class="pr-foot">
+        <span class="lab">stored verbatim · no summarisation</span>
+        <span class="meta">sha256 4f1c9a…e0b7</span>
+      </div>
+
+      <div class="orig">
+        <div class="cap">The original document</div>
+        <div class="url">sec.gov/Archives/edgar/data/353278/000117184326001204/nonof-20f_2025.htm</div>
+        <dl class="kv">
+          <dt>CIK</dt><dd>0000353278</dd>
+          <dt>Accession</dt><dd>0001171843-26-001204</dd>
+          <dt>Form</dt><dd>20-F · fiscal year ended 2025-12-31</dd>
+          <dt>Retrieved</dt><dd>2026-02-06 · 1,184 pages</dd>
+        </dl>
+        <span class="btn-out">Open filing on sec.gov &#8599;</span>
+        <p class="distinct">These are not the same thing. The panel above is the only text the model could see. The filing is the complete document it was cut from — go there to check that the cut was fair.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="boardwrap">
+  <div class="boardlabel"><b>Artboard 5b</b><span>Company page, dark</span></div>
+  
+<div class="board dark">
+  <div class="chrome">
+    <div class="mark">R<s>D</s>B</div>
+    <div class="crumb">companies<i>/</i>Moderna, Inc.</div>
+    <div class="spacer"></div>
+    <div class="corpus">787 companies · 3,614 annual reports · 30,823 trials</div>
+  </div>
+
+  <div class="co-head">
+    <div class="co-name"><h2>Moderna, Inc.</h2><span class="tick">MRNA</span></div>
+    <div class="co-meta">CIK 0001682852<i>·</i>Cambridge, MA<i>·</i>fiscal year ends 31 December<i>·</i>5 annual reports held, FY2021&ndash;FY2025<i>·</i>312 registered trials</div>
+    <div class="tabs">
+      <span class="cur">Overview</span><span>Pipeline</span><span>Financials</span>
+      <span>Trials</span><span>Patents</span><span>Filings</span>
+    </div>
+  </div>
+
+  <div class="co-body">
+    <div class="co-main">
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Pipeline by phase</h3>
+          <span class="period">status as of 2026-08-24 · ClinicalTrials.gov + FDA approvals</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th style="width:186px">Programme</th><th>Indication</th><th style="width:150px">Phase</th>
+            <th style="width:130px">Approved / lead trial</th><th class="n" style="width:64px">Trials</th>
+          </tr></thead>
+          <tbody>
+          <tr>
+            <td><span class="pcode">mRNA-1273</span><div class="sub">Spikevax</div></td>
+            <td>COVID-19, all ages</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2020-12-18</td>
+            <td class="n">182</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1283</span><div class="sub">mNEXSPIKE</div></td>
+            <td>COVID-19, 12+ and at-risk</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2025-05-31</td>
+            <td class="n">14</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1345</span><div class="sub">mRESVIA</div></td>
+            <td>RSV, adults 60+</td>
+            <td><span class="ph"><span class="bar"><u style="width:100%;background:var(--p4)"></u></span>
+                <span class="txt">Approved</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">2024-05-31</td>
+            <td class="n">11</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-4157</span><div class="sub">intismeran autogene</div></td>
+            <td>Melanoma, adjuvant · with Merck</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05933577</td>
+            <td class="n">9</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1010</span><div class="sub"></div></td>
+            <td>Seasonal influenza</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05827068</td>
+            <td class="n">12</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1083</span><div class="sub"></div></td>
+            <td>Influenza + COVID-19 combination</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT06694389</td>
+            <td class="n">4</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1647</span><div class="sub"></div></td>
+            <td>Cytomegalovirus</td>
+            <td><span class="ph"><span class="bar"><u style="width:75%;background:var(--p3)"></u></span>
+                <span class="txt">Phase 3</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05085366</td>
+            <td class="n">7</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1468</span><div class="sub"></div></td>
+            <td>Varicella zoster</td>
+            <td><span class="ph"><span class="bar"><u style="width:50%;background:var(--p2)"></u></span>
+                <span class="txt">Phase 1/2</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05934851</td>
+            <td class="n">3</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-3927</span><div class="sub"></div></td>
+            <td>Propionic acidemia</td>
+            <td><span class="ph"><span class="bar"><u style="width:50%;background:var(--p2)"></u></span>
+                <span class="txt">Phase 1/2</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05130437</td>
+            <td class="n">2</td>
+          </tr>
+          <tr>
+            <td><span class="pcode">mRNA-1195</span><div class="sub"></div></td>
+            <td>Epstein&ndash;Barr virus</td>
+            <td><span class="ph"><span class="bar"><u style="width:25%;background:var(--p1)"></u></span>
+                <span class="txt">Phase 1</span></span></td>
+            <td class="n" style="text-align:left;padding-left:0">NCT05831111</td>
+            <td class="n">1</td>
+          </tr></tbody>
+        </table>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Financial trend</h3>
+          <span class="period">FY2016&ndash;FY2025 · 10-K consolidated statements · US$</span>
+        </div>
+        <div class="fin">
+        <div class="spark">
+          <div class="top"><span class="nm">Total revenue <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $108M <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$1.9B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,38.9 56.1,38.7 107.2,38.9 158.3,39.0 209.4,37.7 260.6,6.4 311.7,5.0 362.8,27.0 413.9,33.4 465.0,35.7" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="311.7" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="35.7" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">0.1</span></div><div><span class="y">&rsquo;17</span><span class="v">0.2</span></div><div><span class="y">&rsquo;18</span><span class="v">0.1</span></div><div><span class="y">&rsquo;19</span><span class="v">0.1</span></div><div><span class="y">&rsquo;20</span><span class="v">0.8</span></div><div><span class="y">&rsquo;21</span><span class="v">18.5</span></div><div><span class="y">&rsquo;22</span><span class="v" style="color:var(--ink)">19.3</span></div><div><span class="y">&rsquo;23</span><span class="v">6.8</span></div><div><span class="y">&rsquo;24</span><span class="v">3.2</span></div><div><span class="y">&rsquo;25</span><span class="v">1.9</span></div></div>
+          <div class="peak">peak FY2022</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Research and development <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $386M <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$3.61B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,39.0 56.1,38.1 107.2,38.5 158.3,38.2 209.4,31.5 260.6,26.8 311.7,16.8 362.8,5.0 413.9,8.0 465.0,14.4" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="362.8" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="14.4" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">0.4</span></div><div><span class="y">&rsquo;17</span><span class="v">0.5</span></div><div><span class="y">&rsquo;18</span><span class="v">0.5</span></div><div><span class="y">&rsquo;19</span><span class="v">0.5</span></div><div><span class="y">&rsquo;20</span><span class="v">1.4</span></div><div><span class="y">&rsquo;21</span><span class="v">2.0</span></div><div><span class="y">&rsquo;22</span><span class="v">3.3</span></div><div><span class="y">&rsquo;23</span><span class="v" style="color:var(--ink)">4.8</span></div><div><span class="y">&rsquo;24</span><span class="v">4.5</span></div><div><span class="y">&rsquo;25</span><span class="v">3.6</span></div></div>
+          <div class="peak">peak FY2023</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Net income / (loss) <span class="u">US$B</span></span>
+            <span class="vals">FY2016 ($216M) <span style="color:var(--muted)">&rarr;</span> FY2025 <b>($2.79B)</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            <line x1="5.0" y1="29.5" x2="465.0" y2="29.5" stroke="var(--line-hi)" stroke-width="1" stroke-dasharray="2 3"/>
+            <polyline points="5.0,30.0 56.1,30.0 107.2,30.3 158.3,30.6 209.4,31.0 260.6,5.0 311.7,12.7 362.8,39.0 413.9,36.7 465.0,35.1" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="260.6" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="35.1" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">(0.2)</span></div><div><span class="y">&rsquo;17</span><span class="v">(0.3)</span></div><div><span class="y">&rsquo;18</span><span class="v">(0.4)</span></div><div><span class="y">&rsquo;19</span><span class="v">(0.5)</span></div><div><span class="y">&rsquo;20</span><span class="v">(0.7)</span></div><div><span class="y">&rsquo;21</span><span class="v" style="color:var(--ink)">12.2</span></div><div><span class="y">&rsquo;22</span><span class="v">8.4</span></div><div><span class="y">&rsquo;23</span><span class="v">(4.7)</span></div><div><span class="y">&rsquo;24</span><span class="v">(3.6)</span></div><div><span class="y">&rsquo;25</span><span class="v">(2.8)</span></div></div>
+          <div class="peak">peak FY2021</div>
+        </div>
+        <div class="spark">
+          <div class="top"><span class="nm">Cash and investments, at year end <span class="u">US$B</span></span>
+            <span class="vals">FY2016 $1.25B <span style="color:var(--muted)">&rarr;</span> FY2025 <b>$5.92B</b></span></div>
+          <svg width="470" height="44" viewBox="0 0 470 44" aria-hidden="true">
+            
+            <polyline points="5.0,39.0 56.1,38.4 107.2,38.1 158.3,39.0 209.4,31.0 260.6,6.1 311.7,5.0 362.8,14.8 413.9,22.5 465.0,29.6" fill="none" stroke="var(--accent-ink)" stroke-width="1.25"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="311.7" cy="5.0" r="2.6" fill="none" stroke="var(--accent-ink)" stroke-width="1"/>
+            <circle cx="465.0" cy="29.6" r="2" fill="var(--accent-ink)"/>
+          </svg>
+          <div class="svals"><div><span class="y">&rsquo;16</span><span class="v">1.2</span></div><div><span class="y">&rsquo;17</span><span class="v">1.6</span></div><div><span class="y">&rsquo;18</span><span class="v">1.7</span></div><div><span class="y">&rsquo;19</span><span class="v">1.3</span></div><div><span class="y">&rsquo;20</span><span class="v">5.2</span></div><div><span class="y">&rsquo;21</span><span class="v">17.6</span></div><div><span class="y">&rsquo;22</span><span class="v" style="color:var(--ink)">18.2</span></div><div><span class="y">&rsquo;23</span><span class="v">13.3</span></div><div><span class="y">&rsquo;24</span><span class="v">9.5</span></div><div><span class="y">&rsquo;25</span><span class="v">5.9</span></div></div>
+          <div class="peak">peak FY2022</div>
+        </div></div>
+
+        <div class="asof">
+          <div class="l">
+            Cash and cash equivalents <b>$1.723B</b>
+            <div class="warn2">Not a point on the series above. This is the quarter end, 2026-06-30, and it counts cash only — the annual line includes investments. Do not read it as FY2026.</div>
+          </div>
+          <div class="r">10-Q · Q2 2026<br>filed 2026-08-07<br>accession 0001682852-26-000073</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="rail">
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Patent protection</h3>
+          <span class="period">Orange Book 2026-08</span>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>Spikevax</span><span class="st st-a">Protected</span></div>
+          <div class="dt">Purple Book reference product exclusivity to 2032-12-18<br>
+            <em>7 patent families asserted in filing text; biologics are not Orange Book listed</em></div>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>mRESVIA</span><span class="st st-b">Approved, no listed protection</span></div>
+          <div class="dt">Approved 2024-05-31 · no exclusivity record found<br>
+            <em>Absence in our tables is not evidence of absence in fact</em></div>
+        </div>
+
+        <div class="pstate">
+          <div class="nm"><span>mRNA-1010</span><span class="st st-c">No approved product</span></div>
+          <div class="dt">Phase 3 · protection not assessable until approval</div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Upcoming readouts</h3>
+          <span class="period">primary completion dates</span>
+        </div>
+        <div class="readout"><span class="when">2026-11</span>
+          <span class="what">mRNA-4157 adjuvant melanoma, primary completion<span class="id">NCT05933577 · INTerpath-001</span></span></div>
+        <div class="readout"><span class="when">2026-12</span>
+          <span class="what">mRNA-1010 seasonal influenza, efficacy readout<span class="id">NCT05827068 · P304</span></span></div>
+        <div class="readout"><span class="when">2027-04</span>
+          <span class="what">mRNA-1647 cytomegalovirus, topline<span class="id">NCT05085366 · CMVictory</span></span></div>
+        <div class="readout"><span class="when">2027-06</span>
+          <span class="what">mRNA-1083 combination vaccine, immunogenicity<span class="id">NCT06694389</span></span></div>
+      </div>
+
+      <div class="sec">
+        <div class="sechead">
+          <h3>Filings held</h3>
+          <span class="period">five years, per company</span>
+        </div>
+        <div class="readout"><span class="when">FY2025</span>
+          <span class="what">10-K &middot; filed 2026-02-20<span class="id">0001682852-26-000011 &middot; 41 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2024</span>
+          <span class="what">10-K &middot; filed 2025-02-21<span class="id">0001682852-25-000016 &middot; 40 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2023</span>
+          <span class="what">10-K &middot; filed 2024-02-23<span class="id">0001682852-24-000021 &middot; 40 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2022</span>
+          <span class="what">10-K &middot; filed 2023-02-24<span class="id">0001682852-23-000017 &middot; 38 sections stored</span></span></div>
+        <div class="readout"><span class="when">FY2021</span>
+          <span class="what">10-K &middot; filed 2022-02-25<span class="id">0001682852-22-000010 &middot; 38 sections stored</span></span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+</div>
+</body></html>
