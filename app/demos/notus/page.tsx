@@ -148,11 +148,50 @@ export default async function NotusDemo() {
     .filter((p) => p.n > 0)
     .sort((a, b) => b.n - a.n);
 
+  /**
+   * The tiles are coloured by where the figure came from, not decoratively.
+   * Four figures, four different systems — and this register had no other
+   * place to say so, which was its weakest point against the canvas.
+   *
+   * Glyph colour follows contrast rather than taste: navy reads on the three
+   * light steps (11.3:1, 9.5:1, 5.7:1) and white on the two dark ones
+   * (9.6:1, 15.1:1).
+   */
   const stats = [
-    { n: String(data.pipeline?.total_trials ?? 0), label: "Registered trials", delta: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "—"}` },
-    { n: String((data.approved_products ?? []).length), label: "Approved products", delta: data.protection?.state ?? "—" },
-    { n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—", label: "R&D, latest year", delta: rd ? rd.peakLabel : "—" },
-    { n: String((data.filings ?? []).length), label: "Annual reports held", delta: "five-year window" },
+    {
+      n: String(data.pipeline?.total_trials ?? 0),
+      label: "Registered trials",
+      note: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "—"}`,
+      source: "ClinicalTrials.gov",
+      chip: "var(--p1)",
+      glyph: "#020887",
+    },
+    {
+      n: String((data.approved_products ?? []).length),
+      label: "Approved products",
+      note: data.protection?.state ?? "—",
+      source: "FDA Orange Book",
+      chip: "var(--p2)",
+      glyph: "#020887",
+    },
+    {
+      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—",
+      label: "Research and development",
+      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "—",
+      source: "SEC XBRL company facts",
+      chip: "var(--p3)",
+      glyph: "#020887",
+    },
+    {
+      n: String((data.filings ?? []).length),
+      label: "Annual reports held",
+      note: (data.filings ?? []).length
+        ? `FY${data.filings[data.filings.length - 1].fiscal_year}–FY${data.filings[0].fiscal_year}`
+        : "—",
+      source: "SEC EDGAR",
+      chip: "var(--p4)",
+      glyph: "#ffffff",
+    },
   ];
 
   return (
@@ -207,7 +246,7 @@ export default async function NotusDemo() {
             <div key={s.label} className={`${card} p-5`} style={{ borderColor: "var(--n-line)" }}>
               <div
                 className="mb-3 flex h-9 w-9 items-center justify-center rounded-[10px]"
-                style={{ background: "var(--n-accent-soft)", color: "var(--n-accent-deep)" }}
+                style={{ background: s.chip, color: s.glyph }}
               >
                 <span className="text-[15px]">◆</span>
               </div>
@@ -215,8 +254,15 @@ export default async function NotusDemo() {
               <div className="mt-[2px] text-[13px]" style={{ color: "var(--n-ink-2)" }}>
                 {s.label}
               </div>
-              <div className="mt-2 text-[12px]" style={{ color: "var(--n-accent-deep)" }}>
-                {s.delta}
+              {/* the period the figure covers, and the system it came from —
+                  the two things this register had nowhere to put */}
+              <div className="mt-3 border-t pt-2" style={{ borderColor: "var(--n-line)" }}>
+                <div className="font-mono text-[10.5px]" style={{ color: "var(--n-ink)" }}>
+                  {s.note}
+                </div>
+                <div className="mt-[2px] font-mono text-[10px]" style={{ color: "var(--n-ink-2)" }}>
+                  {s.source}
+                </div>
               </div>
             </div>
           ))}
