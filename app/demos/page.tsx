@@ -18,6 +18,11 @@ const DEMOS: [string, string, string][] = [
     "The company page in a white, sans-serif, pill-and-card style with a green accent. Replaces the design language rather than adjusting it.",
   ],
   [
+    "/demos/indigo",
+    "Notus — five-step palette",
+    "The same layout on the pale-green-to-navy ramp. Only navy and indigo carry type; the light three are fills, and the ramp doubles as the ordinal phase scale.",
+  ],
+  [
     "/demos/paper",
     "FT Origami — editorial register",
     "A newspaper's treatment of the same answer: warmer ground, one wide measure, figures set as editorial data rather than as table cells.",
