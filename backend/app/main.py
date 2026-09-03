@@ -162,6 +162,11 @@ def watchlist(tickers: str = ""):
                 "next_expiry": protection.get("next_expiry"),
                 "runway": derived.get("runway"),
                 "burn_source": derived.get("burn_source"),
+                # a null runway means two different things and the row has to
+                # be able to say which: a company funding itself has none to
+                # report, which is not the same as one we could not work out
+                "cash_generative": derived.get("cash_generative"),
+                "liquidity_note": derived.get("liquidity_note"),
             })
         # returned in the order asked for, so the page does not reorder a list
         # the reader arranged
@@ -211,7 +216,7 @@ def stats():
 def list_companies(min_rd: float = None, min_cash: float = None,
                    has_phase3: bool = None, min_active_trials: int = None,
                    sector: str = None, min_runway: float = None,
-                   sort_by: str = None, limit: int = None):
+                   sort_by: str = None, limit: int = None, q: str = None):
     """
     Browse/filter the universe. All filters are optional and combine (AND).
       min_rd, min_cash     - minimum R&D expense / cash (raw dollars)
@@ -222,16 +227,33 @@ def list_companies(min_rd: float = None, min_cash: float = None,
       sort_by              - rd | cash | active_trials | total_trials | runway,
                              each descending
       limit                - cap the number of companies returned
+      q                    - match a ticker or name, for picking a company by
+                             typing rather than by knowing its ticker already
     The actual filtering lives in retrieval.query_companies, shared with the chat.
+
+    `q` is applied here rather than in that shared query on purpose: it is a
+    convenience for choosing a company, not a way of selecting a population,
+    and the grounded answers must keep meaning exactly what they mean now.
     """
     db = SessionLocal()
     try:
         # hand the filters off to the shared query and return the matches
+        # the limit has to come after the search, not before it. Applied first
+        # it caps the population and then looks inside the cap, so a company
+        # outside the first N is reported as not existing.
         results = query_companies(db, min_rd=min_rd, min_cash=min_cash,
                                   has_phase3=has_phase3,
                                   min_active_trials=min_active_trials,
                                   sector=sector, min_runway=min_runway,
-                                  sort_by=sort_by, limit=limit)
+                                  sort_by=sort_by,
+                                  limit=None if q else limit)
+        if q:
+            needle = q.strip().casefold()
+            results = [r for r in results
+                       if needle in (r.get("ticker") or "").casefold()
+                       or needle in (r.get("name") or "").casefold()]
+            if limit:
+                results = results[:limit]
         return {"count": len(results), "companies": results}
     finally:
         db.close()

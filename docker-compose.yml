@@ -37,7 +37,12 @@ services:
         # PyPI is slow: the install is most of the build time.
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
     ports:
-      - "8000:8000"
+      # the host port is configurable because 8000 is a busy one — another
+      # service holding 127.0.0.1:8000 wins over this publish for localhost,
+      # and the symptom is the page quietly reading someone else's API.
+      # Nothing in the deployed stack uses this; the frontend reaches the API
+      # by service name over the compose network.
+      - "${API_PORT:-8000}:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://biotech:biotech@db:5432/biotech
       # passed through from your shell or root .env. the app runs without the
