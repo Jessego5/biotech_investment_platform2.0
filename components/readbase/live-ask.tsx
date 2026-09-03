@@ -40,6 +40,34 @@ function listingFor(block: EvidenceBlock): SourceListing & {
   };
 }
 
+/**
+ * Questions that have each been run against this corpus, grouped by the shape
+ * of answer they produce. The last one is here on purpose: it is refused, and a
+ * reader should meet that state early rather than mistake it for a failure.
+ */
+const EXAMPLES: { q: string; shows: string }[] = [
+  {
+    q: "What does Vertex say about its intellectual property risks?",
+    shows: "Filing text · opens the stored passage",
+  },
+  {
+    q: "What was Moderna's revenue in 2019?",
+    shows: "A reported figure · no passage behind it",
+  },
+  {
+    q: "Which companies have a patent expiring soonest?",
+    shows: "Across the universe · ranked",
+  },
+  {
+    q: "Which companies have more than 20 active trials and over a billion in cash?",
+    shows: "Filtered · 787 issuers",
+  },
+  {
+    q: "How has GSK's pipeline changed since 2021?",
+    shows: "Refused · outside the five-year window",
+  },
+];
+
 export function LiveAsk({ corpusNote }: { corpusNote: string }) {
   const [question, setQuestion] = useState("");
   const [asked, setAsked] = useState<string | null>(null);
@@ -47,9 +75,7 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
   const [pending, setPending] = useState(false);
   const [answeredAt, setAnsweredAt] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const q = question.trim();
+  async function run(q: string) {
     if (!q || pending) return;
     setPending(true);
     setAsked(q);
@@ -65,6 +91,11 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
     } finally {
       setPending(false);
     }
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    void run(question.trim());
   }
 
   const evidence = result?.evidence ?? [];
@@ -103,6 +134,24 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
     >
       <div className="flex flex-col items-center pb-[52px] pt-[46px]">
         <div className="w-[788px] max-w-full">
+          {!asked && (
+            <div className="mb-8 text-center">
+              <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
+                787 companies · 3,614 annual reports · 30,823 trials
+              </div>
+              <h1 className="mx-auto mb-4 max-w-[16ch] text-[46px] font-medium leading-[1.08] tracking-[-0.03em]">
+                Ask, and see the{" "}
+                <span style={{ color: "var(--n-accent)" }}>working</span>
+              </h1>
+              <p
+                className="mx-auto max-w-[52ch] text-[16px] leading-[1.6]"
+                style={{ color: "var(--n-ink-2)" }}
+              >
+                {corpusNote}
+              </p>
+            </div>
+          )}
+
           <form
             onSubmit={submit}
             className={`${notusCard} mb-8 flex items-center gap-[14px] px-5 py-4`}
@@ -126,9 +175,36 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
           </form>
 
           {!asked && (
-            <p className="max-w-[62ch] text-[15px] leading-[1.6] text-ink-2">
-              {corpusNote}
-            </p>
+            <div className="mt-8">
+              <div
+                className="mb-3 text-[12px] font-medium uppercase tracking-[0.12em]"
+                style={{ color: "var(--n-ink-2)" }}
+              >
+                Try one of these
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {EXAMPLES.map((ex) => (
+                  <button
+                    key={ex.q}
+                    type="button"
+                    onClick={() => {
+                      setQuestion(ex.q);
+                      void run(ex.q);
+                    }}
+                    className={`${notusCard} px-5 py-4 text-left`}
+                    style={{ borderColor: "var(--n-line)" }}
+                  >
+                    <span className="block text-[15px] leading-[1.45]">{ex.q}</span>
+                    <span
+                      className="mt-2 block text-[12px]"
+                      style={{ color: "var(--n-accent-deep)" }}
+                    >
+                      {ex.shows}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           {asked && (
