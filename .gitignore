@@ -48,3 +48,7 @@ next-env.d.ts
 
 # local database backups taken before migrations
 *.db.bak-*
+
+# the frontend's copy of the API key. It is read server-side only, but it is
+# still a secret and does not belong in the repository.
+.env.local

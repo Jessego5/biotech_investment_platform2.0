@@ -9,6 +9,7 @@ ingestion.
 """
 
 import datetime
+import hmac
 import re
 import json
 import os
@@ -23,7 +24,7 @@ try:
 except ImportError:
     pass
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -44,6 +45,28 @@ from .changes import (compare, compare_universe, latest_pair,
 from .raw_store import get_store, snapshot_coverage
 
 app = FastAPI(title="Biotech Agent API", version="0.3.0")
+
+
+# The only endpoint that spends money. Everything else reads the database and
+# costs a query; /ask calls the model up to MAX_ROUNDS times per question, so
+# an open one on a public URL is an open wallet.
+#
+# The key is optional on purpose: unset, the API behaves exactly as it did, so
+# a local run and the test suite need no configuration. Set, it is required,
+# and the frontend is the only thing that holds it.
+API_KEY = os.environ.get("READBASE_API_KEY") or ""
+
+
+def require_key(x_readbase_key: str = Header(default="")):
+    if not API_KEY:
+        return
+    # compare in constant time: a plain == leaks the key a character at a time
+    # to anyone willing to measure
+    if not hmac.compare_digest(x_readbase_key, API_KEY):
+        raise HTTPException(
+            status_code=401,
+            detail="This endpoint needs a key. The read-only endpoints do not.",
+        )
 
 app.add_middleware(
     CORSMiddleware,
@@ -218,7 +241,7 @@ class Question(BaseModel):
     question: str
 
 
-@app.post("/ask")
+@app.post("/ask", dependencies=[Depends(require_key)])
 def ask(q: Question):
     """
     Grounded RAG chat. The question becomes a real DB query, and the LLM answers

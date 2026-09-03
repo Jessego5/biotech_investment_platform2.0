@@ -12,6 +12,18 @@ import { parseCitationMarkers, resolveCitation } from "@/lib/readbase/citations"
 export const API_BASE =
   process.env.READBASE_API_URL ?? "http://127.0.0.1:8000";
 
+/**
+ * Sent on the one endpoint that spends money. Server-side only — it lives in
+ * the route handlers, never in anything shipped to the browser, which is the
+ * whole point of proxying through them.
+ *
+ * Unset in development, where the API asks for nothing.
+ */
+export function apiHeaders(): Record<string, string> {
+  const key = process.env.READBASE_API_KEY;
+  return key ? { "X-Readbase-Key": key } : {};
+}
+
 /** One document behind a retrieval, as the service names it. */
 export type CitedDoc = {
   kind: "filing" | "trial";

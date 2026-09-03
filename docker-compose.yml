@@ -43,6 +43,10 @@ services:
       # passed through from your shell or root .env. the app runs without the
       # OpenAI key, it just falls back to the fixed template narrative.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Shared secret for /ask. Unset, the endpoint stays open, which is what
+      # a local run wants; set, only a caller holding it can spend the key
+      # above. See app/main.py require_key.
+      READBASE_API_KEY: ${READBASE_API_KEY:-}
       SEC_USER_AGENT: ${SEC_USER_AGENT:-}
       # the API reads the archive as well as writing it: /snapshots, /changes and
       # /company/{ticker}/changes all answer out of it. Without this the archive
