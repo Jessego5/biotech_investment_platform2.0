@@ -5,6 +5,8 @@ import { AnswerProse } from "@/components/readbase/answer-prose";
 import { SourceRow } from "@/components/readbase/source-row";
 import { PeriodLabel } from "@/components/readbase/period-label";
 import { notusCard } from "@/lib/readbase/notus-theme";
+import { AccessorSteps } from "@/components/readbase/accessor-steps";
+import Link from "next/link";
 import { InspectorProvider } from "@/components/readbase/inspector-provider";
 import { PassageSheet } from "@/components/readbase/passage-sheet";
 import {
@@ -17,6 +19,7 @@ import {
   type EvidenceBlock,
 } from "@/lib/readbase/api";
 import type { SourceListing } from "@/lib/readbase/types";
+import { parseCitationMarkers } from "@/lib/readbase/citations";
 
 /**
  * A citation resolves to the document behind its evidence block. Blocks that
@@ -65,6 +68,18 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
   }
 
   const evidence = result?.evidence ?? [];
+  // Companies the answer actually drew on. Morphic offers follow-up questions
+  // here; these are links to pages that exist rather than prompts written for
+  // the reader, because a suggestion that leads nowhere is worse than none.
+  //
+  // Only shown when the answer cites something. A refusal still has rows
+  // behind it — three lookups matched BIAFW, LONA and CTNM while declining a
+  // question about GSK — and calling those "companies behind this answer"
+  // would attribute the refusal to companies it never rested on.
+  const cited = parseCitationMarkers(result?.answer ?? "").length > 0;
+  const touched = cited
+    ? [...new Set(evidence.flatMap((e) => e.tickers ?? []))].slice(0, 6)
+    : [];
   const listings = evidence.map(listingFor);
   const dropped = result?.dropped_citations ?? 0;
 
@@ -122,37 +137,30 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 {asked}
               </p>
 
-              <div className="mb-[26px] flex flex-wrap items-baseline gap-[18px]">
+              <div className="mb-4 flex flex-wrap items-baseline gap-4">
                 {answeredAt && !pending && <PeriodLabel>{answeredAt}</PeriodLabel>}
-                <span className="font-mono text-[10px] tracking-[0.04em] text-muted-foreground">
-                  {pending ? (
-                    "reading the corpus…"
-                  ) : (
-                    <>
-                      read{" "}
-                      {(result?.tools_used ?? []).length
-                        ? result!.tools_used!.map((t, i) => (
-                            <span key={`${t}-${i}`}>
-                              {i > 0 && " · "}
-                              <b className="font-normal text-primary">{t}</b>
-                            </span>
-                          ))
-                        : "nothing"}
-                      {" — "}
-                      {evidence.length} block{evidence.length === 1 ? "" : "s"} returned
-                      {/* the drop is reported rather than left silent: a
-                          citation removed from the prose still happened */}
-                      {dropped > 0 && (
-                        <span className="text-warn">
-                          {" · "}
-                          {dropped} citation{dropped === 1 ? "" : "s"} removed, pointing at
-                          blocks that were never returned
-                        </span>
-                      )}
-                    </>
-                  )}
-                </span>
+                {pending && (
+                  <span className="text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+                    Reading the corpus…
+                  </span>
+                )}
               </div>
+
+              {!pending && result && (
+                <div className="mb-5">
+                  <AccessorSteps
+                    tools={result.tools_used ?? []}
+                    evidence={evidence}
+                    dropped={dropped}
+                    // Open when the answer cites nothing. Lookups returning
+                    // rows is not the same as the answer resting on them —
+                    // "I don't have data on GSK since 2021" comes back after
+                    // three successful lookups, and that is the answer where
+                    // the working matters most.
+                    defaultOpen={parseCitationMarkers(result.answer ?? "").length === 0}
+                  />
+                </div>
+              )}
 
               {result?.error && (
                 <div className={`${notusCard} px-6 py-6`} style={{ borderColor: "var(--warn)" }}>
@@ -170,6 +178,24 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                     className="text-[17px] leading-[1.7]"
                     paragraphClassName="mb-4 max-w-[70ch] last:mb-0"
                   />
+                </div>
+              )}
+
+              {touched.length > 0 && (
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <span className="text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+                    Companies behind this answer
+                  </span>
+                  {touched.map((t) => (
+                    <Link
+                      key={t}
+                      href={`/companies/${t}`}
+                      className="rounded-full border px-[12px] py-[5px] text-[12.5px]"
+                      style={{ borderColor: "var(--n-accent)", color: "var(--n-accent-deep)" }}
+                    >
+                      {t}
+                    </Link>
+                  ))}
                 </div>
               )}
 
