@@ -1,5 +1,6 @@
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
+import { StatTiles, PhaseDonut, type Tile } from "@/components/readbase/stat-tiles";
 import { NotusSection as Section } from "@/components/readbase/notus-section";
 import { PhaseBar } from "@/components/readbase/phase-bar";
 import { Sparkline } from "@/components/readbase/sparkline";
@@ -46,7 +47,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
 
   if (!data?.ticker) {
     return (
-      <div style={notusPage} className="min-h-svh">
+      <div style={notusPage} className="notus min-h-svh">
         <NotusChrome current="Companies" />
         <div className="px-[30px] py-[26px]">
           <div className={`${notusCard} max-w-[62ch] px-7 pb-7 pt-6`} style={{ borderColor: "var(--n-line)" }}>
@@ -71,13 +72,6 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
     toSeries("Cash and equivalents, at year end", history.cash),
   ].filter(Boolean);
 
-  const protection = data.protection;
-  const state = protectionState(protection?.state);
-  const products = data.approved_products ?? [];
-  const filings = data.filings ?? [];
-  // the registry spells the same bucket more than one way — "N/A" and "NA" are
-  // one absence, not two — so they are merged on the label they display under
-  const interventions = data.interventions ?? [];
   const byPhase = Object.entries(
     Object.entries(data.pipeline?.by_phase ?? {}).reduce<Record<string, number>>(
       (acc, [phase, n]) => {
@@ -91,8 +85,54 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1]);
 
+  const rd = toSeries("R&D", data.financial_history?.rd_expense);
+  const tiles: Tile[] = [
+    {
+      n: String(data.pipeline?.total_trials ?? 0),
+      label: "Registered trials",
+      note: `${byPhase[0]?.[1] ?? 0} in ${byPhase[0]?.[0] ?? "—"}`,
+      source: "ClinicalTrials.gov",
+      chip: "var(--p1)",
+      glyph: "#020887",
+    },
+    {
+      n: String((data.approved_products ?? []).length),
+      label: "Approved products",
+      note: data.protection?.state ?? "—",
+      source: "FDA Orange Book",
+      chip: "var(--p2)",
+      glyph: "#020887",
+    },
+    {
+      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—",
+      label: "Research and development",
+      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "—",
+      source: "SEC XBRL company facts",
+      chip: "var(--p3)",
+      glyph: "#020887",
+    },
+    {
+      n: String((data.filings ?? []).length),
+      label: "Annual reports held",
+      note: (data.filings ?? []).length
+        ? `FY${data.filings[data.filings.length - 1].fiscal_year}–FY${data.filings[0].fiscal_year}`
+        : "—",
+      source: "SEC EDGAR",
+      chip: "var(--p4)",
+      glyph: "#ffffff",
+    },
+  ];
+
+  const protection = data.protection;
+  const state = protectionState(protection?.state);
+  const products = data.approved_products ?? [];
+  const filings = data.filings ?? [];
+  // the registry spells the same bucket more than one way — "N/A" and "NA" are
+  // one absence, not two — so they are merged on the label they display under
+  const interventions = data.interventions ?? [];
+
   return (
-    <div id="top" style={notusPage} className="min-h-svh">
+    <div id="top" style={notusPage} className="notus min-h-svh">
       <NotusChrome current="Companies" />
 
       <div className="mx-auto max-w-[1180px] px-8 pt-9">
@@ -122,8 +162,20 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
         </div>
       </div>
 
+      <div className="mx-auto max-w-[1180px] px-8 pb-6">
+        <StatTiles tiles={tiles} />
+      </div>
+
       <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-6 px-8 pb-12 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-6">
+          <Section
+            id="phases"
+            title="Trials by phase"
+            period="ClinicalTrials.gov · lead and collaborator"
+          >
+            <PhaseDonut slices={byPhase.map(([label, n]) => ({ label, n }))} />
+          </Section>
+
           {/* Approved products, then trials. Deliberately two sections: the
               database records what is marketed and what is being studied, and
               has no record of the programme in between. Presenting trials as a

@@ -31,3 +31,38 @@
     animation: none !important;
   }
 }
+
+
+/* ---------------------------------------------------------------------------
+   The Notus register: one typeface.
+
+   `@theme inline` compiles font-mono and font-serif to a literal stack at
+   build time rather than to var(--font-mono), so redefining those variables on
+   a wrapper does nothing. This is the scoped override instead: inside .notus
+   every face is the sans, and the utilities differ only in size and colour.
+
+   Tabular figures are kept. That was the real reason for a monospace face in a
+   column of numbers, and it survives without one.
+   --------------------------------------------------------------------------- */
+.notus,
+.notus .font-mono,
+.notus .font-serif,
+.notus .font-sans,
+.notus code,
+.notus kbd,
+.notus samp,
+/* the component classes in globals.css @apply font-mono, which compiles to a
+   literal stack for the same reason, so they are named here too */
+.notus .period,
+.notus .sys-label,
+.notus .cite-chip {
+  font-family: var(--n-sans);
+}
+
+.notus .font-mono,
+.notus .period,
+.notus .cite-chip,
+.notus .tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}

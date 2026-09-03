@@ -171,7 +171,7 @@ export default async function NotusDemo() {
   return (
     <div
       style={{ ...NOTUS, background: "var(--n-bg)", color: "var(--n-ink)", fontFamily: "var(--n-sans)" }}
-      className="min-h-svh"
+      className="notus min-h-svh"
     >
       {/* header */}
       <div className="border-b bg-[var(--n-card)]" style={{ borderColor: "var(--n-line)" }}>

@@ -8,7 +8,7 @@ import { notusPage } from "@/lib/readbase/notus-theme";
  */
 export default function AskPage() {
   return (
-    <div style={notusPage} className="min-h-svh">
+    <div style={notusPage} className="notus min-h-svh">
       <NotusChrome current="Ask" />
       <LiveAsk corpusNote="Every figure here comes from a filing, a trial record or an FDA table, and every one can be opened and checked. Ask a question to begin." />
     </div>

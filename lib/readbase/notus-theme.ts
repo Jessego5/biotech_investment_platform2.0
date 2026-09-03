@@ -33,6 +33,26 @@ export const NOTUS = {
     'ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
 } as React.CSSProperties;
 
+
+
+/**
+ * One face everywhere.
+ *
+ * `--font-mono` is remapped to the same stack, so a component asking for mono
+ * gets the sans and the register has a single typeface differing only in size
+ * and colour. Nothing had to be rewritten to do it.
+ *
+ * The one thing mono was carrying is kept: globals.css sets
+ * font-variant-numeric: tabular-nums on .font-mono, so figures in a column
+ * still line up digit under digit. That was the practical reason for a
+ * monospace face in a table of numbers, and it survives without it.
+ */
+export const notusFonts = {
+  "--font-mono": "var(--n-sans)",
+  "--font-serif": "var(--n-sans)",
+  "--font-sans": "var(--n-sans)",
+} as React.CSSProperties;
+
 /** A card in this register. Border and a shadow soft enough to read as depth. */
 export const notusCard =
   "rounded-[14px] border bg-[var(--n-card)] shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]";
@@ -52,6 +72,7 @@ export const notusCard =
  */
 export const notusPage = {
   ...NOTUS,
+  ...notusFonts,
   background: "var(--n-bg)",
   color: "var(--n-ink)",
   fontFamily: "var(--n-sans)",

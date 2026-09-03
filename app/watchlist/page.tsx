@@ -4,7 +4,7 @@ import { notusPage } from "@/lib/readbase/notus-theme";
 
 export default function WatchlistPage() {
   return (
-    <div style={notusPage} className="min-h-svh">
+    <div style={notusPage} className="notus min-h-svh">
       <NotusChrome current="Watchlist" />
       <Watchlist />
     </div>
