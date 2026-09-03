@@ -47,3 +47,9 @@ requirements-dev.txt
 *.swp
 
 *.log
+
+# database dumps taken for a restore elsewhere. Large, and never part of an
+# image or a commit — a 1 GB backup in the build context already broke one
+# build with "no space left on device".
+dumps/
+*.dump

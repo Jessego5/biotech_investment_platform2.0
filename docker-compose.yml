@@ -62,6 +62,25 @@ services:
       db:
         condition: service_healthy
 
+  web:
+    # The frontend, from the image the serving stack ships. Here for the same
+    # reason the API is: so the thing that gets deployed is the thing that was
+    # run, rather than a dev server that resembles it.
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      # the service name, not localhost. Every call the browser makes goes to
+      # the frontend's own route handlers, which reach the API from in here.
+      READBASE_API_URL: http://api:8000
+      # must match the API's. Unset on both, /ask stays open, which is what a
+      # local run wants.
+      READBASE_API_KEY: ${READBASE_API_KEY:-}
+    depends_on:
+      api:
+        condition: service_started
+
   # the same image with a different command. not started by `docker compose up`,
   # since ingestion is a batch job you run on purpose, not a service.
   ingest:
