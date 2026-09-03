@@ -120,6 +120,14 @@ describe("company mappings", () => {
     expect(phaseLabel("PHASE2, PHASE3")).toBe("Phase 2/3");
   });
 
+  it("reads the registry's string, not the label it renders as", () => {
+    // phaseLabel is lossy for this purpose: "PHASE2, PHASE3" displays as
+    // "Phase 2/3", and feeding that back gives 2 rather than 3. Anything
+    // colouring or ordering by phase has to keep the original string.
+    expect(phaseLevel("PHASE2, PHASE3")).toBe(3);
+    expect(phaseLevel(phaseLabel("PHASE2, PHASE3"))).toBe(2);
+  });
+
   it("has no phase for an unstated one", () => {
     expect(phaseLevel("NA")).toBeNull();
     expect(phaseLabel("N/A")).toBe("Not stated");

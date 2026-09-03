@@ -1,8 +1,22 @@
 import { API_BASE } from "@/lib/readbase/api";
-import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbase/company";
+import {
+  money,
+  phaseLabel,
+  phaseLevel,
+  toSeries,
+  type CompanyResponse,
+} from "@/lib/readbase/company";
 
 /**
- * The Notus register on a white ground, with green as the primary colour
+ * The Notus register on a white ground, with green as the primary colour and
+ * the five-step palette carrying the ordinal scale.
+ *
+ * The two are deliberately not the same colour. Green is the brand: actions,
+ * links, provenance. The ramp is a measurement — pale for the earliest phase,
+ * navy for approval — and it appears only where something is genuinely ordered.
+ * Pale green to mint is 1.19:1, near identical to the eye, so the bars encode
+ * phase in length as well and nobody has to order them by hue.
+ *
  * rather than an accent on a black interface: it takes the main button, the
  * headline emphasis, the phase ramp and every active mark.
  *
@@ -31,6 +45,15 @@ const NOTUS = {
   "--n-accent": "#1d9e75",
   "--n-accent-soft": "#e1f5ee",
   "--n-accent-deep": "#0f6e56",
+  // The five-step palette, doing a different job from the brand green: green
+  // means action and provenance, this means how far along. It runs pale to
+  // navy, which is the one gradient the brief allows because the variable
+  // under it — clinical phase — is ordinal.
+  "--p1": "#c8e8be",
+  "--p2": "#a9d8b8",
+  "--p3": "#7ca5b8",
+  "--p4": "#3b369a",
+  "--p5": "#020887",
   "--n-sans":
     'ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
 } as React.CSSProperties;
@@ -49,7 +72,7 @@ async function load(ticker: string): Promise<CompanyResponse | null> {
 
 function Donut({ slices }: { slices: { label: string; n: number }[] }) {
   const total = slices.reduce((a, s) => a + s.n, 0) || 1;
-  const shades = ["var(--n-accent)", "#5dcaa5", "#9fe1cb", "#c9e9dd", "#e1f5ee"];
+  const shades = ["var(--p5)", "var(--p4)", "var(--p3)", "var(--p2)", "var(--p1)"];
   const C = 2 * Math.PI * 54;
   // offsets worked out before the render rather than accumulated during it
   const arcs = slices.reduce<{ label: string; len: number; at: number }[]>((acc, s) => {
@@ -104,18 +127,26 @@ export default async function NotusDemo() {
 
   const rd = toSeries("R&D", data.financial_history?.rd_expense);
   const rev = toSeries("Revenue", data.financial_history?.revenue);
-  const phases = Object.entries(
-    Object.entries(data.pipeline?.by_phase ?? {}).reduce<Record<string, number>>((a, [p, n]) => {
-      const l = phaseLabel(p);
-      a[l] = (a[l] ?? 0) + n;
-      return a;
+  // Keep the registry's own phase string alongside the label. The level must
+  // come from that, not from the label: phaseLevel promises the furthest phase
+  // in a combined string, and "Phase 2/3" read back as a label gives 2, which
+  // would draw a Phase 2/3 trial at the Phase 2 step and understate it.
+  const phases = Object.values(
+    Object.entries(data.pipeline?.by_phase ?? {}).reduce<
+      Record<string, { label: string; n: number; level: number | null }>
+    >((acc, [raw, n]) => {
+      const label = phaseLabel(raw);
+      const existing = acc[label];
+      acc[label] = {
+        label,
+        n: (existing?.n ?? 0) + n,
+        level: existing?.level ?? phaseLevel(raw),
+      };
+      return acc;
     }, {}),
   )
-    .sort((a, b) => b[1] - a[1])
-    .map(([label, n]) => ({ label, n }));
-  // every bucket, not the top few: the donut's centre total has to agree with
-  // the trial count in the tile above it, and slicing the tail made it 232
-  // against 244 with nothing on the page to explain the twelve missing
+    .filter((p) => p.n > 0)
+    .sort((a, b) => b.n - a.n);
 
   const stats = [
     { n: String(data.pipeline?.total_trials ?? 0), label: "Registered trials", delta: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "—"}` },
@@ -243,6 +274,46 @@ export default async function NotusDemo() {
           </div>
         </div>
 
+        {/* the ramp, where the ordering is the point */}
+        <div className={`${card} mb-6 p-6`} style={{ borderColor: "var(--n-line)" }}>
+          <div className="mb-1 flex items-baseline justify-between">
+            <h2 className="text-[17px] font-medium">Pipeline by phase</h2>
+            <span className="font-mono text-[11px]" style={{ color: "var(--n-ink-2)" }}>
+              as of today · ClinicalTrials.gov
+            </span>
+          </div>
+          <p className="mb-5 text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+            The step is the phase itself — pale at Phase 1, indigo at Phase 4 —
+            and length carries it too, so the two palest steps never have to be
+            told apart by hue alone. Navy is held back for approval, which is
+            not a phase. A trial whose phase the registry never stated sits off
+            the scale in grey rather than being placed on it.
+          </p>
+          <div className="space-y-[10px]">
+            {phases.map((p) => (
+              <div key={p.label} className="flex items-center gap-4">
+                <span className="w-[92px] text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+                  {p.label}
+                </span>
+                <span className="h-[10px] flex-1 overflow-hidden rounded-full" style={{ background: "#f1f4f2" }}>
+                  <span
+                    className="block h-full rounded-full"
+                    style={{
+                      width: `${(p.n / Math.max(...phases.map((x) => x.n))) * 100}%`,
+                      // the step comes from the phase, not from the row's rank
+                      // by count — an earlier version coloured by position and
+                      // gave Phase 1 navy and Phase 4 mint, which inverted the
+                      // one thing the ramp exists to say
+                      background: p.level ? `var(--p${p.level})` : "#c7d0cb",
+                    }}
+                  />
+                </span>
+                <span className="w-[38px] text-right font-mono text-[13px]">{p.n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* charts row */}
         <div className="grid gap-4 lg:grid-cols-2">
           <div className={`${card} p-6`} style={{ borderColor: "var(--n-line)" }}>
@@ -285,7 +356,9 @@ export default async function NotusDemo() {
         </div>
 
         <p className="mx-auto mt-10 max-w-[70ch] text-center text-[13px] leading-[1.7]" style={{ color: "var(--n-ink-2)" }}>
-          Same corpus, same figures as /companies/VRTX. What this register gives
+          Green is the brand and the five-step palette is the measurement — they
+          are kept apart on purpose, so a colour never means two things. Same
+          corpus and figures as /companies/VRTX. What this register gives
           up is the period stamp on every number and the provenance chip — both
           would have to be reintroduced before it could carry the product&rsquo;s
           claim.
