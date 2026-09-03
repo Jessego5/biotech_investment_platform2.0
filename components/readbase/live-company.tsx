@@ -1,5 +1,6 @@
-import { Chrome } from "@/components/readbase/chrome";
-import { Section } from "@/components/readbase/section";
+import { NotusChrome } from "@/components/readbase/notus-chrome";
+import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
+import { NotusSection as Section } from "@/components/readbase/notus-section";
 import { PhaseBar } from "@/components/readbase/phase-bar";
 import { Sparkline } from "@/components/readbase/sparkline";
 import { RailList } from "@/components/readbase/rail-list";
@@ -45,14 +46,14 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
 
   if (!data?.ticker) {
     return (
-      <div className="min-h-svh bg-card text-foreground">
-        <Chrome crumb={["companies", ticker.toUpperCase()]} />
+      <div style={notusPage} className="min-h-svh">
+        <NotusChrome current="Companies" />
         <div className="px-[30px] py-[26px]">
-          <div className="max-w-[62ch] border border-border border-l-[3px] border-l-primary bg-secondary px-7 pb-[26px] pt-6">
-            <h4 className="mb-3 font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-accent-deep">
+          <div className={`${notusCard} max-w-[62ch] px-7 pb-7 pt-6`} style={{ borderColor: "var(--n-line)" }}>
+            <h4 className="mb-2 text-[17px] font-medium">
               Nothing held for this ticker
             </h4>
-            <p className="text-[19px] leading-[1.6]">
+            <p className="text-[15px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
               {ticker.toUpperCase()} is not one of the issuers in this corpus, or
               the API could not be reached.
             </p>
@@ -91,17 +92,20 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
     .sort((a, b) => b[1] - a[1]);
 
   return (
-    <div id="top" className="min-h-svh bg-card text-foreground">
-      <Chrome crumb={["companies", data.name]} />
+    <div id="top" style={notusPage} className="min-h-svh">
+      <NotusChrome current="Companies" />
 
-      <div className="border-b border-border bg-secondary px-[30px] pt-6">
-        <div className="flex items-baseline gap-[14px]">
-          <h2 className="text-[27px] font-normal tracking-[-0.01em]">{data.name}</h2>
-          <span className="bg-foreground px-[7px] py-[3px] font-mono text-[12px] tracking-[0.08em] text-card">
+      <div className="mx-auto max-w-[1180px] px-8 pt-9">
+        <div className="flex flex-wrap items-baseline gap-[14px]">
+          <h1 className="text-[30px] font-medium tracking-[-0.02em]">{data.name}</h1>
+          <span
+            className="rounded-full px-[10px] py-[4px] font-mono text-[12px]"
+            style={{ background: "var(--n-accent-soft)", color: "var(--n-accent-deep)" }}
+          >
             {data.ticker}
           </span>
         </div>
-        <div className="mt-2 pb-[18px] font-mono text-[11px] text-ink-2">
+        <div className="mt-2 pb-7 font-mono text-[11px]" style={{ color: "var(--n-ink-2)" }}>
           {[
             data.cik ? `CIK ${data.cik}` : null,
             `${filings.length} annual report${filings.length === 1 ? "" : "s"} held`,
@@ -111,15 +115,15 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
             .filter(Boolean)
             .map((item, i) => (
               <span key={item as string}>
-                {i > 0 && <span className="px-[6px] text-muted-foreground">·</span>}
+                {i > 0 && <span className="px-[6px] opacity-60">·</span>}
                 {item}
               </span>
             ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1px_356px]">
-        <div className="min-w-0 px-[30px] pb-[34px] pt-[26px]">
+      <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-6 px-8 pb-12 lg:grid-cols-[1fr_340px]">
+        <div className="min-w-0 space-y-6">
           {/* Approved products, then trials. Deliberately two sections: the
               database records what is marketed and what is being studied, and
               has no record of the programme in between. Presenting trials as a
@@ -366,9 +370,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
           )}
         </div>
 
-        <div className="hidden bg-border lg:block" />
-
-        <aside className="border-t border-border bg-secondary px-6 pb-[34px] pt-[26px] lg:border-t-0">
+        <aside className="space-y-6">
           <Section id="patents" title="Patent protection" period="Orange Book · Purple Book">
             <div className="border-b border-border py-[11px] last:border-b-0">
               <div className="flex flex-wrap items-baseline justify-between gap-x-[10px] gap-y-[6px] text-[13.5px]">

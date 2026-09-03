@@ -37,10 +37,45 @@ export const NOTUS = {
 export const notusCard =
   "rounded-[14px] border bg-[var(--n-card)] shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]";
 
-/** The page shell: the tokens, the ground and the face. */
+/**
+ * The page shell.
+ *
+ * As well as its own tokens it remaps the product's, so a component written
+ * against `border-border` or `text-muted-foreground` renders in this register
+ * without being rewritten. That keeps one implementation of each screen rather
+ * than a Notus copy drifting away from a canvas original — and it means
+ * switching a page between registers is a change of wrapper, not a rewrite.
+ *
+ * Only the surface tokens are remapped. The citation chip is not: it means
+ * provenance in either register and does not become a green pill because the
+ * page around it changed.
+ */
 export const notusPage = {
   ...NOTUS,
   background: "var(--n-bg)",
   color: "var(--n-ink)",
   fontFamily: "var(--n-sans)",
+  "--background": "#ffffff",
+  "--foreground": "#14251f",
+  "--card": "#ffffff",
+  "--card-foreground": "#14251f",
+  "--secondary": "#f6f8f7",
+  "--muted": "#f6f8f7",
+  "--muted-foreground": "#68736e",
+  "--border": "#dbe3df",
+  "--input": "#c9d5cf",
+  "--ink-2": "#68736e",
+  "--line-hi": "#c9d5cf",
+  "--primary": "#0f6e56",
+  "--primary-foreground": "#ffffff",
+  "--accent-mid": "#1d9e75",
+  "--accent-deep": "#0f6e56",
+  "--tint": "#e1f5ee",
+  "--good": "#0f6e56",
+  // the ordinal ramp, so a phase bar in this register uses the five steps
+  "--phase-1": "#c8e8be",
+  "--phase-2": "#a9d8b8",
+  "--phase-3": "#7ca5b8",
+  "--phase-4": "#3b369a",
+  "--phase-na": "#dde3e0",
 } as React.CSSProperties;

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Chrome } from "@/components/readbase/chrome";
+import { NotusChrome } from "@/components/readbase/notus-chrome";
+import { notusPage } from "@/lib/readbase/notus-theme";
 
 const LIVE: [string, string, string][] = [
   ["/ask", "Ask", "A question against the corpus, answered only from what the accessors return."],
@@ -37,8 +38,8 @@ function Row({ href, title, note }: { href: string; title: string; note: string 
 
 export default function Home() {
   return (
-    <div className="min-h-svh bg-card text-foreground">
-      <Chrome crumb={["readbase"]} />
+    <div style={notusPage} className="min-h-svh">
+      <NotusChrome />
       <div className="mx-auto max-w-[788px] px-8 py-[46px]">
         <p className="mb-[34px] max-w-[62ch] text-[19px] leading-[1.6]">
           Grounded question answering over biotech&rsquo;s primary sources. Every

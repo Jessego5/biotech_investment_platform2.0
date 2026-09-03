@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnswerProse } from "@/components/readbase/answer-prose";
 import { SourceRow } from "@/components/readbase/source-row";
 import { PeriodLabel } from "@/components/readbase/period-label";
+import { notusCard } from "@/lib/readbase/notus-theme";
 import { InspectorProvider } from "@/components/readbase/inspector-provider";
 import { PassageSheet } from "@/components/readbase/passage-sheet";
 import {
@@ -89,21 +90,23 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
         <div className="w-[788px] max-w-full">
           <form
             onSubmit={submit}
-            className="mb-[38px] flex items-center gap-[14px] border border-line-hi bg-card px-[18px] py-[15px]"
+            className={`${notusCard} mb-8 flex items-center gap-[14px] px-5 py-4`}
+            style={{ borderColor: "var(--n-line)" }}
           >
             <input
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask about trials by phase, R&D, cash, patents or expected readouts"
               aria-label="Ask a question"
-              className="flex-1 bg-transparent text-[19px] outline-none placeholder:text-muted-foreground"
+              className="flex-1 bg-transparent text-[17px] outline-none placeholder:text-muted-foreground"
             />
             <button
               type="submit"
               disabled={pending || !question.trim()}
-              className="font-mono text-[10.5px] tracking-[0.1em] text-muted-foreground disabled:opacity-40"
+              className="whitespace-nowrap rounded-full px-[16px] py-[8px] text-[13px] font-medium text-white disabled:opacity-40"
+              style={{ background: "var(--n-accent-deep)" }}
             >
-              {pending ? "reading" : "return"}
+              {pending ? "Reading…" : "Ask"}
             </button>
           </form>
 
@@ -115,7 +118,9 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
 
           {asked && (
             <>
-              <p className="mb-[26px] max-w-[70ch] text-[19px] leading-[1.7]">{asked}</p>
+              <p className="mb-4 max-w-[70ch] text-[22px] font-medium leading-[1.4] tracking-[-0.01em]">
+                {asked}
+              </p>
 
               <div className="mb-[26px] flex flex-wrap items-baseline gap-[18px]">
                 {answeredAt && !pending && <PeriodLabel>{answeredAt}</PeriodLabel>}
@@ -150,24 +155,26 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
               </div>
 
               {result?.error && (
-                <div className="border border-border border-l-[3px] border-l-warn bg-secondary px-7 pb-[26px] pt-6">
-                  <h4 className="mb-3 font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-warn">
+                <div className={`${notusCard} px-6 py-6`} style={{ borderColor: "var(--warn)" }}>
+                  <h4 className="mb-2 text-[16px] font-medium" style={{ color: "var(--warn)" }}>
                     The API did not answer
                   </h4>
-                  <p className="max-w-[62ch] text-[19px] leading-[1.6]">{result.error}</p>
+                  <p className="max-w-[62ch] text-[15px] leading-[1.6]">{result.error}</p>
                 </div>
               )}
 
               {result?.answer && (
-                <AnswerProse
-                  paragraphs={toAnswerNodes(result.answer, evidence.length)}
-                  className="text-[19px] leading-[1.7]"
-                  paragraphClassName="mb-5 max-w-[70ch] last:mb-0"
-                />
+                <div className={`${notusCard} px-6 py-6`} style={{ borderColor: "var(--n-line)" }}>
+                  <AnswerProse
+                    paragraphs={toAnswerNodes(result.answer, evidence.length)}
+                    className="text-[17px] leading-[1.7]"
+                    paragraphClassName="mb-4 max-w-[70ch] last:mb-0"
+                  />
+                </div>
               )}
 
               {listings.length > 0 && (
-                <div className="mt-[34px] border-t border-border pt-[18px]">
+                <div className={`${notusCard} mt-5 px-6 py-2`} style={{ borderColor: "var(--n-line)" }}>
                   {listings.map((l) => (
                     <SourceRow
                       key={l.n}

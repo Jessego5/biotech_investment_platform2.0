@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { CompanyPicker, type PickedCompany } from "@/components/readbase/company-picker";
-import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
+import { notusCard } from "@/lib/readbase/notus-theme";
 import { phaseLevel } from "@/lib/readbase/company";
 
 const STORE = "readbase.watchlist";
@@ -133,8 +133,7 @@ export function Watchlist() {
   const shown = key ? rows : [];
 
   return (
-    <div style={notusPage} className="min-h-svh">
-      <div className="mx-auto max-w-[1100px] px-8 py-[38px]">
+    <div className="mx-auto max-w-[1100px] px-8 py-[38px]">
       <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[30px] font-medium tracking-[-0.02em]">Watchlist</h1>
@@ -318,7 +317,6 @@ export function Watchlist() {
         onPick={add}
         exclude={tickers}
       />
-      </div>
     </div>
   );
 }
