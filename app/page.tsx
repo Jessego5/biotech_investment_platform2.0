@@ -4,6 +4,11 @@ import { Chrome } from "@/components/readbase/chrome";
 const LIVE: [string, string, string][] = [
   ["/ask", "Ask", "A question against the corpus, answered only from what the accessors return."],
   ["/companies/VRTX", "Company", "Any of the issuers held. VRTX, MRNA, ABBV — the ticker is the route."],
+  ["/watchlist", "Watchlist", "A row per company: next readout, nearest loss of protection, how long the money lasts. Kept in this browser."],
+];
+
+const EXPLORATIONS: [string, string, string][] = [
+  ["/demos", "Design demos", "The same content in four registers — the canvas as built, Tufte sidenotes, an editorial paper, and the Notus template in green."],
 ];
 
 const FIXTURES: [string, string, string][] = [
@@ -46,6 +51,13 @@ export default function Home() {
           Live
         </div>
         {LIVE.map(([href, title, note]) => (
+          <Row key={href} href={href} title={title} note={note} />
+        ))}
+
+        <div className="mb-[10px] mt-[34px] font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          Exploration
+        </div>
+        {EXPLORATIONS.map(([href, title, note]) => (
           <Row key={href} href={href} title={title} note={note} />
         ))}
 
