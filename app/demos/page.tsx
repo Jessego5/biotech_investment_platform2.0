@@ -13,6 +13,11 @@ const DEMOS: [string, string, string][] = [
     "The source sits beside the sentence it supports, always visible, nothing to click. Borrowed from Tufte CSS's sidenote.",
   ],
   [
+    "/demos/notus",
+    "Notus — modern SaaS register",
+    "The company page in a white, sans-serif, pill-and-card style with a green accent. Replaces the design language rather than adjusting it.",
+  ],
+  [
     "/demos/paper",
     "FT Origami — editorial register",
     "A newspaper's treatment of the same answer: warmer ground, one wide measure, figures set as editorial data rather than as table cells.",
@@ -25,12 +30,14 @@ export default function DemosPage() {
       <Chrome crumb={["demos"]} />
       <div className="mx-auto max-w-[788px] px-8 py-[46px]">
         <h1 className="mb-4 text-[23px] leading-[1.42]">
-          Three treatments of one answer
+          Four treatments, one corpus
         </h1>
         <p className="mb-[34px] max-w-[62ch] text-[16px] leading-[1.6] text-ink-2">
-          The same semaglutide answer, the same four sources, rendered three
-          ways — so the question is which makes provenance easiest to check,
-          not which looks better in isolation.
+          The same content, rendered several ways — so the question is which
+          makes provenance easiest to check, not which looks better in
+          isolation. The first three are one answer; the Notus demo is the
+          Vertex company page, since that register is built around tiles and
+          charts rather than prose.
         </p>
         {DEMOS.map(([href, title, note]) => (
           <Link
