@@ -2,8 +2,12 @@ import { API_BASE } from "@/lib/readbase/api";
 import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbase/company";
 
 /**
- * The Notus register, applied to the company page, with green where the
- * template uses coral.
+ * The Notus register on a white ground, with green as the primary colour
+ * rather than an accent on a black interface: it takes the main button, the
+ * headline emphasis, the phase ramp and every active mark.
+ *
+ * Page and cards are both white, so the border carries the separation and is
+ * a little stronger than it would need to be over a grey page.
  *
  * This deliberately breaks four of the brief's non-negotiables — sans rather
  * than serif, generous radii rather than near-sharp corners, shadows rather
@@ -15,11 +19,15 @@ import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbas
  * figures rather than on lorem.
  */
 const NOTUS = {
-  "--n-bg": "#fbfbfa",
+  // pure white ground. With the cards also white the border does the
+  // separating, so it is a touch stronger than it would be over a grey page.
+  "--n-bg": "#ffffff",
   "--n-card": "#ffffff",
-  "--n-ink": "#16171a",
-  "--n-ink-2": "#6b7076",
-  "--n-line": "#ececea",
+  "--n-ink": "#14251f",
+  "--n-ink-2": "#68736e",
+  "--n-line": "#dbe3df",
+  // green is the primary now, not an accent on a black interface: it takes the
+  // main button, the headline emphasis, the ramp and every active mark
   "--n-accent": "#1d9e75",
   "--n-accent-soft": "#e1f5ee",
   "--n-accent-deep": "#0f6e56",
@@ -131,7 +139,7 @@ export default async function NotusDemo() {
             ))}
           </nav>
           <div className="flex-1" />
-          <span className="rounded-full bg-[var(--n-ink)] px-[18px] py-[9px] text-[14px] font-medium text-white">
+          <span className="rounded-full px-[18px] py-[9px] text-[14px] font-medium text-white" style={{ background: "var(--n-accent-deep)" }}>
             Start asking
           </span>
         </div>
@@ -153,10 +161,10 @@ export default async function NotusDemo() {
             one click away.
           </p>
           <div className="flex justify-center gap-3">
-            <span className="rounded-full bg-[var(--n-ink)] px-6 py-3 text-[15px] font-medium text-white">
+            <span className="rounded-full px-6 py-3 text-[15px] font-medium text-white" style={{ background: "var(--n-accent-deep)" }}>
               Ask a question
             </span>
-            <span className="rounded-full border bg-white px-6 py-3 text-[15px] font-medium" style={{ borderColor: "var(--n-line)" }}>
+            <span className="rounded-full border bg-white px-6 py-3 text-[15px] font-medium" style={{ borderColor: "var(--n-accent)", color: "var(--n-accent-deep)" }}>
               Browse companies
             </span>
           </div>
