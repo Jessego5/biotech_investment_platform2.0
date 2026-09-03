@@ -1,0 +1,425 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  Serves Readbase: the Next.js frontend behind a public load balancer, and the
+  FastAPI service beside it on the private network.
+
+  Only the frontend is reachable from the internet. The API answers on a private
+  DNS name that nothing outside the VPC can resolve, because the frontend proxies
+  every call to it through its own route handlers — so there is no browser that
+  needs to reach the API, and therefore no reason to expose it. The shared secret
+  on /ask sits behind that as a second line rather than the only one.
+
+  Deploys on top of the cluster the pipeline stack creates; pass its ClusterName
+  output in as a parameter.
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+    Description: Which environment this stack serves.
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC the services run in. The same one the ingestion uses.
+
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >-
+      Subnets for the load balancer. These must be public and in at least two
+      availability zones; an ALB refuses to come up in one.
+
+  ServiceSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >-
+      Subnets the tasks run in. Private subnets with a NAT gateway are the right
+      answer; public subnets with AssignPublicIp ENABLED work and cost less.
+
+  AssignPublicIp:
+    Type: String
+    Default: ENABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: >-
+      ENABLED when the tasks sit in public subnets, which is how they reach ECR
+      and the model API without a NAT gateway. DISABLED for private subnets.
+
+  ClusterName:
+    Type: String
+    Description: ECS cluster to run in — the ClusterName output of the pipeline stack.
+
+  ApiImage:
+    Type: String
+    Description: Full image URI for the Python service, tag included.
+
+  WebImage:
+    Type: String
+    Description: Full image URI for the Next.js frontend, tag included.
+
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: >-
+      SQLAlchemy URL for the Postgres holding the corpus. The API reads it; it is
+      never handed to the frontend, which only ever talks to the API.
+
+  OpenAiSecretArn:
+    Type: String
+    Description: >-
+      Secrets Manager ARN holding the OpenAI key. Passed as an ARN rather than a
+      value so the key never appears in a template, a parameter file or a stack
+      event.
+
+  SecUserAgent:
+    Type: String
+    Default: ""
+    Description: Contact string the SEC requires on its endpoints.
+
+  CpuArchitecture:
+    Type: String
+    Default: X86_64
+    AllowedValues: [X86_64, ARM64]
+    Description: Match the images. ARM64 runs on Graviton and costs less.
+
+  DesiredCount:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    Description: Tasks per service.
+
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: >-
+      ACM certificate for HTTPS. Left empty the listener is plain HTTP, which is
+      fine for a first deploy on the load balancer's own hostname and not fine
+      for anything a person is asked to trust.
+
+Conditions:
+  HasCertificate: !Not [!Equals [!Ref CertificateArn, ""]]
+  HasSecUserAgent: !Not [!Equals [!Ref SecUserAgent, ""]]
+
+Resources:
+  # ---------------------------------------------------------------- secrets
+  # Generated here rather than supplied: nobody needs to know this value, both
+  # services read it from the same place, and a rotation is a stack update.
+  ApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "readbase/${Environment}/api-key"
+      Description: >-
+        Shared secret for /ask, the only endpoint that spends money. The API
+        requires it; the frontend sends it server-side.
+      GenerateSecretString:
+        PasswordLength: 48
+        ExcludePunctuation: true
+
+  # ------------------------------------------------------------------- logs
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/readbase/${Environment}/api"
+      RetentionInDays: 30
+
+  WebLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/readbase/${Environment}/web"
+      RetentionInDays: 30
+
+  # -------------------------------------------------------- network access
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public entry point. The only thing open to the internet.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - !If
+          - HasCertificate
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 0.0.0.0/0
+            Description: HTTPS
+          - !Ref AWS::NoValue
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend tasks. Reachable only from the load balancer.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+          Description: From the load balancer only
+
+  ApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: >-
+        API tasks. Reachable only from the frontend: no load balancer, no public
+        address, nothing outside the VPC can resolve or reach it.
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          SourceSecurityGroupId: !Ref WebSecurityGroup
+          Description: From the frontend only
+
+  # ------------------------------------------------------- private discovery
+  # The frontend needs a stable name for the API. Cloud Map gives one that only
+  # resolves inside the VPC, so the address itself is not reachable from outside.
+  DiscoveryNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Sub "readbase-${Environment}.internal"
+      Vpc: !Ref VpcId
+
+  ApiDiscoveryService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: api
+      NamespaceId: !Ref DiscoveryNamespace
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 15
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+
+  # ------------------------------------------------------------------ roles
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ecs-tasks.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: read-the-two-secrets-and-nothing-else
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref ApiKeySecret
+                  - !Ref OpenAiSecretArn
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ecs-tasks.amazonaws.com}
+            Action: sts:AssumeRole
+      # Deliberately empty. Neither service calls an AWS API: the corpus is in
+      # Postgres and the model is reached over the internet.
+
+  # ------------------------------------------------------------ definitions
+  ApiTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "readbase-${Environment}-api"
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "1024"
+      Memory: "2048"
+      RuntimePlatform:
+        CpuArchitecture: !Ref CpuArchitecture
+        OperatingSystemFamily: LINUX
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: api
+          Image: !Ref ApiImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8000
+          Environment:
+            - Name: DATABASE_URL
+              Value: !Ref DatabaseUrl
+            - !If
+              - HasSecUserAgent
+              - {Name: SEC_USER_AGENT, Value: !Ref SecUserAgent}
+              - !Ref AWS::NoValue
+          Secrets:
+            - Name: OPENAI_API_KEY
+              ValueFrom: !Ref OpenAiSecretArn
+            - Name: READBASE_API_KEY
+              ValueFrom: !Ref ApiKeySecret
+          HealthCheck:
+            # / is a cheap handler that does not touch the database, so an
+            # unreachable Postgres shows up as failing requests rather than as a
+            # task that will not start
+            Command: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/',timeout=5)\" || exit 1"]
+            Interval: 30
+            Timeout: 6
+            Retries: 3
+            StartPeriod: 30
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ApiLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: api
+
+  WebTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "readbase-${Environment}-web"
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: "512"
+      Memory: "1024"
+      RuntimePlatform:
+        CpuArchitecture: !Ref CpuArchitecture
+        OperatingSystemFamily: LINUX
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: web
+          Image: !Ref WebImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: 3000
+          Environment:
+            # the private name, resolvable only inside this VPC
+            - Name: READBASE_API_URL
+              Value: !Sub "http://api.readbase-${Environment}.internal:8000"
+          Secrets:
+            # read server-side by the route handlers; it never reaches a browser
+            - Name: READBASE_API_KEY
+              ValueFrom: !Ref ApiKeySecret
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref WebLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: web
+
+  # --------------------------------------------------------------- balancing
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnetIds
+      SecurityGroups: [!Ref LoadBalancerSecurityGroup]
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Port: 3000
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: {HttpCode: "200-399"}
+      TargetGroupAttributes:
+        - {Key: deregistration_delay.timeout_seconds, Value: "20"}
+
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - !If
+          - HasCertificate
+          # with a certificate, plain HTTP only exists to send you to HTTPS
+          - Type: redirect
+            RedirectConfig:
+              Protocol: HTTPS
+              Port: "443"
+              StatusCode: HTTP_301
+          - Type: forward
+            TargetGroupArn: !Ref WebTargetGroup
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Condition: HasCertificate
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates: [{CertificateArn: !Ref CertificateArn}]
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebTargetGroup
+
+  # ---------------------------------------------------------------- services
+  ApiService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ClusterName
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref ApiTaskDefinition
+      # no load balancer: the only caller is the frontend, by private DNS
+      ServiceRegistries:
+        - RegistryArn: !GetAtt ApiDiscoveryService.Arn
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: !Ref AssignPublicIp
+          Subnets: !Ref ServiceSubnetIds
+          SecurityGroups: [!Ref ApiSecurityGroup]
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+
+  WebService:
+    Type: AWS::ECS::Service
+    DependsOn: HttpListener
+    Properties:
+      Cluster: !Ref ClusterName
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref WebTaskDefinition
+      LoadBalancers:
+        - ContainerName: web
+          ContainerPort: 3000
+          TargetGroupArn: !Ref WebTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: !Ref AssignPublicIp
+          Subnets: !Ref ServiceSubnetIds
+          SecurityGroups: [!Ref WebSecurityGroup]
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+
+Outputs:
+  SiteUrl:
+    Description: Where the thing actually is.
+    Value: !If
+      - HasCertificate
+      - !Sub "https://${LoadBalancer.DNSName}"
+      - !Sub "http://${LoadBalancer.DNSName}"
+
+  ApiInternalHost:
+    Description: >-
+      The API's private name. Resolvable only inside the VPC, which is the point.
+    Value: !Sub "http://api.readbase-${Environment}.internal:8000"
+
+  ApiKeySecretArn:
+    Description: Where the generated /ask secret lives, for rotation.
+    Value: !Ref ApiKeySecret

@@ -1,0 +1,19 @@
+# keep the build context to the frontend's own source
+
+node_modules
+.next
+.git
+.env
+.env.local
+
+# the Python service ships from backend/Dockerfile with its own context
+backend
+infra
+frontend
+design
+logs
+
+*.db
+*.db.bak-*
+*.log
+.DS_Store
