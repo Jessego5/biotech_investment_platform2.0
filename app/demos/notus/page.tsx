@@ -1,4 +1,5 @@
 import { API_BASE } from "@/lib/readbase/api";
+import { NOTUS, notusCard } from "@/lib/readbase/notus-theme";
 import {
   money,
   phaseLabel,
@@ -32,34 +33,7 @@ import {
  * The data is the live corpus, so the two registers can be judged on the same
  * figures rather than on lorem.
  */
-const NOTUS = {
-  // pure white ground. With the cards also white the border does the
-  // separating, so it is a touch stronger than it would be over a grey page.
-  "--n-bg": "#ffffff",
-  "--n-card": "#ffffff",
-  "--n-ink": "#14251f",
-  "--n-ink-2": "#68736e",
-  "--n-line": "#dbe3df",
-  // green is the primary now, not an accent on a black interface: it takes the
-  // main button, the headline emphasis, the ramp and every active mark
-  "--n-accent": "#1d9e75",
-  "--n-accent-soft": "#e1f5ee",
-  "--n-accent-deep": "#0f6e56",
-  // The five-step palette, doing a different job from the brand green: green
-  // means action and provenance, this means how far along. It runs pale to
-  // navy, which is the one gradient the brief allows because the variable
-  // under it — clinical phase — is ordinal.
-  "--p1": "#c8e8be",
-  "--p2": "#a9d8b8",
-  "--p3": "#7ca5b8",
-  "--p4": "#3b369a",
-  "--p5": "#020887",
-  "--n-sans":
-    'ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif',
-} as React.CSSProperties;
-
-const card =
-  "rounded-[14px] border bg-[var(--n-card)] shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)]";
+const card = notusCard;
 
 async function load(ticker: string): Promise<CompanyResponse | null> {
   try {

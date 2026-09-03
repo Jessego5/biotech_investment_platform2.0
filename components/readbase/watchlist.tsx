@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { CompanyPicker, type PickedCompany } from "@/components/readbase/company-picker";
-import { PeriodLabel } from "@/components/readbase/period-label";
+import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
+import { phaseLevel } from "@/lib/readbase/company";
 
 const STORE = "readbase.watchlist";
 
@@ -132,11 +133,12 @@ export function Watchlist() {
   const shown = key ? rows : [];
 
   return (
-    <div className="mx-auto max-w-[1100px] px-8 py-[38px]">
-      <div className="mb-[26px] flex flex-wrap items-baseline justify-between gap-4">
+    <div style={notusPage} className="min-h-svh">
+      <div className="mx-auto max-w-[1100px] px-8 py-[38px]">
+      <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[23px] leading-[1.42]">Watchlist</h1>
-          <p className="mt-1 max-w-[64ch] text-[14px] leading-[1.6] text-ink-2">
+          <h1 className="text-[30px] font-medium tracking-[-0.02em]">Watchlist</h1>
+          <p className="mt-2 max-w-[64ch] text-[15px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             What a watcher is watching for: the next readout, the nearest loss of
             protection, and how long the money lasts. No price and no position —
             those would be the first figures here neither computed from a filing
@@ -146,22 +148,27 @@ export function Watchlist() {
         <button
           type="button"
           onClick={() => setPicking(true)}
-          className="whitespace-nowrap bg-primary px-[14px] py-[8px] font-mono text-[11px] tracking-[0.05em] text-primary-foreground"
+          className="whitespace-nowrap rounded-full px-[18px] py-[10px] text-[14px] font-medium text-white"
+          style={{ background: "var(--n-accent-deep)" }}
         >
           Add a company
         </button>
       </div>
 
       {tickers.length === 0 && (
-        <div className="border border-border border-l-[3px] border-l-primary bg-secondary px-7 pb-[26px] pt-6">
-          <h4 className="mb-3 font-mono text-[10px] font-normal uppercase tracking-[0.14em] text-accent-deep">
-            Nothing watched yet
-          </h4>
-          <p className="max-w-[62ch] text-[19px] leading-[1.6]">
+        <div className={`${notusCard} px-7 pb-7 pt-6`} style={{ borderColor: "var(--n-line)" }}>
+          <div
+            className="mb-3 flex h-9 w-9 items-center justify-center rounded-[10px]"
+            style={{ background: "var(--n-accent-soft)", color: "var(--n-accent-deep)" }}
+          >
+            <span className="text-[15px]">◆</span>
+          </div>
+          <h4 className="mb-2 text-[17px] font-medium">Nothing watched yet</h4>
+          <p className="max-w-[62ch] text-[15px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             Add a company and this becomes a row per issuer, refreshed from the
             corpus each time you open it.
           </p>
-          <p className="mt-4 max-w-[62ch] text-[14px] leading-[1.6] text-ink-2">
+          <p className="mt-3 max-w-[62ch] text-[13px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             The list is kept in this browser. There are no accounts, so it does
             not follow you to another device — and nobody else sees it.
           </p>
@@ -169,116 +176,140 @@ export function Watchlist() {
       )}
 
       {shown.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] border-collapse text-[13.5px]">
-            <thead>
-              <tr>
-                {[
-                  ["Company", ""],
-                  ["Next readout", "primary completion"],
-                  ["Protection", "Orange Book · Purple Book"],
-                  ["Runway", "liquidity ÷ annual burn"],
-                  ["", ""],
-                ].map(([h, sub], i) => (
-                  <th
-                    key={h || i}
-                    className="whitespace-normal border-b border-border px-0 pb-[7px] pr-[14px] text-left align-bottom font-mono text-[9.5px] font-normal uppercase tracking-[0.11em] text-muted-foreground"
-                  >
-                    {h}
-                    {sub && (
-                      <span className="mt-[2px] block normal-case tracking-[0.04em] opacity-80">
-                        {sub}
-                      </span>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((row) => {
-                const runway = runwayCell(row);
-                return (
-                  <tr key={row.ticker} className="border-b border-border">
-                    <td className="px-0 py-[11px] pr-[14px] align-top">
-                      <Link
-                        href={`/companies/${row.ticker}`}
-                        className="font-mono text-[12px] text-primary"
-                      >
-                        {row.ticker}
-                      </Link>
-                      <span className="mt-[2px] block max-w-[26ch] text-[13px] leading-[1.4]">
-                        {row.name}
-                      </span>
-                    </td>
+        <div className={`${notusCard} overflow-hidden`} style={{ borderColor: "var(--n-line)" }}>
+          <div className="flex items-center justify-between px-6 py-[18px]">
+            <h2 className="text-[17px] font-medium">
+              {shown.length} {shown.length === 1 ? "company" : "companies"}
+            </h2>
+            <span
+              className="rounded-full border px-3 py-1 text-[12px]"
+              style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+            >
+              {loading ? "refreshing…" : "read just now"}
+            </span>
+          </div>
 
-                    <td className="px-0 py-[11px] pr-[14px] align-top">
-                      {row.next_readout ? (
-                        <>
-                          <span className="font-mono text-[12px] tabular-nums">
-                            {row.next_readout.completion_date?.slice(0, 10)}
-                          </span>
-                          <span className="mt-[2px] block max-w-[34ch] text-[12.5px] leading-[1.45] text-ink-2">
-                            {row.next_readout.title}
-                          </span>
-                          <span className="mt-[2px] block font-mono text-[10px] text-muted-foreground">
-                            {row.next_readout.nct_id}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="font-mono text-[11px] text-muted-foreground">
-                          none with a date ahead
+          <div className="overflow-x-auto">
+            <table
+              className="w-full min-w-[860px] border-t text-[14px]"
+              style={{ borderColor: "var(--n-line)" }}
+            >
+              <thead>
+                <tr style={{ color: "var(--n-ink-2)" }}>
+                  {[
+                    ["Company", ""],
+                    ["Next readout", "primary completion"],
+                    ["Protection", "Orange Book · Purple Book"],
+                    ["Runway", "liquidity ÷ annual burn"],
+                    ["", ""],
+                  ].map(([h, sub], i) => (
+                    <th
+                      key={h || i}
+                      className="border-b px-6 py-3 text-left align-bottom text-[13px] font-normal"
+                      style={{ borderColor: "var(--n-line)" }}
+                    >
+                      {h}
+                      {sub && (
+                        <span className="mt-[2px] block font-mono text-[10px] opacity-70">
+                          {sub}
                         </span>
                       )}
-                    </td>
-
-                    <td className="px-0 py-[11px] pr-[14px] align-top">
-                      <span className="text-[13px]">{row.protection_state}</span>
-                      <span className="mt-[2px] block font-mono text-[11px] tabular-nums text-ink-2">
-                        {row.next_expiry
-                          ? `nearest expiry ${row.next_expiry}`
-                          : "no expiry recorded"}
-                      </span>
-                    </td>
-
-                    <td className="px-0 py-[11px] pr-[14px] align-top">
-                      <span
-                        className={`font-mono text-[12px] tabular-nums ${
-                          runway.muted ? "text-muted-foreground" : ""
-                        }`}
-                      >
-                        {runway.value}
-                      </span>
-                      {runway.note && (
-                        <span className="mt-[2px] block font-mono text-[10px] text-muted-foreground">
-                          {runway.note}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((row) => {
+                  const runway = runwayCell(row);
+                  const level = phaseLevel(row.next_readout?.phase ?? null);
+                  return (
+                    <tr key={row.ticker}>
+                      <td className="border-b px-6 py-[14px] align-top" style={{ borderColor: "var(--n-line)" }}>
+                        <Link href={`/companies/${row.ticker}`} className="font-medium">
+                          {row.ticker}
+                        </Link>
+                        <span className="mt-[2px] block max-w-[24ch] text-[13px] leading-[1.4]" style={{ color: "var(--n-ink-2)" }}>
+                          {row.name}
                         </span>
-                      )}
-                    </td>
+                      </td>
 
-                    <td className="px-0 py-[11px] text-right align-top">
-                      <button
-                        type="button"
-                        onClick={() => remove(row.ticker)}
-                        aria-label={`Stop watching ${row.ticker}`}
-                        className="border border-line-hi px-[8px] py-[4px] font-mono text-[10px] text-ink-2"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className="border-b px-6 py-[14px] align-top" style={{ borderColor: "var(--n-line)" }}>
+                        {row.next_readout ? (
+                          <>
+                            <span className="inline-flex items-center gap-2">
+                              {/* the step is the phase of the study reporting,
+                                  which is the one ordered thing in this row */}
+                              <span
+                                className="h-[9px] w-[9px] rounded-full"
+                                style={{ background: level ? `var(--p${level})` : "#c7d0cb" }}
+                              />
+                              <span className="font-mono text-[13px] tabular-nums">
+                                {row.next_readout.completion_date?.slice(0, 10)}
+                              </span>
+                            </span>
+                            <span className="mt-[3px] block max-w-[36ch] text-[12.5px] leading-[1.45]" style={{ color: "var(--n-ink-2)" }}>
+                              {row.next_readout.title}
+                            </span>
+                            <span className="mt-[2px] block font-mono text-[10.5px] opacity-70" style={{ color: "var(--n-ink-2)" }}>
+                              {row.next_readout.nct_id}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+                            none with a date ahead
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="border-b px-6 py-[14px] align-top" style={{ borderColor: "var(--n-line)" }}>
+                        <span
+                          className="rounded-full px-[10px] py-1 text-[12.5px]"
+                          style={{ background: "var(--n-accent-soft)", color: "var(--n-accent-deep)" }}
+                        >
+                          {row.protection_state}
+                        </span>
+                        <span className="mt-[4px] block font-mono text-[11px] tabular-nums" style={{ color: "var(--n-ink-2)" }}>
+                          {row.next_expiry ? `nearest expiry ${row.next_expiry}` : "no expiry recorded"}
+                        </span>
+                      </td>
+
+                      <td className="border-b px-6 py-[14px] align-top" style={{ borderColor: "var(--n-line)" }}>
+                        <span
+                          className="font-mono text-[13px] tabular-nums"
+                          style={{ color: runway.muted ? "var(--n-ink-2)" : "var(--n-ink)" }}
+                        >
+                          {runway.value}
+                        </span>
+                        {runway.note && (
+                          <span className="mt-[2px] block font-mono text-[10.5px]" style={{ color: "var(--n-ink-2)" }}>
+                            {runway.note}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="border-b px-6 py-[14px] text-right align-top" style={{ borderColor: "var(--n-line)" }}>
+                        <button
+                          type="button"
+                          onClick={() => remove(row.ticker)}
+                          aria-label={`Stop watching ${row.ticker}`}
+                          className="rounded-full border px-[12px] py-[5px] text-[12px]"
+                          style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="px-6 py-4 text-[12px]" style={{ color: "var(--n-ink-2)" }}>
+            Read from the corpus on each visit. The list is kept in this browser,
+            not on the server.
+          </p>
         </div>
-      )}
-
-      {shown.length > 0 && (
-        <PeriodLabel className="mt-4 block whitespace-normal">
-          {loading ? "refreshing from the corpus…" : "read from the corpus just now"}
-          {" · "}
-          the list is kept in this browser, not on the server
-        </PeriodLabel>
       )}
 
       <CompanyPicker
@@ -287,6 +318,7 @@ export function Watchlist() {
         onPick={add}
         exclude={tickers}
       />
+      </div>
     </div>
   );
 }
