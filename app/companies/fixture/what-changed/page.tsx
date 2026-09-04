@@ -1,3 +1,4 @@
+import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import {
   ProvenanceStrip,
@@ -26,6 +27,7 @@ export default function WhatChangedPage() {
       <Chrome
         crumb={["companies", "fixture", company.name, "what changed", "FY2024 → FY2025"]}
       />
+      <FixtureNotice what="This is the what-changed artboard as drawn." />
 
       <div className="px-[30px] pb-[34px] pt-[26px]">
         {/* --------------------------------------------------- comparable */}

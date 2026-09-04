@@ -1,3 +1,4 @@
+import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";
 import { AccessorTrace } from "@/components/readbase/accessor-trace";
@@ -27,6 +28,7 @@ export default function AskFixturePage() {
     <InspectorProvider sections={sections} locate={sourceLocation}>
       <div className="min-h-svh bg-card text-foreground">
         <Chrome crumb={["ask", "fixture"]} />
+      <FixtureNotice what="This is the Ask artboard as drawn, kept for the refusal card." />
 
         <div className="flex flex-col items-center pb-[52px] pt-[46px]">
           <div className="w-[788px]">

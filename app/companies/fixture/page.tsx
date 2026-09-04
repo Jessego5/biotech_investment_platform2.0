@@ -1,3 +1,4 @@
+import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { Section } from "@/components/readbase/section";
 import { PhaseBar } from "@/components/readbase/phase-bar";
@@ -48,6 +49,7 @@ export default function CompanyFixturePage() {
   return (
     <div id="top" className="min-h-full bg-card text-foreground scroll-mt-0">
       <Chrome crumb={["companies", "fixture", company.name]} />
+      <FixtureNotice what="This is the company artboard as drawn, kept for its programme table." />
 
       {/* ------------------------------------------------------------ head */}
       <div className="border-b border-border bg-secondary px-[30px] pt-6">

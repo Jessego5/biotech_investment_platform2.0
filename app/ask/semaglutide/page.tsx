@@ -1,3 +1,4 @@
+import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";
 import { SourceIndex } from "@/components/readbase/source-index";
@@ -36,6 +37,7 @@ export default function SourceInspectorPage() {
         <Chrome
           crumb={["Novo Nordisk A/S", "ask", "semaglutide patent expiry"]}
         />
+      <FixtureNotice what="This is the source-inspector artboard as drawn." />
 
         <ResizablePanelGroup
           orientation="horizontal"

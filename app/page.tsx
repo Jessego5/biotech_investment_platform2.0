@@ -2,28 +2,40 @@ import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusPage } from "@/lib/readbase/notus-theme";
 
+/**
+ * The landing page.
+ *
+ * It used to list the design demos and the canvas fixtures as well. That was
+ * scaffolding from when the artboards were the deliverable and there was no
+ * live app to link to, and it should not have survived the corpus arriving:
+ * the fixtures carry invented accession numbers and filing text, and a product
+ * whose whole claim is traceability cannot offer those from its front door.
+ * They still exist, and they now say what they are on the page itself.
+ */
 const LIVE: [string, string, string][] = [
-  ["/ask", "Ask", "A question against the corpus, answered only from what the accessors return."],
-  ["/companies/VRTX", "Company", "Any of the issuers held. VRTX, MRNA, ABBV — the ticker is the route."],
-  ["/watchlist", "Watchlist", "A row per company: next readout, nearest loss of protection, how long the money lasts. Kept in this browser."],
-];
-
-const EXPLORATIONS: [string, string, string][] = [
-  ["/demos", "Design demos", "The same content in four registers — the canvas as built, Tufte sidenotes, an editorial paper, and the Notus template in green."],
-];
-
-const FIXTURES: [string, string, string][] = [
-  ["/ask/semaglutide", "Source inspector", "The signature screen: what we read, and the document it was cut from."],
-  ["/ask/fixture", "Ask, as drawn", "Kept for the refusal card, which needs a question the corpus cannot answer."],
-  ["/companies/fixture", "Company, as drawn", "The programme table the corpus cannot yet produce."],
-  ["/companies/fixture/what-changed", "What changed", "Both provenance states, including the comparison that is withheld."],
+  [
+    "/browse",
+    "Browse",
+    "Everything held, searchable by name, ticker, brand or accession — companies, approved products, annual reports and trials.",
+  ],
+  [
+    "/ask",
+    "Ask",
+    "A question against the corpus, answered only from what the accessors return, with the lookups behind it shown.",
+  ],
+  [
+    "/watchlist",
+    "Watchlist",
+    "A row per company: next readout, nearest loss of protection, how long the money lasts. Kept in this browser.",
+  ],
 ];
 
 function Row({ href, title, note }: { href: string; title: string; note: string }) {
   return (
     <Link
       href={href}
-      className="grid grid-cols-[190px_1fr] items-baseline gap-4 border-b border-border py-[13px]"
+      className="grid grid-cols-1 gap-1 border-b py-4 sm:grid-cols-[220px_1fr] sm:gap-4"
+      style={{ borderColor: "var(--n-line)" }}
     >
       <span className="text-[15px] font-medium">{title}</span>
       <span className="text-[14px] leading-[1.5]" style={{ color: "var(--n-ink-2)" }}>
@@ -38,8 +50,7 @@ export default function Home() {
   return (
     <div style={notusPage} className="notus min-h-svh">
       <NotusChrome />
-      {/* the hero the register is built around: an eyebrow, one large line with
-          the emphasis on the word carrying the claim, then the two actions */}
+
       <div className="mx-auto max-w-[1180px] px-8 pb-4 pt-16 text-center">
         <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
           Grounded question answering over biotech&rsquo;s primary sources
@@ -65,37 +76,17 @@ export default function Home() {
             Ask a question
           </Link>
           <Link
-            href="/companies/VRTX"
+            href="/browse"
             className="rounded-full border bg-white px-6 py-3 text-[15px] font-medium"
             style={{ borderColor: "var(--n-accent)", color: "var(--n-accent-deep)" }}
           >
-            Browse companies
+            Browse the corpus
           </Link>
         </div>
       </div>
 
       <div className="mx-auto max-w-[900px] px-8 pb-16 pt-10">
-        <div
-          className="mb-3 text-[12px] font-medium uppercase tracking-[0.12em]"
-          style={{ color: "var(--n-ink-2)" }}
-        >
-          Live
-        </div>
         {LIVE.map(([href, title, note]) => (
-          <Row key={href} href={href} title={title} note={note} />
-        ))}
-
-        <div className="mb-3 mt-10 text-[12px] font-medium uppercase tracking-[0.12em]" style={{ color: "var(--n-ink-2)" }}>
-          Exploration
-        </div>
-        {EXPLORATIONS.map(([href, title, note]) => (
-          <Row key={href} href={href} title={title} note={note} />
-        ))}
-
-        <div className="mb-3 mt-10 text-[12px] font-medium uppercase tracking-[0.12em]" style={{ color: "var(--n-ink-2)" }}>
-          Fixtures — the artboards as drawn
-        </div>
-        {FIXTURES.map(([href, title, note]) => (
           <Row key={href} href={href} title={title} note={note} />
         ))}
       </div>
