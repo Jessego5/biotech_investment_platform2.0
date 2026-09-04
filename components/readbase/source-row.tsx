@@ -35,7 +35,7 @@ export function SourceRow({
         {readable ? (
           <button
             type="button"
-            onClick={(e) => openCitation(`source-${source.n}`, source.n, e.currentTarget)}
+            onClick={(e) => openCitation(`source-${source.n}`, source.n, e.currentTarget, String(source.n))}
             className="whitespace-nowrap bg-primary px-[9px] py-[5px] font-mono text-[10px] tracking-[0.04em] text-primary-foreground"
           >
             Read passage

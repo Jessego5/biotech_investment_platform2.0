@@ -30,7 +30,7 @@ export function CiteChip({ id, source }: { id: string; source: number }) {
       data-state={isOpen ? "open" : undefined}
       aria-label={`Open source ${source}`}
       aria-pressed={isOpen}
-      onClick={(e) => inspector.openCitation(id, source, e.currentTarget)}
+      onClick={(e) => inspector.openCitation(id, source, e.currentTarget, String(source))}
       onMouseEnter={() => inspector.setHovered(source)}
       onMouseLeave={() => inspector.setHovered(null)}
       onFocus={() => inspector.setHovered(source)}

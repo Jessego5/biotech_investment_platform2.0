@@ -24,7 +24,8 @@ async function corpusLine(): Promise<string> {
 }
 
 const NAV: [string, string][] = [
-  ["/companies/VRTX", "Companies"],
+  // the index over everything, rather than one company chosen arbitrarily
+  ["/browse", "Browse"],
   ["/ask", "Ask"],
   ["/watchlist", "Watchlist"],
 ];

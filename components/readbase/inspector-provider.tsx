@@ -28,6 +28,11 @@ import type {
 export type OpenCitation = {
   chipId: string;
   source: number;
+  /** What to show in the panel's chip. Absent where the panel was not opened
+   *  from a citation — a section opened from a filing has no citation number,
+   *  and showing the chunk id there would put an internal identifier in the
+   *  one mark that means provenance. */
+  label?: string;
   sectionId: string;
   /** Which passage of the section is showing. The stepper moves this. */
   index: number;
@@ -35,7 +40,7 @@ export type OpenCitation = {
 
 type InspectorValue = {
   open: OpenCitation | null;
-  openCitation: (chipId: string, source: number, origin?: HTMLElement) => void;
+  openCitation: (chipId: string, source: number, origin?: HTMLElement, label?: string) => void;
   /** Step to another passage within the open section. */
   showPassage: (index: number) => void;
   sections: Record<string, PassageSection>;
@@ -107,7 +112,7 @@ export function InspectorProvider({
    * Two elements sharing it would abort the transition.
    */
   const openCitation = useCallback(
-    (chipId: string, source: number, origin?: HTMLElement) => {
+    (chipId: string, source: number, origin?: HTMLElement, label?: string) => {
       const at = locate[source];
       if (!at) {
         // Live data: the section is not known until it is fetched, so the
@@ -118,12 +123,12 @@ export function InspectorProvider({
           .then((found) => {
             if (!found) return;
             setFetched((all) => ({ ...all, [found.section.id]: found.section }));
-            setOpen({ chipId, source, sectionId: found.section.id, index: found.index });
+            setOpen({ chipId, source, label, sectionId: found.section.id, index: found.index });
           })
           .finally(() => setLoading(false));
         return;
       }
-      const next = { chipId, source, ...at };
+      const next = { chipId, source, label: label ?? String(source), ...at };
       const canMorph =
         origin &&
         typeof document !== "undefined" &&

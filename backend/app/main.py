@@ -28,9 +28,11 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from sqlalchemy import func, or_
+
 from .database import SessionLocal, init_db
 from .models import (Company, Trial, RegistryTrial, ApprovedProduct,
-                     Filing, FilingChunk)
+                     Filing, FilingChunk, ProductPatent, ProductExclusivity)
 from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
                            fetch_financials, company_name, SPONSOR_OVERRIDES)
 from .analysis import build_assessment
@@ -176,6 +178,210 @@ def watchlist(tickers: str = ""):
     finally:
         db.close()
 
+
+@app.get("/filing/{accession}")
+def filing_detail(accession: str):
+    """
+    One annual report: what was stored from it, and how to reach the original.
+
+    The section list and the passage counts are the point. A filing here is not
+    the document — it is the part of the document we kept — and showing which
+    sections were stored, and how many passages each became, is what stops a
+    reader treating an answer drawn from it as drawn from the whole filing.
+    """
+    db = SessionLocal()
+    try:
+        row = (db.query(Filing, Company)
+                 .join(Company, Company.ticker == Filing.company_ticker)
+                 .filter(Filing.accession == accession).first())
+        if row is None:
+            raise HTTPException(status_code=404,
+                                detail=f"No filing stored under {accession}.")
+        filing, company = row
+        sections = (db.query(FilingChunk.section, func.count(FilingChunk.id))
+                      .filter(FilingChunk.filing_id == filing.id)
+                      .group_by(FilingChunk.section)
+                      .order_by(func.count(FilingChunk.id).desc()).all())
+        # the first chunk of each section, so a reader can open one and step
+        first = {sec: (db.query(FilingChunk.id)
+                         .filter(FilingChunk.filing_id == filing.id,
+                                 FilingChunk.section == sec)
+                         .order_by(FilingChunk.ordinal).first() or [None])[0]
+                 for sec, _ in sections}
+        return {
+            "accession": filing.accession,
+            "form": filing.form,
+            "filed": filing.filed,
+            "fiscal_year": filing.fiscal_year,
+            "period_end": filing.period_end,
+            "document": filing.document,
+            "text_chars": filing.text_chars,
+            "company": {"ticker": company.ticker, "name": company.name,
+                        "cik": company.cik},
+            "url": (filing_url(company.cik, filing.accession, filing.document)
+                    if company.cik else None),
+            "sections": [{"section": sec, "passages": n,
+                          "first_chunk_id": first.get(sec)} for sec, n in sections],
+        }
+    finally:
+        db.close()
+
+
+@app.get("/product/{appl_no}")
+def product_detail(appl_no: str):
+    """
+    One approved product, with what protects it and when that runs out.
+
+    Patents and exclusivity are shown as rows rather than rolled into a state,
+    because "protected" is a summary and a date is a fact. The two answer
+    different questions and the aggregate is the one already on the company
+    page.
+    """
+    db = SessionLocal()
+    try:
+        rows = (db.query(ApprovedProduct)
+                  .filter(ApprovedProduct.appl_no == appl_no).all())
+        if not rows:
+            raise HTTPException(status_code=404,
+                                detail=f"No approved product under application {appl_no}.")
+        lead = rows[0]
+        patents = (db.query(ProductPatent)
+                     .filter(ProductPatent.appl_no == appl_no)
+                     .order_by(ProductPatent.expire_date).all())
+        excl = (db.query(ProductExclusivity)
+                  .filter(ProductExclusivity.appl_no == appl_no)
+                  .order_by(ProductExclusivity.expire_date).all())
+        # One row per patent, not per patent-and-product-number. A patent
+        # covering four dosage forms is listed four times by the Orange Book,
+        # and counting the rows would report 148 patents where there are 74.
+        by_patent = {}
+        for p in patents:
+            key = (p.patent_no, p.expire_date)
+            entry = by_patent.setdefault(key, {
+                "patent_no": p.patent_no, "expire_date": p.expire_date,
+                "drug_substance": False, "drug_product": False,
+                "use_code": p.use_code, "delisted": p.delisted, "products": 0,
+            })
+            entry["drug_substance"] = entry["drug_substance"] or bool(p.drug_substance)
+            entry["drug_product"] = entry["drug_product"] or bool(p.drug_product)
+            entry["products"] += 1
+        by_code = {}
+        for e in excl:
+            by_code.setdefault((e.code, e.expire_date),
+                               {"code": e.code, "expire_date": e.expire_date})
+
+        return {
+            "appl_no": appl_no,
+            "trade_name": lead.trade_name,
+            "ingredient": lead.ingredient,
+            "applicant": lead.applicant,
+            "appl_type": lead.appl_type,
+            "company_ticker": lead.company_ticker,
+            "resolved_by": lead.resolved_by,
+            "approval_date": min((r.approval_date for r in rows if r.approval_date),
+                                 default=None),
+            "products": sorted({r.product_no for r in rows if r.product_no}),
+            "patents": sorted(by_patent.values(), key=lambda p: p["expire_date"] or ""),
+            "patent_rows": len(patents),
+            "exclusivity": sorted(by_code.values(), key=lambda e: e["expire_date"] or ""),
+        }
+    finally:
+        db.close()
+
+@app.get("/search")
+def search(q: str = "", kind: str = None, limit: int = 8):
+    """
+    One index over everything held, typed by what the thing is.
+
+    A reader looking for "Trikafta" does not know whether it is a company, a
+    filing or an approved product, and until now the only way in was knowing a
+    ticker. Each hit carries the kind it is, so the page can send it somewhere
+    that makes sense rather than pretending everything is a company.
+
+    Matching is a plain case-insensitive substring, not the semantic search the
+    chat uses. That is deliberate: this is for finding a thing you can name,
+    and a fuzzy match here would put the wrong company at the top of a list
+    someone is about to click.
+    """
+    needle = (q or "").strip()
+    if not needle:
+        return {"query": "", "counts": {}, "results": []}
+    like = f"%{needle}%"
+    db = SessionLocal()
+    try:
+        out, counts = [], {}
+
+        if kind in (None, "company"):
+            rows = (db.query(Company)
+                      .filter(or_(Company.ticker.ilike(like), Company.name.ilike(like)))
+                      .order_by(Company.ticker).limit(limit).all())
+            counts["company"] = len(rows)
+            out += [{
+                "kind": "company", "id": c.ticker, "title": c.name,
+                "subtitle": c.ticker,
+                "meta": c.sector or "sector not recorded",
+                "href": f"/companies/{c.ticker}",
+            } for c in rows]
+
+        if kind in (None, "product"):
+            # one row per product rather than per application: a drug listed
+            # under four dosage forms is one thing a reader recognises
+            rows = (db.query(ApprovedProduct)
+                      .filter(or_(ApprovedProduct.trade_name.ilike(like),
+                                  ApprovedProduct.ingredient.ilike(like)))
+                      .limit(limit * 6).all())
+            seen, products = set(), []
+            for r in rows:
+                key = r.appl_no
+                if key in seen:
+                    continue
+                seen.add(key)
+                products.append(r)
+                if len(products) >= limit:
+                    break
+            counts["product"] = len(products)
+            out += [{
+                "kind": "product", "id": p.appl_no,
+                "title": p.trade_name or p.ingredient,
+                "subtitle": p.ingredient,
+                "meta": " · ".join(x for x in [
+                    f"approved {p.approval_date}" if p.approval_date else None,
+                    p.company_ticker,
+                ] if x) or "applicant not resolved",
+                "href": f"/products/{p.appl_no}",
+            } for p in products]
+
+        if kind in (None, "filing"):
+            rows = (db.query(Filing)
+                      .filter(or_(Filing.company_ticker.ilike(like),
+                                  Filing.accession.ilike(like)))
+                      .limit(limit).all())
+            rows.sort(key=lambda f: (f.fiscal_year or -1), reverse=True)
+            counts["filing"] = len(rows)
+            out += [{
+                "kind": "filing", "id": f.accession,
+                "title": f"{f.company_ticker} {f.form}"
+                         + (f" FY{f.fiscal_year}" if f.fiscal_year else ""),
+                "subtitle": f"filed {f.filed}",
+                "meta": f.accession,
+                "href": f"/filings/{f.accession}",
+            } for f in rows]
+
+        if kind in (None, "trial"):
+            rows = (db.query(Trial)
+                      .filter(or_(Trial.nct_id.ilike(like), Trial.title.ilike(like)))
+                      .limit(limit).all())
+            counts["trial"] = len(rows)
+            out += [{
+                "kind": "trial", "id": t.nct_id, "title": t.title,
+                "subtitle": t.nct_id,
+                "meta": " · ".join(x for x in [t.phase, t.status, t.company_ticker] if x),
+                "href": f"https://clinicaltrials.gov/study/{t.nct_id}",
+            } for t in rows]
+
+        return {"query": needle, "counts": counts, "results": out}
+    finally:
+        db.close()
 
 @app.get("/stats")
 def stats():

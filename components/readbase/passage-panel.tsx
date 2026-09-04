@@ -103,13 +103,15 @@ export function PassagePanel() {
           {/* The chip the reader clicked, landed. It is the far end of the
               open transition, and it also answers "which citation is this
               panel showing" without making anyone re-read the header. */}
-          <span
-            ref={registerHeaderChip}
-            className="cite-chip mr-[6px] cursor-default align-baseline"
-            aria-label={`Showing source ${open.source}`}
-          >
-            {open.source}
-          </span>
+          {open.label && (
+            <span
+              ref={registerHeaderChip}
+              className="cite-chip mr-[6px] cursor-default align-baseline"
+              aria-label={`Showing source ${open.label}`}
+            >
+              {open.label}
+            </span>
+          )}
           {headerFor(section, open.index).map((part, i) => (
             <span key={part}>
               {i > 0 && <span className="text-muted-foreground"> · </span>}

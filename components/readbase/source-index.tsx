@@ -27,7 +27,7 @@ export function SourceIndex({ sources }: { sources: Source[] }) {
           <button
             key={s.n}
             type="button"
-            onClick={(e) => openCitation(`source-${s.n}`, s.n, e.currentTarget)}
+            onClick={(e) => openCitation(`source-${s.n}`, s.n, e.currentTarget, String(s.n))}
             onMouseEnter={() => setHovered(s.n)}
             onMouseLeave={() => setHovered(null)}
             data-active={lit || undefined}
