@@ -73,9 +73,11 @@ export function Browse() {
           className="mx-auto max-w-[56ch] text-[15px] leading-[1.6]"
           style={{ color: "var(--n-ink-2)" }}
         >
-          787 companies, 48,664 approved product listings, 3,614 annual reports
-          and 30,823 trials. Search by name, ticker, brand or accession — each
-          result opens the thing it actually is.
+          Companies, approved products, annual reports and trials. Search by
+          name, ticker, brand or accession — each result opens the thing it
+          actually is. The counts are on the front page, read from the corpus
+          rather than typed here, which is how the last hand-written figure went
+          wrong.
         </p>
       </div>
 

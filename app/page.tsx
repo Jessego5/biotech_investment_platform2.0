@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusPage } from "@/lib/readbase/notus-theme";
+import { StatTiles, type Tile } from "@/components/readbase/stat-tiles";
+import { API_BASE } from "@/lib/readbase/api";
 
 /**
  * The landing page.
@@ -30,6 +32,70 @@ const LIVE: [string, string, string][] = [
   ],
 ];
 
+type Stats = {
+  companies: number;
+  filings: number;
+  trials: number;
+  trials_total: number;
+  registry_trials: number;
+  approved_products: number;
+};
+
+async function stats(): Promise<Stats | null> {
+  try {
+    const res = await fetch(`${API_BASE}/stats`, { cache: "no-store" });
+    return res.ok ? res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What the corpus holds, and where each part of it came from.
+ *
+ * The chip colour is the source, the same key the company page uses — so two
+ * tiles drawn from EDGAR share a colour, which is the point rather than a
+ * clash. Counted at request time: these are the figures the product is built
+ * on, and typing them in by hand is how the banner drifted last time.
+ */
+function corpusTiles(s: Stats): Tile[] {
+  const n = (v: number) => v.toLocaleString("en-US");
+  return [
+    {
+      n: n(s.companies),
+      label: "Companies",
+      note: "five years of filings each",
+      source: "SEC EDGAR",
+      chip: "var(--p4)",
+      glyph: "#ffffff",
+    },
+    {
+      n: n(s.filings),
+      label: "Annual reports",
+      note: "10-K and 20-F, read and stored",
+      source: "SEC EDGAR",
+      chip: "var(--p4)",
+      glyph: "#ffffff",
+    },
+    {
+      n: n(s.trials_total),
+      label: "Registered trials",
+      note: `${n(s.trials)} lead-sponsored`,
+      source: "ClinicalTrials.gov",
+      chip: "var(--p1)",
+      glyph: "#020887",
+    },
+    {
+      n: n(s.approved_products),
+      label: "Approved products",
+      note: "distinct applications",
+      source: "FDA Orange Book",
+      chip: "var(--p2)",
+      glyph: "#020887",
+    },
+  ];
+}
+
 function Row({ href, title, note }: { href: string; title: string; note: string }) {
   return (
     <Link
@@ -46,7 +112,8 @@ function Row({ href, title, note }: { href: string; title: string; note: string 
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const s = await stats();
   return (
     <div style={notusPage} className="notus min-h-svh">
       <NotusChrome />
@@ -84,6 +151,20 @@ export default function Home() {
           </Link>
         </div>
       </div>
+
+      {s && (
+        <div className="mx-auto max-w-[1180px] px-8 pb-2 pt-6">
+          <StatTiles tiles={corpusTiles(s)} />
+          <p
+            className="mt-3 text-center text-[12.5px]"
+            style={{ color: "var(--n-ink-2)" }}
+          >
+            Counted now, not written into the page. The colour on each tile is
+            the source it came from, and it means the same thing everywhere else
+            in the product.
+          </p>
+        </div>
+      )}
 
       <div className="mx-auto max-w-[900px] px-8 pb-16 pt-10">
         {LIVE.map(([href, title, note]) => (

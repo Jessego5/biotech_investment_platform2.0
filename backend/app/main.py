@@ -413,6 +413,10 @@ def stats():
                 ApprovedProduct.company_ticker).filter(
                 ApprovedProduct.company_ticker.isnot(None)).distinct().count(),
             "filings": db.query(Filing).count(),
+            # distinct applications, not Orange Book rows: a drug is listed once
+            # per dosage form it covers, and counting rows would report the
+            # corpus as several times larger than it is
+            "approved_products": db.query(ApprovedProduct.appl_no).distinct().count(),
         }
     finally:
         db.close()
