@@ -59,6 +59,30 @@ SELECT count(*) FROM trials;         -- 30,823
 Those four are also what the banner reads from `/stats`, so a wrong number here
 shows up on the page rather than staying hidden.
 
+### Then build the vector index
+
+The dump predates the index, so a fresh restore has none and every semantic
+lookup reads all 334,624 vectors — 2.2 GB per question. This is the single
+largest thing that decides the instance size, so it is worth doing before
+choosing one rather than after.
+
+```bash
+DATABASE_URL='postgresql+psycopg://…' python backend/migrate_vector_index.py
+```
+
+Slow, and safe to re-run: each index is built only if it is missing. Pass
+`--dry-run` first for the sizes.
+
+On the instance that will serve, raise `--build-memory` to whatever it has
+spare. Below the size of the graph, about 2 GB here, pgvector builds in two
+passes and spills to disk.
+
+**Running Postgres in a container needs `shm_size` raised.** A parallel index
+build sizes its shared memory segments from `maintenance_work_mem`, Docker
+gives a container 64 MB of `/dev/shm`, and the failure is a `DiskFull` naming
+shared memory while the disk has room. `docker-compose.yml` sets 2 GB. RDS does
+not have this problem.
+
 ---
 
 ## The OpenAI key

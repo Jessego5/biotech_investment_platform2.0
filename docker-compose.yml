@@ -14,6 +14,13 @@ services:
     # create it, and the trials table has a vector column, so the schema would
     # fail to create at all.
     image: pgvector/pgvector:pg16
+    # Docker gives a container 64 MB of /dev/shm, and Postgres builds an index
+    # in parallel through shared memory segments sized from maintenance_work_mem.
+    # Building the HNSW index over 334k vectors asks for a gigabyte of it and
+    # fails with "No space left on device" pointing at shared memory, not at the
+    # disk, which is a confusing way to read a real limit. RDS does not have this
+    # problem; only a container does.
+    shm_size: 2gb
     environment:
       POSTGRES_USER: biotech
       POSTGRES_PASSWORD: biotech        # local only, never used anywhere real
