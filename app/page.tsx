@@ -123,8 +123,16 @@ export default async function Home() {
       <NotusChrome />
 
       <div className="mx-auto max-w-[1180px] px-8 pb-4 pt-16 text-center">
+        {/* Not "every US biotech": 107 of these file 20-F as foreign private
+            issuers, so the universe is defined by filing with the SEC rather
+            than by country. And not simply "every filer" either — the rule is
+            every SEC filer with a ticker that leads its own clinical trials and
+            files real financials, which is the claim worth making because it
+            says the list was not curated. */}
         <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
-          {s ? `${s.companies.toLocaleString("en-US")} public biotech companies` : "Grounded question answering"}
+          {s
+            ? `${s.companies.toLocaleString("en-US")} companies — every SEC filer that leads its own trials`
+            : "Every SEC filer that leads its own trials"}
         </div>
         <h1 className="mx-auto mb-5 max-w-[17ch] text-[52px] font-medium leading-[1.06] tracking-[-0.03em]">
           Every figure traced to its{" "}
