@@ -198,12 +198,16 @@ def test_both_environments_are_configured():
     assert set(mappings["dev"]) == set(mappings["prod"])
 
 
-def test_the_dev_schedule_is_off_by_default():
-    # a dev stack must not quietly run a full universe fetch against SEC on a timer
+def test_no_schedule_fetches_from_sec_without_someone_turning_it_on():
+    # A dev stack must not quietly run a full universe fetch against SEC on a
+    # timer. Prod is off for a different reason: the scheduled task reads an
+    # ingest image from ECR that serve.sh does not push, so a first deploy with
+    # this ENABLED is a daily failure and nothing else. Turning it on is a
+    # deliberate edit once the image is there.
     mappings = load_template("pipeline.yaml")["Mappings"]["EnvironmentConfig"]
 
     assert mappings["dev"]["ScheduleState"] == "DISABLED"
-    assert mappings["prod"]["ScheduleState"] == "ENABLED"
+    assert mappings["prod"]["ScheduleState"] == "DISABLED"
 
 
 def test_every_findinmap_reads_a_map_that_exists():

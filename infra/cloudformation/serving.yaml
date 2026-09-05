@@ -423,3 +423,11 @@ Outputs:
   ApiKeySecretArn:
     Description: Where the generated /ask secret lives, for rotation.
     Value: !Ref ApiKeySecret
+
+  ApiSecurityGroupId:
+    Description: >-
+      The API tasks' security group. The database is deliberately not in this
+      stack, so nothing here can open a path to it — this is the id to allow on
+      5432 in the RDS instance's own security group. Without it the tasks start,
+      pass their health check, and fail every query.
+    Value: !Ref ApiSecurityGroup

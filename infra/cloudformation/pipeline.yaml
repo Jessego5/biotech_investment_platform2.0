@@ -94,7 +94,12 @@ Mappings:
     prod:
       ShardCount: 8               # 480 companies in slices of 60
       Schedule: "cron(0 6 * * ? *)"
-      ScheduleState: ENABLED
+      # Off until an ingest image exists at the tag the task reads. serve.sh
+      # pushes api-<timestamp> and web-<timestamp> only, so on a first deploy
+      # this schedule would fire at 06:00 UTC into an ECR tag nothing has
+      # pushed — a daily failure with no ingestion behind it. Push the image,
+      # then set this to ENABLED and update the stack.
+      ScheduleState: DISABLED
       TaskCpu: "1024"
       TaskMemory: "2048"
       LogRetentionDays: 30
