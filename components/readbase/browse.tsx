@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Building2, FileText, FlaskConical, Pill, type LucideIcon } from "lucide-react";
 import { notusCard } from "@/lib/readbase/notus-theme";
 
 type Hit = {
@@ -14,11 +15,14 @@ type Hit = {
 };
 
 /** Each kind takes a step from the ordinal palette, so a list reads by type. */
-const KIND: Record<Hit["kind"], { label: string; chip: string; glyph: string }> = {
-  company: { label: "Company", chip: "var(--p4)", glyph: "#ffffff" },
-  product: { label: "Product", chip: "var(--p2)", glyph: "#020887" },
-  filing: { label: "Filing", chip: "var(--p3)", glyph: "#020887" },
-  trial: { label: "Trial", chip: "var(--p1)", glyph: "#020887" },
+const KIND: Record<
+  Hit["kind"],
+  { label: string; chip: string; glyph: string; icon: LucideIcon }
+> = {
+  company: { label: "Company", chip: "var(--p4)", glyph: "#ffffff", icon: Building2 },
+  product: { label: "Product", chip: "var(--p2)", glyph: "#020887", icon: Pill },
+  filing: { label: "Filing", chip: "var(--p3)", glyph: "#020887", icon: FileText },
+  trial: { label: "Trial", chip: "var(--p1)", glyph: "#020887", icon: FlaskConical },
 };
 
 const KINDS = ["company", "product", "filing", "trial"] as const;
@@ -38,9 +42,9 @@ export function Browse({ corpus }: { corpus: string }) {
     let cancelled = false;
     const id = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `/api/search?q=${encodeURIComponent(q)}${kind ? `&kind=${kind}` : ""}`,
-        );
+        // every kind, every time: the chips carry counts, and asking the API
+        // for one kind would blank the others out from under the reader
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
         const body = await res.json();
         if (cancelled) return;
         setHits(body.results ?? []);
@@ -54,13 +58,19 @@ export function Browse({ corpus }: { corpus: string }) {
       cancelled = true;
       clearTimeout(id);
     };
-  }, [query, kind]);
+  }, [query]);
 
   // only show what belongs to the query on screen now, so clearing the box
   // empties the list without a second render to do it
   const typed = query.trim();
-  const shown = typed && ran === typed ? hits : typed ? hits : [];
-  const total = typed ? Object.values(counts).reduce((a, b) => a + b, 0) : 0;
+  // the kind filter is a view of one result set, not a second search, so the
+  // counts on the chips stay put and selecting one costs nothing
+  const shown = typed ? hits.filter((h) => !kind || h.kind === kind) : [];
+  const total = typed
+    ? kind
+      ? (counts[kind] ?? 0)
+      : Object.values(counts).reduce((a, b) => a + b, 0)
+    : 0;
 
   return (
     <div className="mx-auto max-w-[900px] px-8 pb-16 pt-10">
@@ -152,7 +162,7 @@ export function Browse({ corpus }: { corpus: string }) {
                     className="mt-[2px] flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[10px]"
                     style={{ background: k.chip, color: k.glyph }}
                   >
-                    ◆
+                    <k.icon size={15} strokeWidth={2} aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px] leading-[1.4]">{h.title}</span>
