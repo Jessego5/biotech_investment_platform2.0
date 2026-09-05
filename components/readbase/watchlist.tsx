@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CompanyPicker, type PickedCompany } from "@/components/readbase/company-picker";
 import { notusCard } from "@/lib/readbase/notus-theme";
 import { phaseLevel } from "@/lib/readbase/company";
@@ -81,9 +82,18 @@ const store = {
   },
 };
 
-export function Watchlist() {
+/**
+ * @param shared a list arriving in the URL rather than from this browser.
+ *
+ * This is the whole of the answer to "my watchlist does not follow me to
+ * another device". There are no accounts, so the list cannot be looked up —
+ * but it is four tickers, and four tickers fit in a link. Sending yourself one
+ * moves the list; sending it to someone else shares it. Neither needs a user.
+ */
+export function Watchlist({ shared = null }: { shared?: string[] | null }) {
+  const router = useRouter();
   const raw = useSyncExternalStore(store.subscribe, store.read, store.server);
-  const tickers: string[] = (() => {
+  const mine: string[] = (() => {
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
@@ -92,8 +102,15 @@ export function Watchlist() {
     }
   })();
 
+  // A link never edits the browser it is opened in. Someone following a shared
+  // list is reading it, and replacing what they watch to show it to them would
+  // be destroying one list to display another.
+  const visiting = shared !== null;
+  const tickers = visiting ? shared : mine;
+
   const [rows, setRows] = useState<Row[]>([]);
   const [picking, setPicking] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   // which ticker list `rows` actually describes. Comparing it to the current
   // one gives the refreshing state without a second flag to keep in step, and
   // it is only ever assigned after the request comes back.
@@ -121,14 +138,32 @@ export function Watchlist() {
 
   const add = useCallback(
     (c: PickedCompany) => {
-      if (!tickers.includes(c.ticker)) store.write([...tickers, c.ticker]);
+      if (!mine.includes(c.ticker)) store.write([...mine, c.ticker]);
     },
-    [tickers],
+    [mine],
   );
   const remove = useCallback(
-    (ticker: string) => store.write(tickers.filter((x) => x !== ticker)),
-    [tickers],
+    (ticker: string) => store.write(mine.filter((x) => x !== ticker)),
+    [mine],
   );
+
+  /** Merge, never replace: keeping a shared list should not cost you your own. */
+  const keepShared = useCallback(() => {
+    store.write([...mine, ...(shared ?? []).filter((t) => !mine.includes(t))]);
+    router.push("/watchlist");
+  }, [mine, shared, router]);
+
+  const copyLink = useCallback(async () => {
+    const url = `${window.location.origin}/watchlist?tickers=${mine.join(",")}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied("copied");
+    } catch {
+      // a browser that refuses the clipboard still has to give the reader the
+      // link, so show it rather than reporting a failure they cannot act on
+      setCopied(url);
+    }
+  }, [mine]);
 
   const shown = key ? rows : [];
 
@@ -144,17 +179,74 @@ export function Watchlist() {
             nor traceable to one.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setPicking(true)}
-          className="whitespace-nowrap rounded-full px-[18px] py-[10px] text-[14px] font-medium text-white"
-          style={{ background: "var(--n-accent-deep)" }}
-        >
-          Add a company
-        </button>
+        {visiting ? (
+          <Link
+            href="/watchlist"
+            className="whitespace-nowrap rounded-full border px-[18px] py-[10px] text-[14px] font-medium"
+            style={{ borderColor: "var(--n-accent)", color: "var(--n-accent-deep)" }}
+          >
+            Back to my list
+          </Link>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            {mine.length > 0 && (
+              <button
+                type="button"
+                onClick={copyLink}
+                className="whitespace-nowrap rounded-full border px-[18px] py-[10px] text-[14px] font-medium"
+                style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+              >
+                {copied === "copied" ? "Link copied" : "Copy as link"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              className="whitespace-nowrap rounded-full px-[18px] py-[10px] text-[14px] font-medium text-white"
+              style={{ background: "var(--n-accent-deep)" }}
+            >
+              Add a company
+            </button>
+          </div>
+        )}
       </div>
 
-      {tickers.length === 0 && (
+      {copied && copied !== "copied" && (
+        <div className={`${notusCard} mb-5 px-6 py-4`} style={{ borderColor: "var(--n-line)" }}>
+          <p className="mb-2 text-[13px]" style={{ color: "var(--n-ink-2)" }}>
+            This browser would not let the page reach the clipboard. The link:
+          </p>
+          <input
+            readOnly
+            value={copied}
+            onFocus={(e) => e.currentTarget.select()}
+            className="w-full bg-transparent font-mono text-[12px] outline-none"
+          />
+        </div>
+      )}
+
+      {visiting && (
+        <div className={`${notusCard} mb-5 px-6 py-5`} style={{ borderColor: "var(--n-accent)" }}>
+          <h2 className="mb-2 text-[15px] font-medium">
+            A list from a link, not the one this browser keeps
+          </h2>
+          <p className="mb-4 max-w-[64ch] text-[14px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
+            {tickers.length} {tickers.length === 1 ? "company" : "companies"}, read
+            from the corpus the same way. Nothing here has changed what you watch
+            {mine.length > 0 ? `, and your own ${mine.length} are still there.` : "."}
+          </p>
+          <button
+            type="button"
+            onClick={keepShared}
+            className="rounded-full px-[18px] py-[9px] text-[14px] font-medium text-white"
+            style={{ background: "var(--n-accent-deep)" }}
+          >
+            Add these to my list
+          </button>
+        </div>
+      )}
+
+      {!visiting && tickers.length === 0 && (
         <div className={`${notusCard} px-7 pb-7 pt-6`} style={{ borderColor: "var(--n-line)" }}>
           <div
             className="mb-3 flex h-9 w-9 items-center justify-center rounded-[10px]"
@@ -169,7 +261,9 @@ export function Watchlist() {
           </p>
           <p className="mt-3 max-w-[62ch] text-[13px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             The list is kept in this browser. There are no accounts, so it does
-            not follow you to another device — and nobody else sees it.
+            not follow you to another device by itself — but it fits in a link,
+            and once there is something here you can copy one and send it to
+            yourself or to anyone else.
           </p>
         </div>
       )}
@@ -287,15 +381,17 @@ export function Watchlist() {
                       </td>
 
                       <td className="border-b px-6 py-[14px] text-right align-top" style={{ borderColor: "var(--n-line)" }}>
-                        <button
-                          type="button"
-                          onClick={() => remove(row.ticker)}
-                          aria-label={`Stop watching ${row.ticker}`}
-                          className="rounded-full border px-[12px] py-[5px] text-[12px]"
-                          style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
-                        >
-                          Remove
-                        </button>
+                        {!visiting && (
+                          <button
+                            type="button"
+                            onClick={() => remove(row.ticker)}
+                            aria-label={`Stop watching ${row.ticker}`}
+                            className="rounded-full border px-[12px] py-[5px] text-[12px]"
+                            style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -306,7 +402,8 @@ export function Watchlist() {
 
           <p className="px-6 py-4 text-[12px]" style={{ color: "var(--n-ink-2)" }}>
             Read from the corpus on each visit. The list is kept in this browser,
-            not on the server.
+            not on the server — a link carries the tickers, and the rows are
+            rebuilt from the corpus at the other end.
           </p>
         </div>
       )}
@@ -315,7 +412,7 @@ export function Watchlist() {
         open={picking}
         onOpenChange={setPicking}
         onPick={add}
-        exclude={tickers}
+        exclude={mine}
       />
     </div>
   );
