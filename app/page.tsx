@@ -64,7 +64,10 @@ async function stats(): Promise<Stats | null> {
  * typing them in by hand is how the banner drifted twice.
  */
 function corpusTiles(s: Stats): Tile[] {
-  const n = (v: number) => v.toLocaleString("en-US");
+  // a field the API does not send yet is a dash, not a crash. /stats has grown
+  // three times, and each time a page built against the newer shape would have
+  // thrown on the older one — server-side, so the whole page went with it
+  const n = (v?: number) => (typeof v === "number" ? v.toLocaleString("en-US") : "—");
   return [
     {
       icon: FlaskConical,

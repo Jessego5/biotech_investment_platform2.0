@@ -369,16 +369,44 @@ def search(q: str = "", kind: str = None, limit: int = 8):
             } for f in rows]
 
         if kind in (None, "trial"):
+            # one row per NCT, not per company: a co-sponsored study is stored
+            # once for each company attached to it, and a reader searching for
+            # a trial is looking for the study, not for the sponsor list
             rows = (db.query(Trial)
                       .filter(or_(Trial.nct_id.ilike(like), Trial.title.ilike(like)))
-                      .limit(limit).all())
-            counts["trial"] = len(rows)
+                      .limit(limit * 6).all())
+            seen, trials = {}, []
+            for r in rows:
+                if r.nct_id in seen:
+                    # keep the lead row when both are held: it is the record
+                    # with the sponsor who actually controls the study
+                    if r.role == "lead" and seen[r.nct_id].role != "lead":
+                        trials[trials.index(seen[r.nct_id])] = r
+                        seen[r.nct_id] = r
+                    continue
+                seen[r.nct_id] = r
+                trials.append(r)
+                if len(trials) >= limit:
+                    break
+            # every company attached to the trials being shown, so a study run
+            # by two of them does not silently name one
+            sponsors = {}
+            if trials:
+                for nct, ticker in (db.query(Trial.nct_id, Trial.company_ticker)
+                                      .filter(Trial.nct_id.in_([t.nct_id for t in trials]))
+                                      .filter(Trial.company_ticker.isnot(None))
+                                      .distinct().all()):
+                    sponsors.setdefault(nct, []).append(ticker)
+            counts["trial"] = len(trials)
             out += [{
                 "kind": "trial", "id": t.nct_id, "title": t.title,
                 "subtitle": t.nct_id,
-                "meta": " · ".join(x for x in [t.phase, t.status, t.company_ticker] if x),
+                "meta": " · ".join(x for x in [
+                    t.phase, t.status,
+                    ", ".join(sorted(sponsors.get(t.nct_id, []))) or None,
+                ] if x),
                 "href": f"https://clinicaltrials.gov/study/{t.nct_id}",
-            } for t in rows]
+            } for t in trials]
 
         return {"query": needle, "counts": counts, "results": out}
     finally:
