@@ -19,7 +19,7 @@ export async function GET(
     return NextResponse.json(body, { status: upstream.status });
   } catch {
     return NextResponse.json(
-      { error: `Could not reach the Readbase API at ${API_BASE}.` },
+      { error: `Could not reach the BioBase API at ${API_BASE}.` },
       { status: 502 },
     );
   }

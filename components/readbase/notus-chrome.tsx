@@ -21,7 +21,7 @@ export function NotusChrome({ current }: { current?: string }) {
     <header className="border-b" style={{ borderColor: "var(--n-line)" }}>
       <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-8 gap-y-3 px-8 py-4">
         <Link href="/" className="text-[19px] font-semibold tracking-[-0.02em]">
-          Readbase
+          BioBase
         </Link>
         <nav className="flex gap-6 text-[14px]" style={{ color: "var(--n-ink-2)" }}>
           {NAV.map(([href, label]) => (

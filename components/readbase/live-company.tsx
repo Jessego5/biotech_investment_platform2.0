@@ -479,7 +479,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
 
       <footer className="border-t border-border px-[30px] py-4">
         <PeriodLabel className="whitespace-normal">
-          Live from the Readbase corpus · figures as the filings and registry
+          Live from the BioBase corpus · figures as the filings and registry
           state them
         </PeriodLabel>
       </footer>

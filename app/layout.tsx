@@ -7,7 +7,7 @@ import "./effects.css";
 // next/font here would introduce a third typeface.
 
 export const metadata: Metadata = {
-  title: "Readbase",
+  title: "BioBase",
   description:
     "Grounded question answering over biotech's primary sources — SEC filings, ClinicalTrials.gov and FDA data.",
 };

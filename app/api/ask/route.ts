@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   } catch {
     // Say which service is unreachable rather than failing as a bare 500.
     return NextResponse.json(
-      { error: `Could not reach the Readbase API at ${API_BASE}.` },
+      { error: `Could not reach the BioBase API at ${API_BASE}.` },
       { status: 502 },
     );
   }

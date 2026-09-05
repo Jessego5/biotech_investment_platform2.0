@@ -141,7 +141,7 @@ export default async function IndigoDemo() {
       {/* header */}
       <div className="border-b bg-[var(--n-card)]" style={{ borderColor: "var(--n-line)" }}>
         <div className="mx-auto flex max-w-[1180px] items-center gap-8 px-8 py-4">
-          <span className="text-[19px] font-semibold tracking-[-0.02em]">Readbase</span>
+          <span className="text-[19px] font-semibold tracking-[-0.02em]">BioBase</span>
           <nav className="hidden gap-7 text-[14px] md:flex" style={{ color: "var(--n-ink-2)" }}>
             {["Companies", "Ask", "Filings", "Trials"].map((x) => (
               <span key={x}>{x}</span>

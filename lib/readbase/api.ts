@@ -1,5 +1,5 @@
 /**
- * The live Readbase API — the Python service in backend/.
+ * The live BioBase API — the Python service in backend/.
  *
  * The response shapes here mirror what that service actually returns; they are
  * not a hopeful contract. Where the API and these screens disagree, the API is
@@ -21,6 +21,8 @@ export const API_BASE =
  */
 export function apiHeaders(): Record<string, string> {
   const key = process.env.READBASE_API_KEY;
+  // the header name stays as it is: it has to match require_key on the API,
+  // and renaming it means changing both sides in the same deploy
   return key ? { "X-Readbase-Key": key } : {};
 }
 
