@@ -130,9 +130,7 @@ export default async function Home() {
             files real financials, which is the claim worth making because it
             says the list was not curated. */}
         <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
-          {s
-            ? `${s.companies.toLocaleString("en-US")} companies — every SEC filer that leads its own trials`
-            : "Every SEC filer that leads its own trials"}
+          Every SEC filer that leads its own clinical trials
         </div>
         <h1 className="mx-auto mb-5 max-w-[17ch] text-[52px] font-medium leading-[1.06] tracking-[-0.03em]">
           Every figure traced to its{" "}
