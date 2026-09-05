@@ -2,6 +2,7 @@ import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusPage } from "@/lib/readbase/notus-theme";
 import { StatTiles, type Tile } from "@/components/readbase/stat-tiles";
+import { ChartColumn, FileText, FlaskConical, Pill } from "lucide-react";
 import { API_BASE } from "@/lib/readbase/api";
 
 /**
@@ -66,6 +67,7 @@ function corpusTiles(s: Stats): Tile[] {
   const n = (v: number) => v.toLocaleString("en-US");
   return [
     {
+      icon: FlaskConical,
       n: n(s.trials_total),
       label: "Registered trials",
       note: `${n(s.trials)} lead-sponsored`,
@@ -74,6 +76,7 @@ function corpusTiles(s: Stats): Tile[] {
       glyph: "#020887",
     },
     {
+      icon: Pill,
       n: n(s.approved_products),
       label: "Approved products",
       note: "distinct applications",
@@ -82,6 +85,7 @@ function corpusTiles(s: Stats): Tile[] {
       glyph: "#020887",
     },
     {
+      icon: ChartColumn,
       n: n(s.financial_facts),
       label: "Reported figures",
       note: "ten years, per metric",
@@ -90,6 +94,7 @@ function corpusTiles(s: Stats): Tile[] {
       glyph: "#020887",
     },
     {
+      icon: FileText,
       n: n(s.filings),
       label: "Annual reports",
       note: "five years per company",

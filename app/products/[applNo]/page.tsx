@@ -2,6 +2,7 @@ import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { NotusSection } from "@/components/readbase/notus-section";
 import { StatTiles, type Tile } from "@/components/readbase/stat-tiles";
+import { Atom, CalendarClock, Lock, ShieldCheck } from "lucide-react";
 import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
 import { API_BASE } from "@/lib/readbase/api";
 
@@ -77,6 +78,7 @@ export default async function ProductPage({
 
   const tiles: Tile[] = [
     {
+      icon: ShieldCheck,
       n: String(p.patents.length),
       label: "Patents in force",
       note: `${p.patent_rows} Orange Book rows`,
@@ -85,6 +87,7 @@ export default async function ProductPage({
       glyph: "#020887",
     },
     {
+      icon: Atom,
       n: String(substance),
       label: "Composition-of-matter",
       note: substance ? "the strongest claim listed" : "none listed",
@@ -93,6 +96,7 @@ export default async function ProductPage({
       glyph: "#020887",
     },
     {
+      icon: CalendarClock,
       n: soonest ?? "—",
       label: "Nearest expiry",
       note: soonest ? "first protection to lapse" : "no dated patent",
@@ -101,6 +105,7 @@ export default async function ProductPage({
       glyph: "#ffffff",
     },
     {
+      icon: Lock,
       n: String(p.exclusivity.length),
       label: "Exclusivity periods",
       note: last ? `patents run to ${last}` : "—",

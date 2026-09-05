@@ -1,6 +1,7 @@
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
 import { StatTiles, PhaseDonut, type Tile } from "@/components/readbase/stat-tiles";
+import { ChartColumn, FileText, FlaskConical, Pill } from "lucide-react";
 import { NotusSection as Section } from "@/components/readbase/notus-section";
 import { PhaseBar } from "@/components/readbase/phase-bar";
 import { Sparkline } from "@/components/readbase/sparkline";
@@ -88,6 +89,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
   const rd = toSeries("R&D", data.financial_history?.rd_expense);
   const tiles: Tile[] = [
     {
+      icon: FlaskConical,
       n: String(data.pipeline?.total_trials ?? 0),
       label: "Registered trials",
       note: `${byPhase[0]?.[1] ?? 0} in ${byPhase[0]?.[0] ?? "—"}`,
@@ -96,6 +98,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       glyph: "#020887",
     },
     {
+      icon: Pill,
       n: String((data.approved_products ?? []).length),
       label: "Approved products",
       note: data.protection?.state ?? "—",
@@ -104,6 +107,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       glyph: "#020887",
     },
     {
+      icon: ChartColumn,
       n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—",
       label: "Research and development",
       note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "—",
@@ -112,6 +116,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       glyph: "#020887",
     },
     {
+      icon: FileText,
       n: String((data.filings ?? []).length),
       label: "Annual reports held",
       note: (data.filings ?? []).length

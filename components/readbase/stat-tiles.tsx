@@ -1,6 +1,11 @@
+import type { LucideIcon } from "lucide-react";
 import { notusCard } from "@/lib/readbase/notus-theme";
 
 export type Tile = {
+  /** What the figure is of — a flask for trials, a page for filings. The chip
+   *  says which source it came from; the icon says what was counted, so the
+   *  two carry different halves of the same sentence. */
+  icon: LucideIcon;
   n: string;
   label: string;
   /** The span the figure covers. Never optional — a figure without one cannot be checked. */
@@ -25,7 +30,7 @@ export function StatTiles({ tiles }: { tiles: Tile[] }) {
             className="mb-3 flex h-9 w-9 items-center justify-center rounded-[10px]"
             style={{ background: t.chip, color: t.glyph }}
           >
-            <span className="text-[15px]">◆</span>
+            <t.icon size={17} strokeWidth={2} aria-hidden />
           </div>
           <div className="text-[26px] font-semibold tabular-nums tracking-[-0.02em]">{t.n}</div>
           <div className="mt-[2px] text-[13px]" style={{ color: "var(--n-ink-2)" }}>
