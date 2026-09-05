@@ -135,10 +135,10 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
       <div className="flex flex-col items-center pb-[52px] pt-[46px]">
         <div className="w-[788px] max-w-full">
           {!asked && (
-            <div className="mb-8 text-center">
-              <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
-                787 companies · 3,614 annual reports · 30,823 trials
-              </div>
+            // the corpus size lives on Browse, where it says what the search
+            // box is searching over. The 28.5px it occupied is kept as padding
+            // so the headline stays where it was.
+            <div className="mb-8 pt-[28px] text-center">
               <h1 className="mx-auto mb-4 max-w-[16ch] text-[46px] font-medium leading-[1.08] tracking-[-0.03em]">
                 Ask, and see the{" "}
                 <span style={{ color: "var(--n-accent)" }}>working</span>
