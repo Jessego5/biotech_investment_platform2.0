@@ -23,7 +23,7 @@ const KIND: Record<Hit["kind"], { label: string; chip: string; glyph: string }> 
 
 const KINDS = ["company", "product", "filing", "trial"] as const;
 
-export function Browse() {
+export function Browse({ corpus }: { corpus: string }) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<string | null>(null);
   const [hits, setHits] = useState<Hit[]>([]);
@@ -65,6 +65,9 @@ export function Browse() {
   return (
     <div className="mx-auto max-w-[900px] px-8 pb-16 pt-10">
       <div className="mb-6 text-center">
+        <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
+          {corpus}
+        </div>
         <h1 className="mx-auto mb-3 max-w-[18ch] text-[40px] font-medium leading-[1.1] tracking-[-0.03em]">
           Everything the corpus{" "}
           <span style={{ color: "var(--n-accent)" }}>holds</span>
@@ -73,11 +76,9 @@ export function Browse() {
           className="mx-auto max-w-[56ch] text-[15px] leading-[1.6]"
           style={{ color: "var(--n-ink-2)" }}
         >
-          Companies, approved products, annual reports and trials. Search by
-          name, ticker, brand or accession — each result opens the thing it
-          actually is. The counts are on the front page, read from the corpus
-          rather than typed here, which is how the last hand-written figure went
-          wrong.
+          Search by name, ticker, brand or accession — each result opens the
+          thing it actually is, whether that is a company, an approved product,
+          an annual report or a trial.
         </p>
       </div>
 

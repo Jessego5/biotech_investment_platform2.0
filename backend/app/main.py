@@ -32,7 +32,8 @@ from sqlalchemy import func, or_
 
 from .database import SessionLocal, init_db
 from .models import (Company, Trial, RegistryTrial, ApprovedProduct,
-                     Filing, FilingChunk, ProductPatent, ProductExclusivity)
+                     Filing, FilingChunk, ProductPatent, ProductExclusivity,
+                     Financial)
 from .data_sources import (fetch_trials_raw, parse_trials, summarize_pipeline,
                            fetch_financials, company_name, SPONSOR_OVERRIDES)
 from .analysis import build_assessment
@@ -417,6 +418,10 @@ def stats():
             # per dosage form it covers, and counting rows would report the
             # corpus as several times larger than it is
             "approved_products": db.query(ApprovedProduct.appl_no).distinct().count(),
+            # every reported figure held, across metrics and years. The XBRL
+            # side of the corpus has no count otherwise, and it is the source
+            # behind every financial answer.
+            "financial_facts": db.query(Financial).count(),
         }
     finally:
         db.close()

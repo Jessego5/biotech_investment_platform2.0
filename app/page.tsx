@@ -39,6 +39,7 @@ type Stats = {
   trials_total: number;
   registry_trials: number;
   approved_products: number;
+  financial_facts: number;
 };
 
 async function stats(): Promise<Stats | null> {
@@ -53,30 +54,17 @@ async function stats(): Promise<Stats | null> {
 /**
  * What the corpus holds, and where each part of it came from.
  *
- * The chip colour is the source, the same key the company page uses — so two
- * tiles drawn from EDGAR share a colour, which is the point rather than a
- * clash. Counted at request time: these are the figures the product is built
- * on, and typing them in by hand is how the banner drifted last time.
+ * The four steps run pale to indigo in the same order the company page uses,
+ * and each one still keys to a source: ClinicalTrials.gov, the Orange Book,
+ * SEC XBRL facts, EDGAR. Four tiles, four sources, so the ramp and the key
+ * agree instead of one having to give way to the other.
+ *
+ * Counted at request time. These are the figures the product is built on, and
+ * typing them in by hand is how the banner drifted twice.
  */
 function corpusTiles(s: Stats): Tile[] {
   const n = (v: number) => v.toLocaleString("en-US");
   return [
-    {
-      n: n(s.companies),
-      label: "Companies",
-      note: "five years of filings each",
-      source: "SEC EDGAR",
-      chip: "var(--p4)",
-      glyph: "#ffffff",
-    },
-    {
-      n: n(s.filings),
-      label: "Annual reports",
-      note: "10-K and 20-F, read and stored",
-      source: "SEC EDGAR",
-      chip: "var(--p4)",
-      glyph: "#ffffff",
-    },
     {
       n: n(s.trials_total),
       label: "Registered trials",
@@ -92,6 +80,22 @@ function corpusTiles(s: Stats): Tile[] {
       source: "FDA Orange Book",
       chip: "var(--p2)",
       glyph: "#020887",
+    },
+    {
+      n: n(s.financial_facts),
+      label: "Reported figures",
+      note: "ten years, per metric",
+      source: "SEC XBRL company facts",
+      chip: "var(--p3)",
+      glyph: "#020887",
+    },
+    {
+      n: n(s.filings),
+      label: "Annual reports",
+      note: "five years per company",
+      source: "SEC EDGAR",
+      chip: "var(--p4)",
+      glyph: "#ffffff",
     },
   ];
 }
@@ -120,7 +124,7 @@ export default async function Home() {
 
       <div className="mx-auto max-w-[1180px] px-8 pb-4 pt-16 text-center">
         <div className="mb-3 text-[14px]" style={{ color: "var(--n-accent)" }}>
-          Grounded question answering over biotech&rsquo;s primary sources
+          {s ? `${s.companies.toLocaleString("en-US")} public biotech companies` : "Grounded question answering"}
         </div>
         <h1 className="mx-auto mb-5 max-w-[17ch] text-[52px] font-medium leading-[1.06] tracking-[-0.03em]">
           Every figure traced to its{" "}
@@ -160,8 +164,8 @@ export default async function Home() {
             style={{ color: "var(--n-ink-2)" }}
           >
             Counted now, not written into the page. The colour on each tile is
-            the source it came from, and it means the same thing everywhere else
-            in the product.
+            the source the figure came from, and it means the same thing on
+            every other screen.
           </p>
         </div>
       )}
