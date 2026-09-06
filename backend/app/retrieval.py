@@ -1,8 +1,10 @@
 """
 This is the shared retrieval layer over the database, used by both the companies
-endpoint and the chat. For structured questions like phase, financials, or
+endpoint and the chat. For structured questions about phase, financials or
 filtering, the right way to look things up is a real database query and not a
-vector search, so the results come back exact and complete.
+vector search, so the results come back exact and complete rather than merely
+close. Imported by main.py and by chat.py, whose typed accessors are thin
+wrappers over these functions.
 """
 
 from .models import Company, FINANCIAL_METRICS

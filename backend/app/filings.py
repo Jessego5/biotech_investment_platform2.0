@@ -1,16 +1,16 @@
 """
-This file pulls the narrative part of a company's annual report out of EDGAR: the
-Risk Factors and the Management's Discussion, which are where a company says in
-its own words what could go wrong and how it reads its own numbers. The structured
-figures already come from XBRL; this is the part of a filing that only exists as
-prose, and it is what lets the app answer "what does this company say are its
-biggest risks?" instead of only counting things.
-
-It is deliberately separate from data_sources.py. That file reads figures, which
-are exact and mechanical. This one reads documents, which are messy: a 10-K is a
-few megabytes of HTML with no markup identifying its sections, so the sections
-have to be found by their headings and the headings appear more than once. Keeping
-the fragile part in its own file makes it obvious which of the two is which.
+This pulls the narrative part of a company's annual report out of EDGAR, the Risk
+Factors and the Management's Discussion, which are where a company says in its
+own words what could go wrong and how it reads its own numbers. The structured
+figures already come from XBRL, so this is the part of a filing that exists only
+as prose and is what lets the app answer what a company says its biggest risks
+are instead of only counting things. It is deliberately separate from
+data_sources.py, which reads figures that are exact and mechanical, because this
+one reads documents that are messy: a 10-K is a few megabytes of HTML with no
+markup identifying its sections, so the sections have to be found by their
+headings and the headings appear more than once, and keeping the fragile part in
+its own file makes it obvious which of the two is which. Imported by
+embed_filings.py, which does the fetching, and by main.py for filing_url.
 """
 
 import re

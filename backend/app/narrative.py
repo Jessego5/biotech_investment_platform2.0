@@ -1,10 +1,11 @@
 """
-This is the narrative layer, It does not let the model compute or guess anything. 
-It takes the facts that analysis.py already worked out from real data and asks 
-the model to say them in plain English. The model can only phrase the numbers we 
-hand it, it can't invent new ones. if OPENAI_API_KEY is set it uses OpenAI, and 
-if neither is set it falls back to a fixed template so the app still works with no
-key at all. The keys only come from environment variables.
+This is the narrative layer, and it does not let the model compute or guess
+anything. It takes the facts analysis.py has already worked out from real data
+and asks the model to say them in plain English, so the model can only phrase the
+numbers it is handed and cannot invent new ones. If OPENAI_API_KEY is set it uses
+OpenAI, and without one it falls back to a fixed template so the app still works
+with no key at all. Keys come only from environment variables. Imported by
+main.py, which calls generate_narrative with an assessment.
 """
 
 import os

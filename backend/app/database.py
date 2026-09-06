@@ -1,10 +1,11 @@
 """
-This sets up the database engine and session. By default it is just a SQLite file
-called biotech.db sitting in the backend folder, which is what you get when you run
-things locally. Setting DATABASE_URL points it somewhere else instead, which is how
-it runs in a container against Postgres without any code change. The engine and
-session factory live here so the API and the ingestion script both share the same
-setup either way.
+This sets up the database engine and session. By default it is a SQLite file
+called biotech.db in the backend folder, which is what you get running locally,
+and setting DATABASE_URL points it somewhere else instead, which is how it runs
+in a container against Postgres with no code change. The engine and session
+factory live here so the API and the ingestion scripts share the same setup
+either way. Import SessionLocal for a session and call init_db once at startup to
+create anything missing.
 """
 
 import os

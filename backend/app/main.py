@@ -1,11 +1,14 @@
 """
-This is the FastAPI backend for the biotech agent. It serves the companies from
-a local database that ingest.py fills in, so browsing and filtering stay fast and
-don't keep hitting the live APIs. There are two main routes, one to browse and
-filter the whole universe, and one to get the full grounded write up for a single
-company. The single company route reads the database first and falls back to a
-live fetch if the ticker isn't stored yet, so the app works even before you run
-ingestion.
+This is the FastAPI backend. It serves the corpus from the database that
+ingest.py fills, so browsing and filtering stay fast instead of hitting the live
+APIs, and it is what the frontend's route handlers proxy to; nothing here is
+meant to be called by a browser directly. The routes cover browsing and filtering
+the universe, one company's full grounded write-up, a typed search over
+companies, products, filings and trials, the passage behind a citation, and /ask,
+which is the only endpoint that spends money and the only one behind a key. The
+single company route reads the database first and falls back to a live fetch if
+the ticker is not stored yet, so the app works before ingestion has run. Run it
+with uvicorn app.main:app from the backend directory, or through docker compose.
 """
 
 import datetime

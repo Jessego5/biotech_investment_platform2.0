@@ -1,19 +1,19 @@
 """
-A daily ceiling on what answering questions can cost.
-
-/ask is the one endpoint that spends money. Everything else reads the corpus
-and costs a query. There are no accounts, so there is nobody to bill and nobody
-to throttle individually — which means the only limit that actually holds is
-one counted where the spend happens, for everyone at once.
-
-It lives in the database rather than in the process. A counter in memory resets
-on every deploy and every restart, and two tasks behind a load balancer each
-keep their own — so the cap you set would quietly become twice the cap, or none
-at all after a crash loop. Raising DesiredCount is the first thing DEPLOY.md
-says to do, and this has to survive that.
-
-The ceiling is a refusal, not an error. The system can say what it did and what
-it cannot do any more, and that is a designed state.
+This is the daily ceiling on what answering questions can cost. /ask is the one
+endpoint that spends money and everything else costs a query, and since there are
+no accounts there is nobody to bill and nobody to throttle individually, so the
+only limit that actually holds is one counted where the spend happens, for
+everyone at once. It lives in the database rather than in the process, because a
+counter in memory resets on every deploy and two tasks behind a load balancer
+each keep their own, so the cap you set would quietly become twice the cap or
+none at all after a crash loop, and raising DesiredCount is the first thing
+DEPLOY.md says to do. The claim is a single statement rather than a read and then
+a write, so two requests arriving together cannot both take the last slot, and a
+refused question is never counted, since the number is questions answered and not
+questions attempted. The ceiling is a refusal and not an error: the system can
+say what it did and what it can no longer do, which is a designed state. Imported
+by main.py, and the limit is read from ASK_DAILY_BUDGET at call time, defaulting
+to 500 and switched off by 0.
 """
 
 import datetime

@@ -1,14 +1,13 @@
 """
-This file compares two snapshots of the same company and says what changed. The
-archive keeps what the APIs returned under a dated key, so the question "what is
-different since last time" is answerable from two stored payloads without asking
-either API again.
-
-It is deliberately about changes a person would act on, not every difference. A
-trial's description being reworded is a difference; a Phase 3 turning into
-TERMINATED is news. Everything reported here is derived from the two payloads and
-says which values it compared, so a claim can be checked the same way every other
-number in this project can.
+This compares two snapshots of the same company and says what changed. The
+archive keeps what the APIs returned under a dated key, so the question of what
+is different since last time is answerable from two stored payloads without
+asking either API again. It is deliberately about changes a person would act on
+and not every difference: a trial's description being reworded is a difference,
+while a Phase 3 turning into TERMINATED is news. Everything reported is derived
+from the two payloads and says which values it compared, so a claim can be
+checked the same way every other number in this project can. Imported by main.py
+for the /changes routes.
 """
 
 from .data_sources import parse_trials

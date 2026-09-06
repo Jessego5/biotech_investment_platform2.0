@@ -1,8 +1,9 @@
 """
-This file turns the real data into simple signals you can actually explain.
-Every signal is worked out from the real numbers and says why it says what it
-says, so you can check it. A plain language summary can sit on top of these 
-same facts later.
+This turns the real data into simple signals that can be explained. Every signal
+is worked out from the real numbers and says why it says what it says, so any of
+them can be checked, and a plain language summary can sit on top of the same
+facts later. Imported by main.py, which calls build_assessment for a company's
+page.
 """
 
 

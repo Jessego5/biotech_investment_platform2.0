@@ -1,18 +1,15 @@
 """
-How long a company's approved products stay protected, read from the FDA Orange
-Book.
-
-The signal this produces is deliberately three-state rather than a yes/no. A
-boolean was the obvious shape and it is wrong in both directions at once:
-measured over the universe it reads FALSE for 85% of companies, nearly all of
-them wrongly, because a clinical-stage biotech has no approved product to list
-patents against and Regeneron's are biologics that are not in this book at all.
-And among the companies the book can speak about, 90% are TRUE, so where it is
-computable it distinguishes almost nobody.
-
-The date is where the signal is. Expiries across the book run from this month to
-the mid-2040s, and "protected until 2027" and "protected until 2038" are not the
-same investment.
+This says how long a company's approved products stay protected, read from the
+FDA Orange Book and the Purple Book. The signal is deliberately three-state
+rather than a yes or no, because a boolean is wrong in both directions at once:
+measured over the universe it reads false for 85% of companies, nearly all of
+them wrongly, since a clinical-stage biotech has no approved product to list
+patents against and Regeneron's are biologics that are not in the Orange Book at
+all, while among the companies the book can speak about 90% are true, so where it
+is computable it distinguishes almost nobody. The date is where the signal is,
+since expiries run from this month to the mid-2040s and protected until 2027 and
+protected until 2038 are not the same investment. Imported by main.py and by the
+watchlist, which call protection_for with a ticker and a date.
 """
 
 from sqlalchemy import func

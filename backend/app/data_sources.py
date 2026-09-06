@@ -1,7 +1,10 @@
 """
-This file grabs the real data for each company, the clinical trials from
+This fetches the real data for each company, the clinical trials from
 ClinicalTrials.gov and the financials from SEC EDGAR. It only works for public
-companies since those are the ones with real filings.
+companies, since those are the ones with real filings. Every SEC request goes
+through one rate limiter shared across threads and retries on a 429, because the
+limit is per requester and not per thread. Imported by ingest.py and by main.py's
+live fallback, and it needs SEC_USER_AGENT set to a real contact address.
 """
 
 import json

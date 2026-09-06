@@ -1,13 +1,12 @@
 """
-This file fetches the wider trial registry: industry-sponsored interventional
-studies from every company, not only the ones in our universe. It answers the
-question the company-by-company view cannot, which is who else is developing for
-an indication and when their readouts are due.
-
-It writes to registry_trials, deliberately not to trials. That table holds
-studies led by a company we track and every pipeline count and signal is computed
-from it, so a competitor's Phase 3 landing in it would silently become part of
-somebody's own pipeline.
+This fetches the wider trial registry, industry-sponsored interventional studies
+from every company and not only the ones in our universe. It answers the question
+the company-by-company view cannot, which is who else is developing for an
+indication and when their readouts are due. It writes to registry_trials and
+deliberately not to trials, because that table holds studies led by a company we
+track and every pipeline count and signal is computed from it, so a competitor's
+Phase 3 landing in it would silently become part of somebody's own pipeline.
+Imported by ingest_registry.py, which drives the paging.
 """
 
 from .data_sources import CT_BASE, _get_with_retry

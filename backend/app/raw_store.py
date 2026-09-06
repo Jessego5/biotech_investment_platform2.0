@@ -1,16 +1,15 @@
 """
-This file archives what the APIs actually returned, before we parse it down to the
+This archives what the APIs actually returned, before parsing them down to the
 handful of fields the database keeps. Every ingestion run writes one snapshot per
-company under a dated key, and nothing ever overwrites an earlier date, so the
-archive accumulates history instead of replacing it. That is the missing piece for
-change over time: today's ingest still wipes and replaces the database rows, but
-the snapshots behind them stay, so "what changed since last month" becomes a
-question you can actually answer, and a field this version of the code ignores can
-still be recovered later by re-parsing an old snapshot.
-
-It writes to S3 when RAW_BUCKET is set, which is how it runs as a container task,
-and to a local folder otherwise, so running locally needs no AWS account and no
-credentials.
+company under a dated key and nothing ever overwrites an earlier date, so the
+archive accumulates history instead of replacing it. That is what makes change
+over time answerable: today's ingest still wipes and replaces the database rows,
+but the snapshots behind them stay, so what changed since last month is a real
+question, and a field this version of the code ignores can be recovered later by
+re-parsing an old snapshot. It writes to S3 when RAW_BUCKET is set, which is how
+it runs as a container task, and to a local folder otherwise, so running locally
+needs no AWS account and no credentials. Imported by ingest.py and by changes.py,
+which reads the snapshots back.
 """
 
 import gzip
