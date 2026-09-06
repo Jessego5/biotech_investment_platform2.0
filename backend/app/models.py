@@ -259,6 +259,15 @@ class FilingChunk(Base):
     text = Column(Text)
     embedding = Column(Embedding)
 
+    # The same passage embedded again, with a line naming the document it came
+    # from prepended to it. A passage is stored without its own identity — a
+    # risk factor reads the same in every filing that has one — so the vector
+    # for "we may be unable to protect our intellectual property" is nearly the
+    # same vector whoever filed it, and the search cannot tell the companies
+    # apart. Filled by embed_contextual.py, and null until it is: the searches
+    # that use it fall back to the plain column rather than returning nothing.
+    embedding_ctx = Column(Embedding)
+
     filing = relationship("Filing", back_populates="chunks")
 
 

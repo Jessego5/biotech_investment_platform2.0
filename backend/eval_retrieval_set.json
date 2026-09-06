@@ -1,0 +1,1228 @@
+{
+ "built": "2026-09-04",
+ "model": "gpt-4o-mini",
+ "seed": 0.42,
+ "plan": {
+  "risk_factors": 50,
+  "mdna": 35,
+  "intellectual_property": 35
+ },
+ "cases": [
+  {
+   "chunk_id": 356529,
+   "filing_id": 2901,
+   "ordinal": 3,
+   "section": "risk_factors",
+   "ticker": "ATNM",
+   "fiscal_year": 2021,
+   "named": "What are the potential capital challenges that Actinium Pharmaceuticals might face in the future?",
+   "topical": "What potential challenges might a company face in securing sufficient capital for its operations?"
+  },
+  {
+   "chunk_id": 372479,
+   "filing_id": 3092,
+   "ordinal": 84,
+   "section": "risk_factors",
+   "ticker": "BNGO",
+   "fiscal_year": 2024,
+   "named": "What risks does Bionano Genomics, Inc. face regarding its internal control over financial reporting?",
+   "topical": "What risks does a smaller reporting company face regarding its internal control over financial reporting?"
+  },
+  {
+   "chunk_id": 256279,
+   "filing_id": 2067,
+   "ordinal": 6,
+   "section": "risk_factors",
+   "ticker": "RMTI",
+   "fiscal_year": 2025,
+   "named": "What risks does Rockwell Medical face related to production costs and government funding?",
+   "topical": "What risks does this company face concerning production costs and reliance on government funding for its business?"
+  },
+  {
+   "chunk_id": 548746,
+   "filing_id": 5004,
+   "ordinal": 9,
+   "section": "risk_factors",
+   "ticker": "SRPT",
+   "fiscal_year": 2021,
+   "named": "What regulatory challenges does Sarepta Therapeutics face in obtaining product approvals outside the U.S.?",
+   "topical": "What are the potential regulatory challenges a company may encounter when seeking product approvals in international markets?"
+  },
+  {
+   "chunk_id": 447062,
+   "filing_id": 3909,
+   "ordinal": 18,
+   "section": "risk_factors",
+   "ticker": "IMTX",
+   "fiscal_year": 2022,
+   "named": "What risks does Immatics N.V. face regarding regulatory approvals and commercialization of their product candidates?",
+   "topical": "What are the risks associated with regulatory approvals and commercialization of product candidates in the biopharmaceutical industry?"
+  },
+  {
+   "chunk_id": 378768,
+   "filing_id": 3157,
+   "ordinal": 63,
+   "section": "risk_factors",
+   "ticker": "CADL",
+   "fiscal_year": 2024,
+   "named": "What are the risks related to internal controls and product liability for Candel Therapeutics, Inc.?",
+   "topical": "What are the risks associated with internal controls and potential product liability for the company?"
+  },
+  {
+   "chunk_id": 374625,
+   "filing_id": 3112,
+   "ordinal": 30,
+   "section": "risk_factors",
+   "ticker": "BOLT",
+   "fiscal_year": 2021,
+   "named": "What risks does Bolt Biotherapeutics face in scaling up the manufacturing of its product candidates?",
+   "topical": "What are the potential challenges in scaling up manufacturing for a biopharmaceutical company\u2019s product candidates?"
+  },
+  {
+   "chunk_id": 454175,
+   "filing_id": 3990,
+   "ordinal": 11,
+   "section": "risk_factors",
+   "ticker": "IOVA",
+   "fiscal_year": 2021,
+   "named": "What regulatory risks does Iovance Biotherapeutics face in clinical trials?",
+   "topical": "What regulatory risks are associated with conducting clinical trials for biotechnology products?"
+  },
+  {
+   "chunk_id": 457608,
+   "filing_id": 4020,
+   "ordinal": 5,
+   "section": "risk_factors",
+   "ticker": "ISPC",
+   "fiscal_year": 2023,
+   "named": "What risks does iSpecimen Inc. face in expanding internationally and developing its technology?",
+   "topical": "What challenges could impact a company's international expansion and technology development?"
+  },
+  {
+   "chunk_id": 523681,
+   "filing_id": 4750,
+   "ordinal": 10,
+   "section": "risk_factors",
+   "ticker": "QNTM",
+   "fiscal_year": 2024,
+   "named": "What risks does Quantum Biopharma Ltd. face regarding its product candidates and overall business viability?",
+   "topical": "What risks are associated with developing pharmaceutical product candidates and achieving business viability in the biotechnology sector?"
+  },
+  {
+   "chunk_id": 346702,
+   "filing_id": 2786,
+   "ordinal": 94,
+   "section": "risk_factors",
+   "ticker": "AMPH",
+   "fiscal_year": 2022,
+   "named": "What risks does Amphastar Pharmaceuticals face concerning securities litigation and market price fluctuations?",
+   "topical": "What are the risks related to securities litigation and market price fluctuations that may affect pharmaceutical companies?"
+  },
+  {
+   "chunk_id": 477827,
+   "filing_id": 4225,
+   "ordinal": 99,
+   "section": "risk_factors",
+   "ticker": "MAZE",
+   "fiscal_year": 2024,
+   "named": "What risks does Maze Therapeutics, Inc. face from financial markets and economic factors?",
+   "topical": "What types of risks are associated with the financial markets and economic factors that could impact a company?"
+  },
+  {
+   "chunk_id": 386212,
+   "filing_id": 3235,
+   "ordinal": 16,
+   "section": "risk_factors",
+   "ticker": "CGEN",
+   "fiscal_year": 2023,
+   "named": "What risks does Compugen Ltd face in its clinical trials that could impact its product development?",
+   "topical": "What are the potential risks in clinical trials that could affect product development for a biotech company?"
+  },
+  {
+   "chunk_id": 202707,
+   "filing_id": 1543,
+   "ordinal": 46,
+   "section": "risk_factors",
+   "ticker": "TGTX",
+   "fiscal_year": 2025,
+   "named": "What legal risks does TG Therapeutics, Inc. face regarding compliance with healthcare regulations?",
+   "topical": "What legal risks does a healthcare company face regarding compliance with healthcare regulations?"
+  },
+  {
+   "chunk_id": 515429,
+   "filing_id": 4655,
+   "ordinal": 70,
+   "section": "risk_factors",
+   "ticker": "PRAX",
+   "fiscal_year": 2024,
+   "named": "What risks does Praxis Precision Medicines face regarding litigation and intellectual property rights?",
+   "topical": "What challenges could arise from litigation and intellectual property rights that may affect a company's operations and growth?"
+  },
+  {
+   "chunk_id": 482156,
+   "filing_id": 4280,
+   "ordinal": 11,
+   "section": "risk_factors",
+   "ticker": "MEOBF",
+   "fiscal_year": 2022,
+   "named": "What risks does Mesoblast Ltd face when conducting international clinical trials?",
+   "topical": "What challenges do companies encounter when carrying out multinational clinical trials?"
+  },
+  {
+   "chunk_id": 481010,
+   "filing_id": 4262,
+   "ordinal": 26,
+   "section": "risk_factors",
+   "ticker": "MDT",
+   "fiscal_year": 2024,
+   "named": "What risks does Medtronic face related to industry consolidation and cost-containment measures?",
+   "topical": "What risks are associated with industry consolidation and cost-containment measures in the healthcare sector?"
+  },
+  {
+   "chunk_id": 370697,
+   "filing_id": 3073,
+   "ordinal": 4,
+   "section": "risk_factors",
+   "ticker": "BLRX",
+   "fiscal_year": 2024,
+   "named": "What are the key risks related to profitability for BioLineRx Ltd.?",
+   "topical": "What are the major risks associated with achieving and sustaining profitability for the company?"
+  },
+  {
+   "chunk_id": 513121,
+   "filing_id": 4629,
+   "ordinal": 31,
+   "section": "risk_factors",
+   "ticker": "PHVS",
+   "fiscal_year": 2022,
+   "named": "How has Pharvaris N.V. been impacted by the ACA and recent changes in the healthcare regulatory environment?",
+   "topical": "What impact have recent changes in the healthcare regulatory environment had on pharmaceutical companies and their product candidates?"
+  },
+  {
+   "chunk_id": 491946,
+   "filing_id": 4393,
+   "ordinal": 15,
+   "section": "risk_factors",
+   "ticker": "NKTX",
+   "fiscal_year": 2023,
+   "named": "What risks does Nkarta, Inc. face in the development and commercialization of NKX101?",
+   "topical": "What risks are associated with the development and commercialization of a product candidate for treating blood cancers and other indications?"
+  },
+  {
+   "chunk_id": 522317,
+   "filing_id": 4735,
+   "ordinal": 93,
+   "section": "risk_factors",
+   "ticker": "PYXS",
+   "fiscal_year": 2023,
+   "named": "What risks does Pyxis Oncology face regarding the protection of its trade secrets?",
+   "topical": "What challenges does a company face in protecting its trade secrets from competitors and third parties?"
+  },
+  {
+   "chunk_id": 554507,
+   "filing_id": 5075,
+   "ordinal": 36,
+   "section": "risk_factors",
+   "ticker": "TBPH",
+   "fiscal_year": 2024,
+   "named": "What data protection compliance challenges does Theravance Biopharma face under GDPR and related laws?",
+   "topical": "What compliance challenges do companies face regarding GDPR and data protection laws in the EU and UK?"
+  },
+  {
+   "chunk_id": 348473,
+   "filing_id": 2809,
+   "ordinal": 108,
+   "section": "risk_factors",
+   "ticker": "ANL",
+   "fiscal_year": 2023,
+   "named": "What limitations do shareholders of Adlai Nortye Ltd. have regarding their rights and recourse under the deposit agreement?",
+   "topical": "What are the limitations on shareholders' rights and recourse under the deposit agreement with regards to their security holdings?"
+  },
+  {
+   "chunk_id": 523449,
+   "filing_id": 4747,
+   "ordinal": 3,
+   "section": "risk_factors",
+   "ticker": "QNRX",
+   "fiscal_year": 2023,
+   "named": "What specific risks does Quoin Pharmaceuticals face in product development and commercialization?",
+   "topical": "What key uncertainties and expenses are associated with pharmaceutical product development and commercialization efforts?"
+  },
+  {
+   "chunk_id": 396428,
+   "filing_id": 3353,
+   "ordinal": 84,
+   "section": "risk_factors",
+   "ticker": "CRBU",
+   "fiscal_year": 2024,
+   "named": "What challenges does Caribou Biosciences face in recruiting and retaining critical personnel for its business operations?",
+   "topical": "What challenges do companies in the biotechnology sector face when it comes to recruiting and retaining critical personnel for their business operations?"
+  },
+  {
+   "chunk_id": 566298,
+   "filing_id": 5200,
+   "ordinal": 45,
+   "section": "risk_factors",
+   "ticker": "TSHA",
+   "fiscal_year": 2022,
+   "named": "What are the competitive challenges Taysha Gene Therapies, Inc. faces in the neurology field for their product candidates?",
+   "topical": "What competitive challenges does a company face in the neurology field regarding its product candidates?"
+  },
+  {
+   "chunk_id": 355965,
+   "filing_id": 2892,
+   "ordinal": 75,
+   "section": "risk_factors",
+   "ticker": "ASND",
+   "fiscal_year": 2022,
+   "named": "What are the potential risks related to personal data regulations for Ascendis Pharma A/S?",
+   "topical": "What risks are associated with personal data regulations and compliance in the current legal landscape?"
+  },
+  {
+   "chunk_id": 559843,
+   "filing_id": 5132,
+   "ordinal": 50,
+   "section": "risk_factors",
+   "ticker": "TLPH",
+   "fiscal_year": 2022,
+   "named": "What are the implications of pending legal proceedings for Talphera, Inc.'s financial resources and potential class action lawsuits?",
+   "topical": "What risks do pending legal proceedings pose to a company's financial resources and potential class action lawsuits?"
+  },
+  {
+   "chunk_id": 573795,
+   "filing_id": 5286,
+   "ordinal": 11,
+   "section": "risk_factors",
+   "ticker": "VRDN",
+   "fiscal_year": 2024,
+   "named": "What challenges does Viridian Therapeutics face in securing regulatory approval for its product candidates?",
+   "topical": "What challenges does a biotechnology company face in securing regulatory approval for its product candidates?"
+  },
+  {
+   "chunk_id": 560209,
+   "filing_id": 5135,
+   "ordinal": 10,
+   "section": "risk_factors",
+   "ticker": "TLRY",
+   "fiscal_year": 2025,
+   "named": "What risks related to competition and distribution does Tilray Brands, Inc. face in the alcoholic beverage market?",
+   "topical": "What risks related to competition and distribution are present in the alcoholic beverage industry?"
+  },
+  {
+   "chunk_id": 490019,
+   "filing_id": 4373,
+   "ordinal": 26,
+   "section": "risk_factors",
+   "ticker": "NBIX",
+   "fiscal_year": 2023,
+   "named": "What risks does Neurocrine Biosciences face that could impact its business and operations?",
+   "topical": "What are the potential risks that could negatively affect a biotechnology company's business and operations?"
+  },
+  {
+   "chunk_id": 502092,
+   "filing_id": 4505,
+   "ordinal": 13,
+   "section": "risk_factors",
+   "ticker": "OGEN",
+   "fiscal_year": 2023,
+   "named": "What are the risks affecting Oragenics Inc's potential success with ONP-002 and its Neurology Assets?",
+   "topical": "What risks could impact the future success of the company\u2019s concussion asset and other Neurology Assets?"
+  },
+  {
+   "chunk_id": 205481,
+   "filing_id": 1567,
+   "ordinal": 83,
+   "section": "risk_factors",
+   "ticker": "TVRD",
+   "fiscal_year": 2025,
+   "named": "What risks does Tvardi Therapeutics face related to employee retention and misconduct?",
+   "topical": "What risks does a biotechnology company face concerning employee retention and misconduct in compliance with regulatory standards?"
+  },
+  {
+   "chunk_id": 371986,
+   "filing_id": 3086,
+   "ordinal": 3,
+   "section": "risk_factors",
+   "ticker": "BMRA",
+   "fiscal_year": 2022,
+   "named": "What specific risks does Biomerica Inc face regarding its manufacturing facility in Mexico?",
+   "topical": "What risks are associated with operating a manufacturing facility outside the United States?"
+  },
+  {
+   "chunk_id": 537078,
+   "filing_id": 4883,
+   "ordinal": 21,
+   "section": "risk_factors",
+   "ticker": "SCLXW",
+   "fiscal_year": 2024,
+   "named": "What risks does Scilex Holding Co face regarding third-party involvement in their clinical trials?",
+   "topical": "What risks are associated with third-party involvement in clinical trials for a company dependent on external organizations?"
+  },
+  {
+   "chunk_id": 502899,
+   "filing_id": 4514,
+   "ordinal": 38,
+   "section": "risk_factors",
+   "ticker": "OKUR",
+   "fiscal_year": 2022,
+   "named": "What risks does OnKure Therapeutics, Inc. face regarding compliance and misconduct in its operations?",
+   "topical": "What are the potential risks related to compliance and misconduct that could impact a company's operations and commercialization efforts?"
+  },
+  {
+   "chunk_id": 372619,
+   "filing_id": 3094,
+   "ordinal": 2,
+   "section": "risk_factors",
+   "ticker": "BNGO",
+   "fiscal_year": 2022,
+   "named": "What are the key risk factors that could affect Bionano Genomics' financial performance and stock price?",
+   "topical": "What are the major risks that might impact the financial results and stock value of a company in the genomics industry?"
+  },
+  {
+   "chunk_id": 567359,
+   "filing_id": 5209,
+   "ordinal": 63,
+   "section": "risk_factors",
+   "ticker": "TVTX",
+   "fiscal_year": 2021,
+   "named": "What financial risks does Travere Therapeutics face concerning the 2025 Notes?",
+   "topical": "What financial risks might a company encounter related to its 2025 Notes?"
+  },
+  {
+   "chunk_id": 416177,
+   "filing_id": 3575,
+   "ordinal": 11,
+   "section": "risk_factors",
+   "ticker": "EOLS",
+   "fiscal_year": 2023,
+   "named": "What competitive challenges is Evolus, Inc. facing in the medical aesthetic market?",
+   "topical": "What competitive challenges are being faced in the medical aesthetic market that could impact business success?"
+  },
+  {
+   "chunk_id": 378889,
+   "filing_id": 3158,
+   "ordinal": 36,
+   "section": "risk_factors",
+   "ticker": "CADL",
+   "fiscal_year": 2023,
+   "named": "What risks does Candel Therapeutics, Inc. face in maintaining regulatory compliance for their products?",
+   "topical": "What are the potential regulatory compliance risks that a biopharmaceutical company might encounter with product approvals?"
+  },
+  {
+   "chunk_id": 201926,
+   "filing_id": 1534,
+   "ordinal": 125,
+   "section": "risk_factors",
+   "ticker": "TCRX",
+   "fiscal_year": 2025,
+   "named": "What are the potential risks TScan Therapeutics, Inc. faces related to changes in tax legislation and inflation rates?",
+   "topical": "What risks does the company face regarding changes in tax laws and inflation rates that could impact its financial condition?"
+  },
+  {
+   "chunk_id": 373976,
+   "filing_id": 3105,
+   "ordinal": 57,
+   "section": "risk_factors",
+   "ticker": "BODYW",
+   "fiscal_year": 2023,
+   "named": "What are the potential risks and impacts related to dilution and the reverse stock split for Beachbody Company, Inc. shareholders?",
+   "topical": "What risks may existing stockholders face regarding dilution and liquidity following a company's potential issuance of equity securities and a reverse stock split?"
+  },
+  {
+   "chunk_id": 138087,
+   "filing_id": 891,
+   "ordinal": 114,
+   "section": "risk_factors",
+   "ticker": "ALMS",
+   "fiscal_year": 2025,
+   "named": "What risks does Alumis Inc. face regarding the securities class action lawsuit involving ACELYRIN?",
+   "topical": "What are the risks associated with securities class action lawsuits for a company after a merger?"
+  },
+  {
+   "chunk_id": 425620,
+   "filing_id": 3680,
+   "ordinal": 47,
+   "section": "risk_factors",
+   "ticker": "GERN",
+   "fiscal_year": 2024,
+   "named": "What specific risks could Geron Corp face related to their loan agreements and intellectual property for RYTELO?",
+   "topical": "What specific risks could a company face related to its loan agreements and intellectual property for a product?"
+  },
+  {
+   "chunk_id": 479192,
+   "filing_id": 4242,
+   "ordinal": 63,
+   "section": "risk_factors",
+   "ticker": "MBX",
+   "fiscal_year": 2024,
+   "named": "What risks does MBX Biosciences face regarding compliance with data protection laws and the use of AI technologies?",
+   "topical": "What compliance challenges and risks are associated with evolving data protection regulations and the integration of new technologies in business operations?"
+  },
+  {
+   "chunk_id": 562632,
+   "filing_id": 5164,
+   "ordinal": 41,
+   "section": "risk_factors",
+   "ticker": "TNGX",
+   "fiscal_year": 2023,
+   "named": "What specific risks does Tango Therapeutics face regarding its supply chain and intellectual property management?",
+   "topical": "What specific risks does the company face regarding its supply chain and intellectual property management?"
+  },
+  {
+   "chunk_id": 453806,
+   "filing_id": 3987,
+   "ordinal": 33,
+   "section": "risk_factors",
+   "ticker": "IOVA",
+   "fiscal_year": 2024,
+   "named": "What challenges does Iovance Biotherapeutics face regarding product naming and regulatory approvals?",
+   "topical": "What challenges does the company face regarding product naming and regulatory approvals that could impact commercialization?"
+  },
+  {
+   "chunk_id": 451933,
+   "filing_id": 3964,
+   "ordinal": 47,
+   "section": "risk_factors",
+   "ticker": "INO",
+   "fiscal_year": 2022,
+   "named": "How could economic conditions impact Inovio Pharmaceuticals' results of operations?",
+   "topical": "What are the potential risks to a company's results of operations due to general economic conditions?"
+  },
+  {
+   "chunk_id": 322991,
+   "filing_id": 2544,
+   "ordinal": 92,
+   "section": "risk_factors",
+   "ticker": "BDTX",
+   "fiscal_year": 2025,
+   "named": "What are the key risk factors that Black Diamond Therapeutics faces in its clinical development and commercialization efforts?",
+   "topical": "What are the key risk factors associated with clinical development and commercialization efforts in the biotech industry?"
+  },
+  {
+   "chunk_id": 203091,
+   "filing_id": 1546,
+   "ordinal": 13,
+   "section": "risk_factors",
+   "ticker": "TLPH",
+   "fiscal_year": 2025,
+   "named": "What challenges does Talphera, Inc. face regarding reimbursement and coverage for its products?",
+   "topical": "What challenges do companies in the healthcare industry face regarding reimbursement and coverage for their products?"
+  },
+  {
+   "chunk_id": 580567,
+   "filing_id": 5358,
+   "ordinal": 0,
+   "section": "mdna",
+   "ticker": "XNCR",
+   "fiscal_year": 2024,
+   "named": "What strategies is Xencor Inc using to prioritize its portfolio of drug candidates?",
+   "topical": "What strategies are being used to prioritize the development of drug candidates in the biopharmaceutical sector?"
+  },
+  {
+   "chunk_id": 567777,
+   "filing_id": 5215,
+   "ordinal": 1,
+   "section": "mdna",
+   "ticker": "TYRA",
+   "fiscal_year": 2023,
+   "named": "What recent developments did Tyra Biosciences announce regarding the treatment for achondroplasia?",
+   "topical": "What are the latest advancements in the development of a treatment for achondroplasia and its clinical trials?"
+  },
+  {
+   "chunk_id": 556111,
+   "filing_id": 5092,
+   "ordinal": 9,
+   "section": "mdna",
+   "ticker": "TDOC",
+   "fiscal_year": 2023,
+   "named": "What are the components of Teladoc Health's cost of revenue and how do they relate to revenue fluctuations?",
+   "topical": "What are the primary factors that affect the cost of revenue for the company and its relationship to revenue changes?"
+  },
+  {
+   "chunk_id": 364565,
+   "filing_id": 3006,
+   "ordinal": 2,
+   "section": "mdna",
+   "ticker": "BDRX",
+   "fiscal_year": 2024,
+   "named": "What were the financial results for Biodexa Pharmaceuticals in FY2024 compared to FY2023?",
+   "topical": "What were the financial results for the company in FY2024 compared to FY2023?"
+  },
+  {
+   "chunk_id": 179713,
+   "filing_id": 1314,
+   "ordinal": 23,
+   "section": "mdna",
+   "ticker": "MGTX",
+   "fiscal_year": 2025,
+   "named": "What were MeiraGTx Holdings plc's cash flow activities for the years ended December 31, 2025, and 2024?",
+   "topical": "What were the cash flow activities for this company for the years ended December 31, 2025, and 2024?"
+  },
+  {
+   "chunk_id": 523831,
+   "filing_id": 4752,
+   "ordinal": 1,
+   "section": "mdna",
+   "ticker": "QNTM",
+   "fiscal_year": 2022,
+   "named": "What roles have Anthony Durkacz and Zeeshan Saeed held at Quantum Biopharma Ltd.?",
+   "topical": "What positions have the interim CEO and the President held in the biopharma company?"
+  },
+  {
+   "chunk_id": 596155,
+   "filing_id": 5556,
+   "ordinal": 57,
+   "section": "mdna",
+   "ticker": "AIM",
+   "fiscal_year": 2022,
+   "named": "What actions did AIM ImmunoTech Inc. take in response to the activist stockholder's nomination attempt?",
+   "topical": "What measures were taken in response to a stockholder's attempt to nominate board members that the company deemed invalid?"
+  },
+  {
+   "chunk_id": 352714,
+   "filing_id": 2856,
+   "ordinal": 3,
+   "section": "mdna",
+   "ticker": "ARAY",
+   "fiscal_year": 2022,
+   "named": "What unique capabilities does Accuray Inc's Radixact System offer in radiation therapy?",
+   "topical": "What unique capabilities does a leading radiation therapy system offer in treatment delivery and imaging?"
+  },
+  {
+   "chunk_id": 359377,
+   "filing_id": 2938,
+   "ordinal": 11,
+   "section": "mdna",
+   "ticker": "AVBP",
+   "fiscal_year": 2024,
+   "named": "What accounting practices does ArriVent BioPharma implement for estimating clinical trial costs and managing stock-based compensation?",
+   "topical": "What accounting practices are utilized for estimating clinical trial costs and managing stock-based compensation in a company?"
+  },
+  {
+   "chunk_id": 161413,
+   "filing_id": 1133,
+   "ordinal": 6,
+   "section": "mdna",
+   "ticker": "FDMT",
+   "fiscal_year": 2025,
+   "named": "What were 4D Molecular Therapeutics, Inc.'s net loss and revenue changes for the fiscal year 2025?",
+   "topical": "What were the changes in net loss and revenue for the company in fiscal year 2025?"
+  },
+  {
+   "chunk_id": 443263,
+   "filing_id": 3871,
+   "ordinal": 12,
+   "section": "mdna",
+   "ticker": "IKT",
+   "fiscal_year": 2024,
+   "named": "What accounting standards has Inhibikase Therapeutics, Inc. chosen to comply with under the JOBS Act?",
+   "topical": "What advantages does the JOBS Act provide for emerging growth companies regarding compliance with new accounting standards?"
+  },
+  {
+   "chunk_id": 537719,
+   "filing_id": 4889,
+   "ordinal": 7,
+   "section": "mdna",
+   "ticker": "SCYX",
+   "fiscal_year": 2022,
+   "named": "What is SCYNEXIS INC's plan to obtain additional capital for its operations?",
+   "topical": "What strategies are being considered to secure additional capital for ongoing operations?"
+  },
+  {
+   "chunk_id": 610988,
+   "filing_id": 5670,
+   "ordinal": 58,
+   "section": "mdna",
+   "ticker": "MMM",
+   "fiscal_year": 2024,
+   "named": "What was the change in net debt for 3M from December 31, 2023 to December 31, 2024?",
+   "topical": "How did net debt change from the end of 2023 to the end of 2024?"
+  },
+  {
+   "chunk_id": 450159,
+   "filing_id": 3941,
+   "ordinal": 33,
+   "section": "mdna",
+   "ticker": "INGN",
+   "fiscal_year": 2021,
+   "named": "What are Inogen Inc's critical accounting policies and estimates related to revenue recognition?",
+   "topical": "What are the critical accounting policies and estimates that affect revenue recognition in financial reporting?"
+  },
+  {
+   "chunk_id": 550203,
+   "filing_id": 5024,
+   "ordinal": 19,
+   "section": "mdna",
+   "ticker": "STOK",
+   "fiscal_year": 2021,
+   "named": "What accounting standards has Stoke Therapeutics adopted, and how do they affect their financial statements?",
+   "topical": "What accounting standards have been adopted by the company, and how do they influence the financial statements?"
+  },
+  {
+   "chunk_id": 375619,
+   "filing_id": 3124,
+   "ordinal": 14,
+   "section": "mdna",
+   "ticker": "BRNS",
+   "fiscal_year": 2021,
+   "named": "What acquisition did Barinthus Biotherapeutics plc. make, and what were the payment terms?",
+   "topical": "What acquisition was made by the organization, and what were the terms of the payment for that acquisition?"
+  },
+  {
+   "chunk_id": 424700,
+   "filing_id": 3668,
+   "ordinal": 11,
+   "section": "mdna",
+   "ticker": "GANX",
+   "fiscal_year": 2022,
+   "named": "What were Gain Therapeutics' cash used for investing and financing activities in 2022?",
+   "topical": "What were the cash uses related to investing and financing activities during the year in question?"
+  },
+  {
+   "chunk_id": 543459,
+   "filing_id": 4950,
+   "ordinal": 4,
+   "section": "mdna",
+   "ticker": "SMMT",
+   "fiscal_year": 2024,
+   "named": "What were the key changes in operating expenses for Summit Therapeutics in 2024 compared to 2023?",
+   "topical": "What were the significant changes in operating expenses for the company in 2024 compared to the previous year?"
+  },
+  {
+   "chunk_id": 140682,
+   "filing_id": 918,
+   "ordinal": 17,
+   "section": "mdna",
+   "ticker": "AQST",
+   "fiscal_year": 2025,
+   "named": "What are the revenue recognition practices of Aquestive Therapeutics regarding licensing arrangements and milestone payments?",
+   "topical": "How is revenue recognized for licensing arrangements and milestone payments in a company?"
+  },
+  {
+   "chunk_id": 405062,
+   "filing_id": 3454,
+   "ordinal": 4,
+   "section": "mdna",
+   "ticker": "DERM",
+   "fiscal_year": 2022,
+   "named": "What critical accounting policies and estimates are used by Journey Medical Corp in their financial statements?",
+   "topical": "What critical accounting policies and estimates are significant for understanding the financial statements of this public company?"
+  },
+  {
+   "chunk_id": 340974,
+   "filing_id": 2733,
+   "ordinal": 7,
+   "section": "mdna",
+   "ticker": "ALGN",
+   "fiscal_year": 2024,
+   "named": "What were the total net revenues for Align Technology in 2024 compared to 2023?",
+   "topical": "How did total net revenues change in 2024 compared to the previous year?"
+  },
+  {
+   "chunk_id": 586453,
+   "filing_id": 5422,
+   "ordinal": 3,
+   "section": "mdna",
+   "ticker": "AUTL",
+   "fiscal_year": 2023,
+   "named": "What options has Autolus Therapeutics granted to BioNTech under the License Agreement?",
+   "topical": "What options have been granted under the License Agreement regarding development and commercialization?"
+  },
+  {
+   "chunk_id": 569247,
+   "filing_id": 5235,
+   "ordinal": 3,
+   "section": "mdna",
+   "ticker": "USNA",
+   "fiscal_year": 2024,
+   "named": "How does USANA Health Sciences Inc. evaluate the impact of currency exchange rates on their financial results?",
+   "topical": "What methods are used to assess the effect of currency exchange fluctuations on a company's financial performance?"
+  },
+  {
+   "chunk_id": 599615,
+   "filing_id": 5578,
+   "ordinal": 23,
+   "section": "mdna",
+   "ticker": "BRTX",
+   "fiscal_year": 2024,
+   "named": "What were the independent accountant fees for BioRestorative Therapies, Inc. for the fiscal years ended December 31, 2024 and 2023?",
+   "topical": "What were the independent registered public accountants' fees for the fiscal years ended December 31, 2024 and 2023?"
+  },
+  {
+   "chunk_id": 538018,
+   "filing_id": 4892,
+   "ordinal": 3,
+   "section": "mdna",
+   "ticker": "SDGR",
+   "fiscal_year": 2023,
+   "named": "What revenue did Schrodinger, Inc. generate in 2023 and how does it compare to 2022?",
+   "topical": "What was the revenue generated in 2023 and how does it compare to the previous year's revenue?"
+  },
+  {
+   "chunk_id": 384780,
+   "filing_id": 3224,
+   "ordinal": 11,
+   "section": "mdna",
+   "ticker": "CERT",
+   "fiscal_year": 2022,
+   "named": "What were the main financial results and significant acquisitions reported by Certara, Inc. in their FY2022 10-K?",
+   "topical": "What were the main financial results and significant acquisitions reported in the FY2022 10-K for the company?"
+  },
+  {
+   "chunk_id": 605374,
+   "filing_id": 5624,
+   "ordinal": 20,
+   "section": "mdna",
+   "ticker": "IFRX",
+   "fiscal_year": 2022,
+   "named": "What challenges does InflaRx face in completing clinical trials for its product candidates?",
+   "topical": "What factors can affect the success of clinical trials for product candidates in the pharmaceutical industry?"
+  },
+  {
+   "chunk_id": 376694,
+   "filing_id": 3135,
+   "ordinal": 13,
+   "section": "mdna",
+   "ticker": "BSX",
+   "fiscal_year": 2022,
+   "named": "What is Boston Scientific Corporation's current financial position and liquidity outlook for the next 12 months?",
+   "topical": "What is the current financial position and liquidity outlook for the company over the next 12 months?"
+  },
+  {
+   "chunk_id": 449109,
+   "filing_id": 3929,
+   "ordinal": 12,
+   "section": "mdna",
+   "ticker": "INCY",
+   "fiscal_year": 2023,
+   "named": "What was the change in interest income for Incyte Corp between 2022 and 2023?",
+   "topical": "What was the increase in interest income for the company between the years ended December 31, 2022 and 2023?"
+  },
+  {
+   "chunk_id": 388456,
+   "filing_id": 3257,
+   "ordinal": 13,
+   "section": "mdna",
+   "ticker": "CL",
+   "fiscal_year": 2022,
+   "named": "What were the net income and earnings per share for Colgate-Palmolive Company in 2022 compared to 2021?",
+   "topical": "What were the net income and earnings per share for the company in 2022 compared to the previous year?"
+  },
+  {
+   "chunk_id": 569252,
+   "filing_id": 5235,
+   "ordinal": 8,
+   "section": "mdna",
+   "ticker": "USNA",
+   "fiscal_year": 2024,
+   "named": "What are the major operating lease responsibilities of USANA Health Sciences Inc?",
+   "topical": "What responsibilities are associated with operating leases that a company engages in?"
+  },
+  {
+   "chunk_id": 186362,
+   "filing_id": 1384,
+   "ordinal": 6,
+   "section": "mdna",
+   "ticker": "OPK",
+   "fiscal_year": 2025,
+   "named": "What were the main factors influencing OPKO Health's revenue growth in 2025?",
+   "topical": "What contributed to the revenue increase for the company in 2025?"
+  },
+  {
+   "chunk_id": 600568,
+   "filing_id": 5588,
+   "ordinal": 27,
+   "section": "mdna",
+   "ticker": "CGC",
+   "fiscal_year": 2025,
+   "named": "What were Canopy Growth Corp's asset impairment and restructuring costs in fiscal 2024 compared to fiscal 2023?",
+   "topical": "What were the asset impairment and restructuring costs recorded in operating expenses for the company in fiscal 2024 compared to the previous fiscal year?"
+  },
+  {
+   "chunk_id": 547631,
+   "filing_id": 4994,
+   "ordinal": 1,
+   "section": "mdna",
+   "ticker": "SPRO",
+   "fiscal_year": 2023,
+   "named": "What is the financial situation for Spero Therapeutics, Inc. as of December 31, 2023?",
+   "topical": "What are the projected financial challenges and funding strategies for a biotechnology company struggling with revenue generation?"
+  },
+  {
+   "chunk_id": 612675,
+   "filing_id": 5686,
+   "ordinal": 24,
+   "section": "mdna",
+   "ticker": "OTLC",
+   "fiscal_year": 2023,
+   "named": "What are Oncotelic Therapeutics, Inc.'s plans for developing and commercializing their product candidates?",
+   "topical": "What are the plans for developing and commercializing the product candidates of the company mentioned?"
+  },
+  {
+   "chunk_id": 358470,
+   "filing_id": 2927,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "AURA",
+   "fiscal_year": 2023,
+   "named": "What intellectual property rights does Aura Biosciences, Inc. hold related to bel-sar, including issued and pending patents?",
+   "topical": "What intellectual property rights does the company hold related to its product, including issued and pending patents?"
+  },
+  {
+   "chunk_id": 420365,
+   "filing_id": 3621,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "FATE",
+   "fiscal_year": 2023,
+   "named": "What is FATE Therapeutics Inc's intellectual property strategy?",
+   "topical": "What strategies are employed to protect the intellectual property of a biotechnology company?"
+  },
+  {
+   "chunk_id": 561329,
+   "filing_id": 5148,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "TMCI",
+   "fiscal_year": 2023,
+   "named": "What is the current status of Treace Medical Concepts' intellectual property portfolio as of December 31, 2023?",
+   "topical": "What is the current status of the intellectual property portfolio of the company as of December 31, 2023?"
+  },
+  {
+   "chunk_id": 355277,
+   "filing_id": 2884,
+   "ordinal": 6,
+   "section": "intellectual_property",
+   "ticker": "ARWR",
+   "fiscal_year": 2022,
+   "named": "What collaborations has Arrowhead Pharmaceuticals entered into with Amgen regarding RNAi therapies?",
+   "topical": "What collaboration and licensing agreements involve RNAi therapies designed to target elevated lipoprotein(a) and other cardiovascular conditions?"
+  },
+  {
+   "chunk_id": 544367,
+   "filing_id": 4964,
+   "ordinal": 5,
+   "section": "intellectual_property",
+   "ticker": "SNGX",
+   "fiscal_year": 2021,
+   "named": "What is the status of Soligenix, Inc.'s license agreements related to their heat stabilization technology and vaccine development?",
+   "topical": "What is the current status of the license agreements related to heat stabilization technology and vaccine development for the company?"
+  },
+  {
+   "chunk_id": 539369,
+   "filing_id": 4905,
+   "ordinal": 3,
+   "section": "intellectual_property",
+   "ticker": "SERA",
+   "fiscal_year": 2023,
+   "named": "What challenges does Sera Prognostics face in maintaining its intellectual property protections?",
+   "topical": "What challenges does a company face in maintaining its intellectual property protections?"
+  },
+  {
+   "chunk_id": 141584,
+   "filing_id": 927,
+   "ordinal": 11,
+   "section": "intellectual_property",
+   "ticker": "ARWR",
+   "fiscal_year": 2025,
+   "named": "What patent rights and licenses has Arrowhead Pharmaceuticals acquired related to RNAi therapeutics?",
+   "topical": "What patent rights and licenses have been acquired related to RNAi therapeutics by the company?"
+  },
+  {
+   "chunk_id": 508760,
+   "filing_id": 4579,
+   "ordinal": 4,
+   "section": "intellectual_property",
+   "ticker": "PBYI",
+   "fiscal_year": 2021,
+   "named": "What are the key terms of PUMA BIOTECHNOLOGY, INC.'s licensing agreement with Pfizer for neratinib and related compounds?",
+   "topical": "What are the key terms of the licensing agreement for neratinib and related compounds with the partner company?"
+  },
+  {
+   "chunk_id": 155800,
+   "filing_id": 1079,
+   "ordinal": 2,
+   "section": "intellectual_property",
+   "ticker": "CYTK",
+   "fiscal_year": 2025,
+   "named": "What are the risks related to the intellectual property of Cytokinetics Inc. as mentioned in the 10-K report?",
+   "topical": "What are the risks related to intellectual property for companies in the pharmaceutical industry as discussed in the 10-K report?"
+  },
+  {
+   "chunk_id": 374571,
+   "filing_id": 3112,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "BOLT",
+   "fiscal_year": 2021,
+   "named": "What is the status of Bolt Biotherapeutics' intellectual property, including patents related to their product candidate BDC-1001?",
+   "topical": "What is the status of the company's intellectual property, including patents related to their lead product candidate?"
+  },
+  {
+   "chunk_id": 355724,
+   "filing_id": 2891,
+   "ordinal": 2,
+   "section": "intellectual_property",
+   "ticker": "ASND",
+   "fiscal_year": 2023,
+   "named": "What are the patent families held by Ascendis Pharma A/S related to their products as of December 31, 2023?",
+   "topical": "What are the details regarding various patent families related to a company's products as of December 31, 2023?"
+  },
+  {
+   "chunk_id": 183702,
+   "filing_id": 1357,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "NUVB",
+   "fiscal_year": 2025,
+   "named": "What strategies does Nuvation Bio Inc. use to protect its intellectual property?",
+   "topical": "What strategies are used by companies to protect their intellectual property and proprietary information?"
+  },
+  {
+   "chunk_id": 607014,
+   "filing_id": 5636,
+   "ordinal": 20,
+   "section": "intellectual_property",
+   "ticker": "IPHYF",
+   "fiscal_year": 2025,
+   "named": "What impact could evolving drug pricing legislation have on Innate Pharma's revenue growth and portfolio strategy?",
+   "topical": "How might changes in drug pricing legislation influence revenue growth and portfolio strategy in the pharmaceutical industry?"
+  },
+  {
+   "chunk_id": 191141,
+   "filing_id": 1437,
+   "ordinal": 7,
+   "section": "intellectual_property",
+   "ticker": "PYXS",
+   "fiscal_year": 2025,
+   "named": "What intellectual property has Pyxis Oncology, Inc. exclusively licensed from Pfizer?",
+   "topical": "What intellectual property has been exclusively licensed from a major pharmaceutical company in relation to therapeutic protein conjugation and antibody-drug conjugates?"
+  },
+  {
+   "chunk_id": 560663,
+   "filing_id": 5141,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "TLSA",
+   "fiscal_year": 2022,
+   "named": "What is Tiziana Life Sciences Ltd's strategy for protecting its intellectual property?",
+   "topical": "What strategies are employed to safeguard proprietary technologies and patent rights in the business?"
+  },
+  {
+   "chunk_id": 472384,
+   "filing_id": 4166,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "LLY",
+   "fiscal_year": 2022,
+   "named": "What are the patent protection strategies that ELI LILLY & Co employs to maintain market exclusivity for its pharmaceuticals?",
+   "topical": "What patent protection strategies can a pharmaceutical company use to maintain market exclusivity for its products?"
+  },
+  {
+   "chunk_id": 563475,
+   "filing_id": 5173,
+   "ordinal": 17,
+   "section": "intellectual_property",
+   "ticker": "TNXP",
+   "fiscal_year": 2021,
+   "named": "What intellectual property does Tonix Pharmaceuticals Holding Corp. hold related to Cyclobenzaprine treatments for various conditions?",
+   "topical": "What intellectual property is associated with Cyclobenzaprine treatments for agitation, psychosis, and cognitive decline in dementia and neurodegenerative conditions?"
+  },
+  {
+   "chunk_id": 332892,
+   "filing_id": 2653,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "ACRS",
+   "fiscal_year": 2023,
+   "named": "What are Aclaris Therapeutics, Inc.'s key intellectual property protections and patent expirations for their drug candidates?",
+   "topical": "What are the key intellectual property protections and patent expirations for this company's drug candidates?"
+  },
+  {
+   "chunk_id": 552170,
+   "filing_id": 5047,
+   "ordinal": 5,
+   "section": "intellectual_property",
+   "ticker": "SVRA",
+   "fiscal_year": 2022,
+   "named": "What clinical trials has Savara Inc conducted to study inhaled GM-CSF's efficacy and safety in aPAP patients?",
+   "topical": "What clinical trials have been conducted to study inhaled GM-CSF's efficacy and safety in patients with aPAP?"
+  },
+  {
+   "chunk_id": 335102,
+   "filing_id": 2673,
+   "ordinal": 4,
+   "section": "intellectual_property",
+   "ticker": "ADCT",
+   "fiscal_year": 2023,
+   "named": "What strategic partnerships is ADC Therapeutics SA pursuing to advance the commercialization of ZYNLONTA?",
+   "topical": "What partnerships are being pursued to enhance the commercialization of a treatment for relapsed or refractory DLBCL?"
+  },
+  {
+   "chunk_id": 329428,
+   "filing_id": 2612,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "ABOS",
+   "fiscal_year": 2024,
+   "named": "What measures is Acumen Pharmaceuticals taking to secure patent protection for their product candidate?",
+   "topical": "What strategies are being used to obtain and maintain patent protection for a product candidate?"
+  },
+  {
+   "chunk_id": 522806,
+   "filing_id": 4741,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "QGEN",
+   "fiscal_year": 2021,
+   "named": "What are QIAGEN N.V.'s key strategies for protecting its intellectual property?",
+   "topical": "What strategies does the company implement to protect its intellectual property and proprietary technologies?"
+  },
+  {
+   "chunk_id": 567898,
+   "filing_id": 5216,
+   "ordinal": 4,
+   "section": "intellectual_property",
+   "ticker": "TYRA",
+   "fiscal_year": 2022,
+   "named": "What measures does Tyra Biosciences take to protect its intellectual property?",
+   "topical": "What steps are being taken to safeguard the integrity and confidentiality of proprietary technology and processes?"
+  },
+  {
+   "chunk_id": 511932,
+   "filing_id": 4616,
+   "ordinal": 3,
+   "section": "intellectual_property",
+   "ticker": "PHAT",
+   "fiscal_year": 2023,
+   "named": "What intellectual property agreements does Phathom Pharmaceuticals have regarding vonoprazan products?",
+   "topical": "What intellectual property agreements exist for a company concerning the development and commercialization of certain pharmaceutical products?"
+  },
+  {
+   "chunk_id": 443245,
+   "filing_id": 3871,
+   "ordinal": 3,
+   "section": "intellectual_property",
+   "ticker": "IKT",
+   "fiscal_year": 2024,
+   "named": "What specific steps is Inhibikase Therapeutics taking to protect its intellectual property?",
+   "topical": "What measures are being implemented to safeguard the intellectual property of a pharmaceutical company?"
+  },
+  {
+   "chunk_id": 477341,
+   "filing_id": 4222,
+   "ordinal": 7,
+   "section": "intellectual_property",
+   "ticker": "MAIA",
+   "fiscal_year": 2024,
+   "named": "What are the potential therapeutic applications of MAIA Biotechnology's telomere-targeting agent THIO in cancer treatment?",
+   "topical": "What are the potential applications of a novel telomere-targeting agent in cancer therapies?"
+  },
+  {
+   "chunk_id": 546537,
+   "filing_id": 4985,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "SOPH",
+   "fiscal_year": 2024,
+   "named": "What is the current status of patent applications for SOPHiA GENETICS SA as of December 31, 2024?",
+   "topical": "What is the current status of patent applications for the company as of December 31, 2024?"
+  },
+  {
+   "chunk_id": 353530,
+   "filing_id": 2866,
+   "ordinal": 5,
+   "section": "intellectual_property",
+   "ticker": "ARGX",
+   "fiscal_year": 2023,
+   "named": "What recent developments have taken place regarding Argenx's collaborations with LEO Pharma and Zai Lab?",
+   "topical": "What are the key details about recent collaborations involving product development and commercialization agreements?"
+  },
+  {
+   "chunk_id": 554667,
+   "filing_id": 5078,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "TBPH",
+   "fiscal_year": 2021,
+   "named": "What are the key details about Theravance Biopharma, Inc.'s patents related to YUPELRI and nezulcitinib?",
+   "topical": "What is the current status and expiration timeline of the patents related to the company's inhalation solutions?"
+  },
+  {
+   "chunk_id": 563155,
+   "filing_id": 5170,
+   "ordinal": 16,
+   "section": "intellectual_property",
+   "ticker": "TNXP",
+   "fiscal_year": 2024,
+   "named": "What patents does Tonix Pharmaceuticals Holding Corp. hold for Magnesium-Containing Oxytocin Formulations, and in which countries do they expire?",
+   "topical": "What patents exist for Magnesium-Containing Oxytocin Formulations, and in which countries do these patents expire?"
+  },
+  {
+   "chunk_id": 387095,
+   "filing_id": 3243,
+   "ordinal": 18,
+   "section": "intellectual_property",
+   "ticker": "CGTX",
+   "fiscal_year": 2021,
+   "named": "What were the results of COGNITION THERAPEUTICS INC's COG0104 Phase 1 trial related to AD patients?",
+   "topical": "What findings were observed in the Phase 1 trial involving treatment for mild-to-moderate AD patients?"
+  },
+  {
+   "chunk_id": 376817,
+   "filing_id": 3137,
+   "ordinal": 0,
+   "section": "intellectual_property",
+   "ticker": "BTAI",
+   "fiscal_year": 2024,
+   "named": "What intellectual property strategies does BioXcel Therapeutics, Inc. employ to protect its proprietary technologies?",
+   "topical": "What intellectual property strategies are used to safeguard proprietary technologies in the biotechnology industry?"
+  },
+  {
+   "chunk_id": 419565,
+   "filing_id": 3612,
+   "ordinal": 1,
+   "section": "intellectual_property",
+   "ticker": "EXEL",
+   "fiscal_year": 2024,
+   "named": "What are the key patent statuses and litigation challenges faced by Exelixis, Inc. regarding cabozantinib and its other products?",
+   "topical": "What are the key patent statuses and litigation challenges faced by the company regarding its primary products and their protections?"
+  },
+  {
+   "chunk_id": 145619,
+   "filing_id": 970,
+   "ordinal": 5,
+   "section": "intellectual_property",
+   "ticker": "BFRIW",
+   "fiscal_year": 2025,
+   "named": "What regulatory requirements does Biofrontera Inc. face after drug approvals?",
+   "topical": "What regulatory requirements must be adhered to after drug approvals?"
+  },
+  {
+   "chunk_id": 611224,
+   "filing_id": 5674,
+   "ordinal": 3,
+   "section": "intellectual_property",
+   "ticker": "MRK",
+   "fiscal_year": 2025,
+   "named": "What are some of the intellectual property strategies and market exclusivity factors Merck & Co., Inc. is focusing on in their 2025 10-K report?",
+   "topical": "What are some of the strategies and factors related to intellectual property and market exclusivity being emphasized in the 2025 annual report for this pharmaceutical company?"
+  }
+ ],
+ "off_topic": [
+  "the weather forecast tomorrow",
+  "time travel and wormholes",
+  "best pizza recipe",
+  "how to train for a marathon",
+  "who won the world cup in 1998",
+  "javascript array sort performance"
+ ],
+ "on_topic": [
+  "patent protection for our lead product",
+  "competition from biosimilars",
+  "manufacturing capacity constraints",
+  "reliance on third party clinical trial sites",
+  "risks from reimbursement and payer coverage",
+  "dependence on a single approved product for revenue"
+ ]
+}

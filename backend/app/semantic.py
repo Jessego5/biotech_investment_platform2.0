@@ -11,7 +11,9 @@ query after each process start: about 4.7 seconds at 12,943 trials against 1
 second once warm, which is fine now and is the reason the Postgres path exists.
 """
 
+import json
 import os
+import re
 
 import numpy as np
 
@@ -195,6 +197,10 @@ def _filing_hit(chunk, filing, score, cik=None):
     """
     return {
         "ticker": filing.company_ticker,
+        # the document's own key, so a caller can tell "the wrong passage of the
+        # right filing" from "the wrong filing", which the accession alone makes
+        # awkward and the retrieval eval needs to score
+        "filing_id": filing.id,
         "section": chunk.section,
         "form": filing.form,
         "filed": filing.filed,
@@ -240,7 +246,63 @@ def _newest_filing_join(db):
               .group_by(Filing.company_ticker).subquery())
 
 
-def search_filings(query, k=6, ticker=None, year=None, all_years=False):
+def _attach_urls(db, hits):
+    """
+    Put an EDGAR link on each hit, in one query rather than one per hit.
+
+    The CIK is the last piece of the path and lives on the company, not the
+    filing, so it has to be looked up — but only for the handful of companies
+    that actually matched, not for all 787.
+    """
+    if not hits:
+        return hits
+    ciks = dict(db.query(Company.ticker, Company.cik)
+                  .filter(Company.ticker.in_({h["ticker"] for h in hits})).all())
+    for h in hits:
+        cik = ciks.get(h["ticker"])
+        h["url"] = (filing_url(cik, h["accession"], h["document"])
+                    if cik and h["accession"] and h["document"] else None)
+    return hits
+
+
+def _embedding_column(use_context):
+    """
+    Which vector space to search.
+
+    Two exist side by side: `embedding` is the passage alone, `embedding_ctx` is
+    the passage with a line naming its filing prepended. Keeping both means the
+    comparison is a flag rather than a migration, and means a half-finished
+    re-embed cannot quietly degrade the shipping search.
+    """
+    return FilingChunk.embedding_ctx if use_context else FilingChunk.embedding
+
+
+def _dense_filings(db, query_vector, k, ticker, year, all_years, filing_ids=None,
+                   use_context=False):
+    """
+    The nearest k passages by cosine, as (chunk, filing, similarity).
+
+    Pulled out of search_filings so the hybrid path ranks with exactly the same
+    query rather than a second copy of it that can drift. filing_ids narrows the
+    search to particular documents, which is how the words get to choose the
+    filing and the vectors get to choose the passage inside it.
+    """
+    column = _embedding_column(use_context)
+    distance = column.cosine_distance(list(query_vector))
+    query_ = (db.query(FilingChunk, Filing, distance.label("d"))
+                .join(Filing, FilingChunk.filing_id == Filing.id)
+                .filter(column.isnot(None)))
+    if filing_ids:
+        query_ = query_.filter(FilingChunk.filing_id.in_(list(filing_ids)))
+    if ticker:
+        query_ = query_.filter(Filing.company_ticker == ticker)
+    query_ = _scope_years(db, query_, year, all_years)
+    rows = query_.order_by(distance).limit(k).all()
+    return [(c, f, 1.0 - float(d)) for c, f, d in rows]
+
+
+def search_filings(query, k=6, ticker=None, year=None, all_years=False,
+                   min_score=None, use_context=False):
     """
     Search the narrative sections of annual reports, which is where a company
     says in its own words what could go wrong. Pass a ticker to ask what one
@@ -256,6 +318,11 @@ def search_filings(query, k=6, ticker=None, year=None, all_years=False):
     to score best — a 2021 passage and a 2025 passage read identically, and the
     answer would be about a company as it was four years ago with nothing to
     say so. Asking across years has to be a choice, not the default.
+
+    min_score overrides the relevance floor. Serving never passes it, so the
+    floor below is what every real question gets. The retrieval eval passes 0 to
+    see the ranking underneath the floor, which is the only way to tell a
+    passage that ranked badly from one that ranked first and was then cut.
     """
     from sqlalchemy import and_
     q = _embed_query(query)[0]
@@ -263,15 +330,9 @@ def search_filings(query, k=6, ticker=None, year=None, all_years=False):
     db = SessionLocal()
     try:
         if _uses_pgvector():
-            distance = FilingChunk.embedding.cosine_distance(list(q))
-            query_ = (db.query(FilingChunk, Filing, distance.label("d"))
-                        .join(Filing, FilingChunk.filing_id == Filing.id)
-                        .filter(FilingChunk.embedding.isnot(None)))
-            if ticker:
-                query_ = query_.filter(Filing.company_ticker == ticker)
-            query_ = _scope_years(db, query_, year, all_years)
-            rows = query_.order_by(distance).limit(k).all()
-            hits = [_filing_hit(c, f, 1.0 - float(d)) for c, f, d in rows]
+            hits = [_filing_hit(c, f, sim) for c, f, sim
+                    in _dense_filings(db, q, k, ticker, year, all_years,
+                                      use_context=use_context)]
         else:
             # no vector search here, so score every stored chunk in memory. the
             # trial path builds a FAISS index because it is queried constantly;
@@ -296,16 +357,305 @@ def search_filings(query, k=6, ticker=None, year=None, all_years=False):
 
         # a floor of its own, measured on this corpus, so an off-topic question
         # gets an honest "no data" rather than the least bad passage
-        hits = [h for h in hits if h["score"] >= MIN_FILING_SCORE]
-        # the CIK is the last piece of the EDGAR path, looked up once for the
-        # handful of companies that actually matched
-        if hits:
-            ciks = dict(db.query(Company.ticker, Company.cik)
-                          .filter(Company.ticker.in_({h["ticker"] for h in hits})).all())
-            for h in hits:
-                cik = ciks.get(h["ticker"])
-                h["url"] = (filing_url(cik, h["accession"], h["document"])
-                            if cik and h["accession"] and h["document"] else None)
+        floor = MIN_FILING_SCORE if min_score is None else min_score
+        hits = [h for h in hits if h["score"] >= floor]
+        _attach_urls(db, hits)
+        return hits
+    finally:
+        db.close()
+
+
+# - hybrid retrieval: meaning from the vectors, exactness from the words
+
+# The constant from the reciprocal rank fusion paper. It damps the very top of
+# each list, so one ranking cannot win a passage on its own by putting it first;
+# a passage has to do at least reasonably well somewhere to place, and well in
+# both to win. Fusing on RANK rather than score is the point of RRF: a cosine
+# similarity and a ts_rank are not on the same scale and never will be, and any
+# attempt to weight them against each other is a constant someone has to tune.
+RRF_K = 60
+
+# How deep each ranking goes before they are fused. Both sides are cheap to
+# extend and the fusion only benefits from seeing further down, but a candidate
+# nobody ranked in their first 30 is not going to survive fusion anyway.
+CANDIDATES = 30
+
+# The full-text config, spelled exactly as migrate_lexical_index.py spells it in
+# the index. If these two ever disagree the query still returns correct rows and
+# quietly stops using the index, so they are pinned to one name here.
+FTS_CONFIG = "english"
+
+
+def _fts_config():
+    """The config as a SQL literal, never a bind parameter.
+
+    A bound parameter here is the classic way to lose the index: the expression
+    the planner sees stops matching the expression the index was built on, the
+    plan silently falls back to a sequential scan over 334,624 rows, and the only
+    symptom is that it got slow.
+    """
+    from sqlalchemy import literal_column
+    return literal_column(f"'{FTS_CONFIG}'")
+
+
+# A lexeme in more than this share of passages tells the search nothing: it is
+# in most filings either way, so matching it selects almost the whole corpus.
+# Measured rather than guessed — see build_fts_stats.py.
+DF_CEILING = 0.05
+
+# How many of the query's rarest lexemes to require. Four distinctive words is
+# already a narrow filter; more only makes the AND below fail more often.
+MAX_LEXICAL_TERMS = 4
+
+_FTS_STATS = None
+
+
+def _fts_stats():
+    """Document frequency per lexeme, loaded once. Missing file means no stats,
+    which makes every word look rare and the AND below very strict — a worse
+    search, not a broken one."""
+    global _FTS_STATS
+    if _FTS_STATS is None:
+        path = os.path.join(os.path.dirname(__file__), "fts_stats.json")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                _FTS_STATS = json.load(fh)
+        except (OSError, ValueError):
+            _FTS_STATS = {"sample_docs": 0, "df": {}}
+    return _FTS_STATS
+
+
+# lexemes are already stemmed and lowercased by the time Postgres hands them
+# back; this only guards the tsquery from anything that would need escaping
+_SAFE_LEXEME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def _query_lexemes(db, query):
+    """
+    Every usable lexeme of the question with how common it is, rarest first.
+
+    Postgres does the stemming and stopword removal, because doing it in Python
+    would be a second implementation of the 'english' configuration that could
+    disagree with the one the index was built with — and a lexeme that does not
+    match the index is a lexeme that matches nothing.
+    """
+    from sqlalchemy import text as sql
+    rows = db.execute(sql("select lexeme from unnest(to_tsvector(:cfg, :q))"),
+                      {"cfg": FTS_CONFIG, "q": query}).all()
+    stats = _fts_stats()
+    docs = stats.get("sample_docs") or 1
+    df = stats.get("df", {})
+
+    seen, out = set(), []
+    for (lexeme,) in rows:
+        if not _SAFE_LEXEME.match(lexeme or "") or lexeme in seen:
+            continue
+        seen.add(lexeme)
+        out.append((df.get(lexeme, 0) / docs, lexeme))
+    return sorted(out)
+
+
+def _distinctive_lexemes(db, query):
+    """The rarest few words of the question — the ones worth requiring."""
+    lexemes = _query_lexemes(db, query)
+    return [lx for share, lx in lexemes if share <= DF_CEILING][:MAX_LEXICAL_TERMS]
+
+
+def _lexical_filings(db, query, k, ticker, year, all_years):
+    """
+    The best k passages by rare-word overlap, as (chunk, filing, ts_rank).
+
+    This is what the dense side cannot do: match a company name, a drug name, an
+    NCT id or an accession as the literal string it is. ts_rank_cd is a cover
+    density ranker rather than BM25 — Postgres has no BM25 without an extension —
+    but fusion uses the ORDER it produces, not its numbers, so the difference
+    matters much less here than it would if the score were being compared.
+
+    The words are ANDed, and dropped one at a time from the commonest end until
+    something matches. Both extremes were measured and both are useless: ORing a
+    whole question matches 294,793 of 334,624 passages and takes 48 seconds,
+    while ANDing a whole question matches nothing at all. Requiring only the
+    rarest words is the version that is both fast and selective.
+    """
+    from sqlalchemy import func
+
+    lexemes = _query_lexemes(db, query)
+    if not lexemes:
+        return []
+    terms = [lx for share, lx in lexemes if share <= DF_CEILING][:MAX_LEXICAL_TERMS]
+    tsv = func.to_tsvector(_fts_config(), FilingChunk.text)
+
+    # Two queries, doing two different jobs. The narrow one decides WHICH
+    # passages are eligible and is built only from rare words, so it stays fast
+    # and selective. The wide one decides the ORDER among those, and includes
+    # the common words too — without them the best match for "Bionano Genomics
+    # internal controls" is the cover page of Bionano's filing, where the name
+    # appears most densely and the subject does not appear at all.
+    wide = func.to_tsquery("simple", " | ".join(f"'{lx}'" for _s, lx in lexemes))
+    rank = func.ts_rank_cd(tsv, wide)
+
+    while terms:
+        # 'simple' on the query side because these lexemes are already stemmed;
+        # stemming them a second time is how 'busi' quietly becomes something
+        # the index does not contain
+        narrow = func.to_tsquery("simple", " & ".join(f"'{t}'" for t in terms))
+        query_ = (db.query(FilingChunk, Filing, rank.label("r"))
+                    .join(Filing, FilingChunk.filing_id == Filing.id)
+                    .filter(tsv.op("@@")(narrow)))
+        if ticker:
+            query_ = query_.filter(Filing.company_ticker == ticker)
+        query_ = _scope_years(db, query_, year, all_years)
+        rows = query_.order_by(rank.desc()).limit(k).all()
+        if rows:
+            return [(c, f, float(r)) for c, f, r in rows]
+        terms = terms[:-1]
+    return []
+
+
+def _cosine_for(db, query_vector, chunk_ids):
+    """
+    Cosine similarity for specific passages, by id.
+
+    Needed because a passage found only by the words still has to carry a cosine
+    score out of here. The relevance floor was calibrated on cosine against
+    measured off-topic distributions, and it is the reason an unanswerable
+    question gets an honest "no data" instead of the least bad passage. Scoring
+    fused results on anything else would quietly retire that guarantee.
+    """
+    if not chunk_ids:
+        return {}
+    distance = FilingChunk.embedding.cosine_distance(list(query_vector))
+    rows = (db.query(FilingChunk.id, distance.label("d"))
+              .filter(FilingChunk.id.in_(list(chunk_ids)))
+              .all())
+    return {cid: 1.0 - float(d) for cid, d in rows}
+
+
+def _rrf(rankings):
+    """
+    Fuse several rankings of the same ids into one score per id.
+
+    Each ranking is a list of ids already in rank order. An id absent from a
+    ranking simply earns nothing from it rather than being penalised, which is
+    what makes this safe to use on lists of different lengths — the lexical side
+    routinely returns three passages where the dense side returns thirty.
+    """
+    points = {}
+    for ranking in rankings:
+        for rank, key in enumerate(ranking, 1):
+            points[key] = points.get(key, 0.0) + 1.0 / (RRF_K + rank)
+    return points
+
+
+def search_filings_hybrid(query, k=6, ticker=None, year=None, all_years=False,
+                          min_score=None, candidates=CANDIDATES):
+    """
+    Search filings on meaning and on words at once, fused by rank.
+
+    Same arguments and same shape of result as search_filings, so it can stand
+    in for it. Postgres only: the lexical half is a GIN index that SQLite has no
+    equivalent for, and rather than pretend otherwise this falls back to the
+    dense search when it finds itself on SQLite.
+    """
+    if not _uses_pgvector():
+        return search_filings(query, k=k, ticker=ticker, year=year,
+                              all_years=all_years, min_score=min_score)
+
+    q = _embed_query(query)[0]
+    db = SessionLocal()
+    try:
+        dense = _dense_filings(db, q, candidates, ticker, year, all_years)
+        lexical = _lexical_filings(db, query, candidates, ticker, year, all_years)
+
+        rows = {}
+        for c, f, _score in list(dense) + list(lexical):
+            rows.setdefault(c.id, (c, f))
+        points = _rrf([[c.id for c, _f, _s in dense],
+                       [c.id for c, _f, _s in lexical]])
+
+        # every survivor carries a real cosine, including the ones only the
+        # words found, so the floor below still means what it meant before
+        known = {c.id: sim for c, _f, sim in dense}
+        missing = [cid for cid in rows if cid not in known]
+        known.update(_cosine_for(db, q, missing))
+
+        order = sorted(points, key=lambda cid: points[cid], reverse=True)[:k]
+        hits = []
+        for cid in order:
+            chunk, filing = rows[cid]
+            hit = _filing_hit(chunk, filing, known.get(cid, 0.0))
+            # kept so a caller can see WHY a passage placed, which is the
+            # difference between a fused result and an unexplained reordering
+            hit["rrf"] = points[cid]
+            hits.append(hit)
+
+        floor = MIN_FILING_SCORE if min_score is None else min_score
+        hits = [h for h in hits if h["score"] >= floor]
+        _attach_urls(db, hits)
+        return hits
+    finally:
+        db.close()
+
+
+def search_filings_filtered(query, k=6, ticker=None, year=None, all_years=False,
+                            min_score=None, candidates=CANDIDATES,
+                            use_context=False):
+    """
+    Let the words pick the document and the vectors pick the passage inside it.
+
+    This exists because the plain fusion was measured and the measurement said
+    something specific. Fusing the two rankings raised how often the right
+    FILING came back — 55.0% to 62.5% of named questions — and lowered how often
+    the right PASSAGE did, from MRR 0.182 to 0.145. The lexical side knows who
+    filed the document and does not know which paragraph answers the question:
+    asked what Bionano Genomics says about its internal controls it returns the
+    cover page of Bionano's 10-K, where the name is densest and the subject is
+    absent, and fusion promotes that over the passage that answers.
+
+    So the lexical result is used for what it is good at and nothing else. Its
+    hits name candidate FILINGS; the dense search then ranks passages within
+    them. The unrestricted dense ranking is fused in as well rather than
+    replaced, because when the words pick the wrong filing — and on topical
+    questions, which name no company, they often have nothing to go on — the
+    unrestricted ranking is the only thing keeping the answer findable.
+    """
+    if not _uses_pgvector():
+        return search_filings(query, k=k, ticker=ticker, year=year,
+                              all_years=all_years, min_score=min_score)
+
+    q = _embed_query(query)[0]
+    db = SessionLocal()
+    try:
+        lexical = _lexical_filings(db, query, candidates, ticker, year, all_years)
+        # deduplicated in rank order: several passages of one filing are one
+        # candidate document, not several
+        filing_ids = list(dict.fromkeys(f.id for _c, f, _r in lexical))
+
+        wide = _dense_filings(db, q, candidates, ticker, year, all_years,
+                              use_context=use_context)
+        narrow = (_dense_filings(db, q, candidates, ticker, year, all_years,
+                                 filing_ids=filing_ids, use_context=use_context)
+                  if filing_ids else [])
+
+        rows = {}
+        for c, f, _score in list(narrow) + list(wide):
+            rows.setdefault(c.id, (c, f))
+        points = _rrf([[c.id for c, _f, _s in narrow],
+                       [c.id for c, _f, _s in wide]])
+
+        known = {c.id: sim for c, _f, sim in list(wide) + list(narrow)}
+        order = sorted(points, key=lambda cid: points[cid], reverse=True)[:k]
+
+        hits = []
+        for cid in order:
+            chunk, filing = rows[cid]
+            hit = _filing_hit(chunk, filing, known.get(cid, 0.0))
+            hit["rrf"] = points[cid]
+            hits.append(hit)
+
+        floor = MIN_FILING_SCORE if min_score is None else min_score
+        hits = [h for h in hits if h["score"] >= floor]
+        _attach_urls(db, hits)
         return hits
     finally:
         db.close()
