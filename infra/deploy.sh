@@ -83,6 +83,12 @@ with open('$CFN_DIR/params/$ENVIRONMENT.json') as f:
 "
 )
 
+# Optional, and an environment variable rather than a fourth argument so the
+# usage above keeps working. Without it the scheduled run still ingests, and the
+# embed step fails loudly rather than leaving the vectors missing on a task that
+# reported success.
+#
+#   OPENAI_SECRET_ARN=arn:aws:secretsmanager:... ./infra/deploy.sh prod ...
 aws cloudformation deploy \
     --stack-name "biotech-agent-pipeline-$ENVIRONMENT" \
     --template-file "$CFN_DIR/pipeline.yaml" \
@@ -92,7 +98,8 @@ aws cloudformation deploy \
         "${OVERRIDES[@]}" \
         "LambdaCodeS3Bucket=$BUCKET_NAME" \
         "LambdaCodeS3Key=$CODE_KEY" \
-        "DatabaseUrl=$DATABASE_URL"
+        "DatabaseUrl=$DATABASE_URL" \
+        ${OPENAI_SECRET_ARN:+"OpenAiSecretArn=$OPENAI_SECRET_ARN"}
 
 echo
 echo "==> done. stack outputs:"

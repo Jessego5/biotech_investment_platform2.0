@@ -78,6 +78,14 @@ Parameters:
       postgresql+psycopg://user:password@host:5432/biotech. Stored in Secrets
       Manager rather than as a task environment variable, so the password isn't
       readable in the task definition.
+  OpenAiSecretArn:
+    Type: String
+    Default: ""
+    Description: >-
+      Secrets Manager ARN holding the OpenAI key, so a scheduled run can embed
+      the trials it just wrote. Optional: without it the ingest half still runs
+      and the embed half fails loudly rather than leaving the vectors missing
+      and the task green.
 
 # Per-environment sizing, in one place. This is what the same templates being
 # reusable across environments actually rests on: nothing below branches on the
@@ -92,7 +100,7 @@ Mappings:
       TaskMemory: "1024"
       LogRetentionDays: 7
     prod:
-      ShardCount: 8               # 480 companies in slices of 60
+      ShardCount: 8               # 787 companies, ~98 to a slice
       Schedule: "cron(0 6 * * ? *)"
       # Off until an ingest image exists at the tag the task reads. serve.sh
       # pushes api-<timestamp> and web-<timestamp> only, so on a first deploy
@@ -103,6 +111,11 @@ Mappings:
       TaskCpu: "1024"
       TaskMemory: "2048"
       LogRetentionDays: 30
+
+Conditions:
+  # an optional secret, so the pipeline stack deploys unchanged for anyone who
+  # has not made one yet
+  HasOpenAiSecret: !Not [!Equals [!Ref OpenAiSecretArn, ""]]
 
 Resources:
   # - image and logs
@@ -247,8 +260,18 @@ Resources:
           Image: !Sub "${EcrRepository.RepositoryUri}:${ImageTag}"
           Essential: true
           # the image's default command serves the API, so a task started with no
-          # overrides at all still needs to run ingestion
-          Command: [python, ingest.py]
+          # overrides at all still needs to run ingestion.
+          #
+          # Two commands, because ingestion alone leaves the job half done:
+          # writing a company's trials replaces the rows and drops their
+          # vectors, and a slice that stopped there would leave trial search
+          # returning nothing for everything it had just refreshed. ingest.py
+          # carries the vectors of unchanged trials across, so this only has to
+          # embed what is genuinely new — a few cents, not the universe.
+          Command:
+            - sh
+            - -c
+            - python ingest.py && python embed_trials.py
           Environment:
             - Name: RAW_BUCKET
               Value: !ImportValue
@@ -257,9 +280,14 @@ Resources:
               Value: !Ref SecUserAgent
             - Name: ENVIRONMENT
               Value: !Ref Environment
-          Secrets:
-            - Name: DATABASE_URL
-              ValueFrom: !Ref DatabaseSecret
+          Secrets: !If
+            - HasOpenAiSecret
+            - - Name: DATABASE_URL
+                ValueFrom: !Ref DatabaseSecret
+              - Name: OPENAI_API_KEY
+                ValueFrom: !Ref OpenAiSecretArn
+            - - Name: DATABASE_URL
+                ValueFrom: !Ref DatabaseSecret
           LogConfiguration:
             LogDriver: awslogs
             Options:

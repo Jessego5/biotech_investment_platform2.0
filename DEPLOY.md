@@ -145,6 +145,28 @@ allow it on 5432 in the RDS instance's own security group.
 Skip this and the failure is quiet: the tasks start, pass their health check on
 `/` — which does not touch the database on purpose — and fail every query.
 
+### Updating the corpus after it is up
+
+Nothing here is write-once. The pipeline stack exists to refresh it, and every
+row is derived — from SEC, ClinicalTrials.gov and the FDA — so there is no
+state on the server that cannot be rebuilt. To start a run by hand:
+
+```bash
+aws lambda invoke --function-name biotech-agent-dispatch-prod /dev/stdout
+```
+
+Schema changes are hand-written scripts, not a migration framework. `init_db()`
+is `create_all`, which creates missing **tables** and not missing **columns** —
+so a new column in `models.py` does nothing to a live database, silently. That
+is what left `embedding_ctx` out of the old dump. The pattern to follow is
+`migrate_vector_index.py` and the `backfill_*.py` scripts: idempotent, with a
+`--dry-run`.
+
+Deploys are rolling — `MinimumHealthyPercent: 100`, `MaximumPercent: 200` — so
+both versions of the code run against the same database for the length of one
+deploy. A schema change has to be safe for both: add the column, deploy the
+code that uses it, remove the old one in a later deploy.
+
 ### Ingestion is off
 
 `pipeline.yaml` ships with the prod schedule `DISABLED`. The task it starts
@@ -153,6 +175,17 @@ and `web-<timestamp>` — so with it enabled, a first deploy fires at 06:00 UTC
 into a tag nothing has pushed, once a day, with no ingestion behind it.
 
 Push an ingest image, set `ScheduleState: ENABLED` for prod, update the stack.
+
+Give it the OpenAI key when you do. Ingesting a company replaces its trial rows
+and drops their vectors; `ingest.py` carries across the ones whose text has not
+changed, and the task then runs `embed_trials.py` for what is genuinely new.
+Without a key that second half exits non-zero rather than leaving the task green
+and the vectors missing — but a failing daily task is still a failing daily task.
+
+```bash
+OPENAI_SECRET_ARN=arn:aws:secretsmanager:…:readbase/prod/openai \
+  ./infra/deploy.sh prod s3://<artifacts-bucket> 'postgresql+psycopg://…'
+```
 
 A dated tag rather than `:latest` on purpose. With `:latest` the task definition
 does not change between deploys, so ECS never pulls, and the stack updates

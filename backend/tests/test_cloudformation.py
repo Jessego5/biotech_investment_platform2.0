@@ -265,15 +265,42 @@ def test_the_visibility_timeout_covers_the_runner_timeout():
     assert visibility >= runner_timeout
 
 
+def _secret_lists(container):
+    """
+    Every list of secrets the container could be deployed with.
+
+    The list is behind an !If — the OpenAI key is optional — and a check that
+    only read one branch would pass while the other shipped the password in
+    plain sight.
+    """
+    secrets = container["Secrets"]
+    if isinstance(secrets, dict) and "Fn::If" in secrets:
+        return secrets["Fn::If"][1:]
+    return [secrets]
+
+
 def test_the_database_url_is_a_secret_not_a_plain_variable():
     pipeline = load_template("pipeline.yaml")
     container = pipeline["Resources"]["IngestTaskDefinition"]["Properties"] \
         ["ContainerDefinitions"][0]
 
     # it must arrive via Secrets, so the password isn't readable in the task definition
-    assert any(s["Name"] == "DATABASE_URL" for s in container["Secrets"])
+    for branch in _secret_lists(container):
+        assert any(s["Name"] == "DATABASE_URL" for s in branch)
     assert not any(e["Name"] == "DATABASE_URL" for e in container["Environment"])
     assert pipeline["Parameters"]["DatabaseUrl"]["NoEcho"] is True
+
+
+def test_the_scheduled_run_embeds_what_it_ingests():
+    # ingestion replaces a company's trials and drops their vectors. A task that
+    # stopped after ingest.py would go green having left trial search returning
+    # nothing for everything it had just refreshed.
+    pipeline = load_template("pipeline.yaml")
+    command = " ".join(pipeline["Resources"]["IngestTaskDefinition"]["Properties"]
+                       ["ContainerDefinitions"][0]["Command"])
+
+    assert "ingest.py" in command
+    assert "embed_trials.py" in command
 
 
 # - the parameter files

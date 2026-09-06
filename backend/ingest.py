@@ -165,6 +165,19 @@ def write_company(db, row, trials, financials, trial_totals=None):
     company.trial_count_total = trial_totals.get("totalCount")
     company.trials_truncated = bool(trial_totals.get("truncated"))
 
+    # Hold on to the vectors before the rows go. Replacing a company's trials
+    # drops their embeddings, and a scheduled run that did that nightly would
+    # leave trial search returning nothing until somebody re-embedded by hand —
+    # quietly, because the search filters out rows with no vector and refuses
+    # rather than failing. Re-embedding all of them instead is money spent to
+    # produce identical numbers.
+    #
+    # Keyed on the summary as well as the id, because the summary is what was
+    # embedded: a trial whose text has changed has to be embedded again, and one
+    # whose text is the same does not.
+    held = {(t.nct_id, t.summary): t.embedding
+            for t in company.trials if t.embedding is not None}
+
     # wipe the old trials and financials so we write a clean snapshot
     company.trials.clear()
     company.financials.clear()
@@ -188,6 +201,11 @@ def write_company(db, row, trials, financials, trial_totals=None):
             allocation=t.get("allocation"),
             masking=t.get("masking"),
         ))
+
+    # carry each vector back onto the row that replaced it. Anything new, or
+    # anything whose text moved, stays None and is what embed_trials.py picks up
+    for trial in company.trials:
+        trial.embedding = held.get((trial.nct_id, trial.summary))
 
     # add the financial rows, but only the metrics that actually came back.
     # One row per metric per fiscal year, not one per metric: the whole series

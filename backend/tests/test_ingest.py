@@ -170,6 +170,64 @@ def test_write_company_handles_a_fetch_with_no_totals(db):
     assert company.trials_truncated is False
 
 
+def _trial(nct, summary):
+    return {"nct_id": nct, "title": "t", "phase": "PHASE2", "status": "RECRUITING",
+            "lead_sponsor": "Alpha", "summary": summary}
+
+
+def test_an_unchanged_trial_keeps_its_vector(db):
+    # writing a company replaces its trial rows. Losing the vectors on every run
+    # would leave trial search returning nothing until somebody re-embedded by
+    # hand — quietly, because the search filters rows with no vector out
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a summary")], {"available": False})
+    db.commit()
+    db.get(Company, "AAA").trials[0].embedding = [0.5] * 1536
+    db.commit()
+
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a summary")], {"available": False})
+    db.commit()
+
+    kept, = db.get(Company, "AAA").trials
+    assert kept.embedding is not None
+    assert list(kept.embedding)[0] == 0.5
+
+
+def test_a_trial_whose_text_changed_is_embedded_again(db):
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a summary")], {"available": False})
+    db.commit()
+    db.get(Company, "AAA").trials[0].embedding = [0.5] * 1536
+    db.commit()
+
+    # the summary is what was embedded, so a new summary makes the old vector
+    # a description of text that is no longer there
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a different summary")], {"available": False})
+    db.commit()
+
+    changed, = db.get(Company, "AAA").trials
+    assert changed.embedding is None
+
+
+def test_a_new_trial_has_no_vector_to_keep(db):
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a summary")], {"available": False})
+    db.commit()
+    db.get(Company, "AAA").trials[0].embedding = [0.5] * 1536
+    db.commit()
+
+    write_company(db, {"ticker": "AAA", "name": "Alpha"},
+                  [_trial("NCT1", "a summary"), _trial("NCT2", "another")],
+                  {"available": False})
+    db.commit()
+
+    stored = {t.nct_id: t.embedding for t in db.get(Company, "AAA").trials}
+    assert stored["NCT1"] is not None
+    assert stored["NCT2"] is None
+
+
 def test_archive_keeps_the_payload_untouched():
     # the snapshot is only useful if it is what the API actually said, so nothing
     # may be dropped on the way in

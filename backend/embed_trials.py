@@ -1,12 +1,20 @@
 """
 This file embeds each trial's text so we can search it by meaning. It reads the
 trial summary, gets an embedding from OpenAI, and stores the vector back on the
-trial. Run it once after ingestion, and run it again if the trial text changes.
-It is cheap, just a few cents for the whole universe, and it needs OPENAI_API_KEY
-from backend/.env or the environment. Run it with python embed_trials.py.
+trial. Run it after ingestion, and run it again if the trial text changes. It is
+cheap, just a few cents for the whole universe, and it needs OPENAI_API_KEY from
+backend/.env or the environment.
+
+It takes the same slice arguments ingest.py does, so a scheduled run can embed
+what its own shard just wrote rather than every shard racing for the same rows.
+
+    python embed_trials.py                    # everything still missing a vector
+    python embed_trials.py --shard 2 --of 8   # just this slice
 """
 
+import argparse
 import os
+import sys
 import time
 
 import numpy as np
@@ -20,26 +28,58 @@ except ImportError:
 
 from app.database import SessionLocal
 from app.models import Trial
+from ingest import load_universe, select_shard, shard_from_env
 
 EMBED_MODEL = "text-embedding-3-small"
 BATCH = 100   # OpenAI lets us embed many texts per request, so batch to save calls
 
 
+def pending(db, shard_index=None, shard_count=None):
+    """
+    Trials with text and no vector, optionally only this task's slice.
+
+    Resume-friendly, and the reason it can be: a re-run after an interruption
+    picks up exactly what is still missing rather than starting again.
+    """
+    q = db.query(Trial).filter(Trial.summary.isnot(None), Trial.summary != "",
+                               Trial.embedding.is_(None))
+    if shard_count:
+        # the same split ingest.py uses, so a shard embeds what it wrote
+        tickers = [row["ticker"] for row in
+                   select_shard(load_universe(), shard_index or 0, shard_count)]
+        q = q.filter(Trial.company_ticker.in_(tickers))
+    return q.all()
+
+
 def main():
-    # this needs an OpenAI key, so stop early if there isn't one
-    if not os.environ.get("OPENAI_API_KEY"):
-        print("Set OPENAI_API_KEY (in backend/.env) before running this.")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--shard", type=int, default=None,
+                        help="which slice of the universe this task embeds")
+    parser.add_argument("--of", type=int, default=None, dest="shard_count",
+                        help="how many slices there are")
+    args = parser.parse_args()
+    if args.shard_count:
+        shard_index, shard_count = args.shard or 0, args.shard_count
+    else:
+        shard_index, shard_count = shard_from_env()
+
+    db = SessionLocal()
+    trials = pending(db, shard_index, shard_count)
+
+    if not trials:
+        print("Nothing to embed: every trial with text already has a vector.")
         return
+
+    # Loudly, not quietly. This used to print a note and return 0, which in a
+    # scheduled task is indistinguishable from success — the run goes green and
+    # the trials it just wrote have no vectors, so trial search returns nothing
+    # and refuses without saying why.
+    if not os.environ.get("OPENAI_API_KEY"):
+        sys.exit(f"{len(trials)} trials need embedding and OPENAI_API_KEY is "
+                 f"not set. Nothing was written.")
 
     from openai import OpenAI
     client = OpenAI()
-    db = SessionLocal()
-    # resume-friendly: only embed trials that have text but no vector yet, so a
-    # re-run after an interruption (like a rate limit) picks up where it left off.
-    trials = (db.query(Trial)
-                .filter(Trial.summary.isnot(None), Trial.summary != "",
-                        Trial.embedding.is_(None))
-                .all())
     print(f"Embedding {len(trials)} trials that still need it ({EMBED_MODEL})...")
 
     def embed(texts):
