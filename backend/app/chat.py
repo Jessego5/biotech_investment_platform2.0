@@ -59,6 +59,15 @@ GREETING = (
 # be, and the whole app rests on that line.
 MAX_ROUNDS = 3
 
+# How much of a retrieved passage the model is given. This used to be 600
+# characters of a passage stored at 3,000, which quietly broke the promise the
+# interface makes: the panel headed "What we read" showed the whole passage, and
+# the model had seen the first fifth of it. Either the window moves or the
+# label has to, and of the two the window is the one that costs a few hundred
+# tokens rather than the product's central claim. Kept equal to the chunk size
+# in filings.py, so a passage arrives whole.
+PASSAGE_CHARS = 3000
+
 TOOLS = [
     {"type": "function", "function": {
         "name": "filter_companies",
@@ -403,13 +412,11 @@ def _run_tool(name, args, db, as_of):
             return "No filing passages matched that.", []
         # the year is in the header of every passage, not only in the tool call,
         # so a passage from 2021 cannot be read as current
-        # the year is in the header of every passage, not only in the tool call,
-        # so a passage from 2021 cannot be read as current
         lines = ["Passages from annual report narrative:", ""]
         for pg in passages:
             year = f"FY{pg['fiscal_year']} " if pg.get("fiscal_year") else ""
             lines.append(f"{pg['ticker']} {year}{pg['form']} filed {pg['filed']} "
-                         f"({pg['section']}):\n  {pg['text'][:600]}")
+                         f"({pg['section']}):\n  {pg['text'][:PASSAGE_CHARS]}")
         return ("\n".join(lines),
                 list(dict.fromkeys(pg["ticker"] for pg in passages if pg["ticker"])),
                 [_filing_citation(pg) for pg in passages])
