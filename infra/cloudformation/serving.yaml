@@ -6,7 +6,7 @@ Description: >-
 
   Only the frontend is reachable from the internet. The API answers on a private
   DNS name that nothing outside the VPC can resolve, because the frontend proxies
-  every call to it through its own route handlers — so there is no browser that
+  every call to it through its own route handlers, so there is no browser that
   needs to reach the API, and therefore no reason to expose it. The shared secret
   on /ask sits behind that as a second line rather than the only one.
 
@@ -45,7 +45,7 @@ Parameters:
 
   ClusterName:
     Type: String
-    Description: ECS cluster to run in — the ClusterName output of the pipeline stack.
+    Description: ECS cluster to run in, the ClusterName output of the pipeline stack.
 
   ApiImage:
     Type: String
@@ -67,7 +67,7 @@ Parameters:
     Default: "500"
     Description: >-
       Questions /ask will answer per UTC day, for everyone together. There are
-      no accounts, so this is the limit that actually caps the OpenAI spend —
+      no accounts, so this is the limit that actually caps the OpenAI spend;
       per-caller limits sit in front of it and are a fairness measure, not a
       defence. Roughly half a cent a question at the worst, so 500 is a ceiling
       of a couple of dollars on the worst possible day. Set 0 to remove the cap,
@@ -439,7 +439,7 @@ Outputs:
   ApiSecurityGroupId:
     Description: >-
       The API tasks' security group. The database is deliberately not in this
-      stack, so nothing here can open a path to it — this is the id to allow on
+      stack, so nothing here can open a path to it, and this is the id to allow on
       5432 in the RDS instance's own security group. Without it the tasks start,
       pass their health check, and fail every query.
     Value: !Ref ApiSecurityGroup

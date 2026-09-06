@@ -1,11 +1,9 @@
 """
-The one index over everything held.
-
-The rule under test is that a hit is a thing, not a row. Both the products
-table and the trials table store the same thing more than once — a drug once
-per dosage form, a co-sponsored study once per company attached to it — and
-listing those rows straight gave a reader the same trial twice with a different
-ticker on each, which reads as two studies.
+This tests the one index over everything held. The rule under test is that a hit
+is a thing and not a row: both the products table and the trials table store the
+same thing more than once, a drug once per dosage form and a co-sponsored study
+once per company attached to it, and listing those rows straight gave a reader
+the same trial twice with a different ticker on each, which reads as two studies.
 """
 
 import pytest

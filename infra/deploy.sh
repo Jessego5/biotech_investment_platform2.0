@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
 #
-# Deploy the ingestion pipeline for one environment.
+# This deploys the ingestion pipeline for one environment. It packages the two
+# Lambda functions, uploads them, and deploys both stacks in order, storage first
+# because the pipeline imports from it, and re-running it is the normal way to
+# ship a change since CloudFormation works out the difference. It does not build
+# or push the container image, which is a separate step because it needs Docker
+# and because the image changes far less often; build it for the architecture the
+# stack is deployed with, since an Apple Silicon machine produces ARM64 and
+# Fargate defaults to X86_64, failing at task start with "exec format error"
+# rather than at build time.
 #
-#   ./infra/deploy.sh dev  s3://my-deploy-artifacts  'postgresql+psycopg://...'
+# Fill in infra/cloudformation/params/<env>.json first: it ships with REPLACE_ME
+# for the VPC, the subnets, the artifacts bucket and the SEC contact address, and
+# the bucket has to exist already because this uploads into it.
 #
-# It packages the two Lambda functions, uploads them, and deploys both stacks in
-# order (storage first, because the pipeline imports from it). Re-running it is
-# the normal way to ship a change: CloudFormation works out the difference.
+#   ./infra/deploy.sh prod s3://my-deploy-artifacts 'postgresql+psycopg://...'
 #
-# It does NOT build or push the container image. That is a separate step because
-# it needs Docker and because the image changes far less often than this does:
-#
-#   aws ecr get-login-password --region "$REGION" \
-#     | docker login --username AWS --password-stdin "$ACCOUNT.dkr.ecr.$REGION.amazonaws.com"
-#   docker build --platform linux/amd64 -t biotech-agent backend/
-#   docker tag biotech-agent "$REPOSITORY_URI:latest"
-#   docker push "$REPOSITORY_URI:latest"
-#
-# --platform matters. Building on an Apple Silicon machine produces an ARM64
-# image, and Fargate defaults to X86_64, which fails at task start with "exec
-# format error" rather than at build time. Either build for amd64 as above, or
-# deploy with CpuArchitecture=ARM64 and let Fargate run it on Graviton.
+# Set OPENAI_SECRET_ARN as well if you want a scheduled run to embed the trials
+# it just wrote.
 
 set -euo pipefail
 

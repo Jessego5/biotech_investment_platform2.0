@@ -1,11 +1,10 @@
 """
-The vector index and the vector search have to agree about distance.
-
-Nothing fails when they stop agreeing. The index builds, the query runs, the
-planner quietly declines to use an index built for an operator the query does
-not ask for, and the only evidence is that the search is as slow as it was
-before — with a two-gigabyte index on disk implying otherwise. So the operator
-class in the migration is held against the operator the query actually emits.
+This holds the vector index and the vector search to the same distance operator.
+Nothing fails when they stop agreeing: the index builds, the query runs, the
+planner quietly declines to use an index built for an operator the query does not
+ask for, and the only evidence is that the search is as slow as it was before,
+with a two-gigabyte index on disk implying otherwise. So the operator class in
+the migration is checked against the operator the query actually emits.
 """
 
 from sqlalchemy.dialects import postgresql

@@ -1,6 +1,6 @@
 """
-How long an approved product stays protected, and — more importantly — what the
-absence of a row is allowed to mean.
+This tests how long an approved product stays protected and, more importantly,
+what the absence of a row is allowed to mean.
 """
 
 import pytest

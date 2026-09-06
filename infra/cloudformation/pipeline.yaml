@@ -105,7 +105,7 @@ Mappings:
       # Off until an ingest image exists at the tag the task reads. serve.sh
       # pushes api-<timestamp> and web-<timestamp> only, so on a first deploy
       # this schedule would fire at 06:00 UTC into an ECR tag nothing has
-      # pushed — a daily failure with no ingestion behind it. Push the image,
+      # pushed, a daily failure with no ingestion behind it. Push the image,
       # then set this to ENABLED and update the stack.
       ScheduleState: DISABLED
       TaskCpu: "1024"
@@ -267,7 +267,7 @@ Resources:
           # vectors, and a slice that stopped there would leave trial search
           # returning nothing for everything it had just refreshed. ingest.py
           # carries the vectors of unchanged trials across, so this only has to
-          # embed what is genuinely new — a few cents, not the universe.
+          # embed what is genuinely new, a few cents rather than the universe.
           Command:
             - sh
             - -c

@@ -44,7 +44,7 @@ services:
         # PyPI is slow: the install is most of the build time.
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
     ports:
-      # the host port is configurable because 8000 is a busy one — another
+      # the host port is configurable because 8000 is a busy one: another
       # service holding 127.0.0.1:8000 wins over this publish for localhost,
       # and the symptom is the page quietly reading someone else's API.
       # Nothing in the deployed stack uses this; the frontend reaches the API
@@ -110,7 +110,7 @@ services:
       DATABASE_URL: postgresql+psycopg://biotech:biotech@db:5432/biotech
       SEC_USER_AGENT: ${SEC_USER_AGENT:-}
       # fewer parallel fetches than the laptop default of eight. Each worker can
-      # hold a sponsor's whole response — up to a thousand studies — while it
+      # hold a sponsor's whole response, up to a thousand studies, while it
       # archives and parses it, and eight at once was killed by the OOM reaper at
       # company 53 of 787 in a 3.8 GB VM that was also running Postgres.
       INGEST_WORKERS: ${INGEST_WORKERS:-3}

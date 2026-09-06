@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 #
-# Deploys the serving stack: the frontend behind a public load balancer, and the
-# API beside it on the private network.
+# This deploys the serving stack: the frontend behind a public load balancer and
+# the API beside it on the private network. It builds and pushes both images
+# under a dated tag, reads the cluster and ECR repository out of the pipeline
+# stack, and deploys serving.yaml on top, so infra/deploy.sh has to have run
+# first. A dated tag rather than latest on purpose, because with latest the task
+# definition does not change between deploys, so ECS never pulls and the stack
+# updates successfully while still running the old image.
 #
-#   ./infra/serve.sh prod 'postgresql+psycopg://…' arn:aws:secretsmanager:…:openai
+# The API is deliberately not published: nothing outside the VPC can resolve or
+# reach it, because the frontend proxies every call through its own route
+# handlers and no browser ever needs it. After the first deploy, allow the
+# stack's ApiSecurityGroupId on 5432 in the database's own security group, or
+# the tasks will start, pass their health check and fail every query.
 #
-# It builds and pushes both images, then deploys serving.yaml on top of the
-# cluster the pipeline stack already created. Run infra/deploy.sh first; this
-# needs that stack's ClusterName and ECR repository.
+#   ./infra/serve.sh prod 'postgresql+psycopg://...' arn:aws:secretsmanager:...
 #
-# The API is deliberately not published. Nothing outside the VPC can resolve or
-# reach it — the frontend proxies every call through its own route handlers, so
-# no browser ever needs to.
+# Set PLATFORM=linux/arm64 on an Apple Silicon machine, and CERTIFICATE_ARN to
+# serve HTTPS instead of plain HTTP.
+
 set -euo pipefail
 
 ENVIRONMENT="${1:-}"
