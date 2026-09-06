@@ -96,7 +96,7 @@ TOOLS = [
         "description": "How a company's figures have MOVED over the years: "
                        "revenue, cash, R&D spend, net income, debt, shares. Use "
                        "this for any question about a trend, a direction, or a "
-                       "comparison across years, growing, shrinking, since, "
+                       "comparison across years: growing, shrinking, since, "
                        "over time, peak, runway shortening. company_report gives "
                        "the current figure only.",
         "parameters": {"type": "object", "properties": {
@@ -106,7 +106,7 @@ TOOLS = [
     {"type": "function", "function": {
         "name": "search_trials",
         "description": "Semantic search over trial descriptions. Use for what a "
-                       "trial studies or tests, mechanisms, mutations, therapies, "
+                       "trial studies or tests, such as mechanisms, mutations or therapies, "
                        "which no structured field holds.",
         "parameters": {"type": "object", "properties": {
             "query": {"type": "string"}}, "required": ["query"]}}},
