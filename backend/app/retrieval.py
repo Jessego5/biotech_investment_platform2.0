@@ -54,7 +54,7 @@ def _period_key(f):
 
 def history_from_db(company):
     """
-    {metric: [figure, ...]} newest first — the series behind the single figure.
+    {metric: [figure, ...]} newest first, the series behind the single figure.
 
     Kept separate from metrics_from_db rather than replacing it: everything that
     reads a company's cash wants one number, and only the questions about a
@@ -182,7 +182,7 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
     # Two aggregate queries rather than two per company.
     #
     # This walked every company and lazy-loaded its trials and financials, which
-    # is 787 companies against roughly 1,600 queries — and the trial load pulled
+    # is 787 companies against roughly 1,600 queries, and the trial load pulled
     # whole ORM objects, embedding column included. Counting phases was dragging
     # 30,142 vectors of 1,536 floats out of the database, about 185 MB, to
     # render a table that shows none of it. The browse endpoint took 7.6

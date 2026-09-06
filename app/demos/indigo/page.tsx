@@ -10,7 +10,7 @@ import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbas
 /**
  * The Notus register again, on the five-step palette.
  *
- * Navy and indigo carry every piece of type — they are the only two swatches
+ * Navy and indigo carry every piece of type, they are the only two swatches
  * that pass contrast on white (15.1:1 and 9.6:1). The three light swatches
  * are fills and tints only; pale green against white is 1.33:1 and would be
  * unreadable as text at any size.
@@ -21,7 +21,7 @@ import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbas
  * because the bar encodes phase in length as well, and the reader is never
  * asked to tell them apart by hue alone.
  *
- * This deliberately breaks four of the brief's non-negotiables — sans rather
+ * This deliberately breaks four of the brief's non-negotiables, sans rather
  * than serif, generous radii rather than near-sharp corners, shadows rather
  * than rules, and colour used as decoration. It is a comparison of design
  * languages, not an adjustment of one, so its tokens are declared here and

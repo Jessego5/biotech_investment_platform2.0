@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-   Readbase — app/globals.css
+   Readbase, app/globals.css
    Drop-in replacement for the file `shadcn@latest init` generates.
    Tailwind v4 (CSS-first config). No tailwind.config.js needed.
    --------------------------------------------------------------------------- */
@@ -151,13 +151,13 @@
   --tint: rgb(93 202 165 / 0.13);
   --phase-na: #3a4049;
   --highlight: rgb(93 202 165 / 0.15);
-  /* the citation chip deliberately does NOT invert — it is the one warm
+  /* the citation chip deliberately does NOT invert, it is the one warm
      signal in the interface and stays the same in both modes */
 }
 
 /* The palette above is switched by the `.dark` class, as in the canvas.
    The chrome carries no theme toggle, so the class alone would leave dark
-   mode unreachable — this mirrors the same tokens onto the reader's system
+   mode unreachable, this mirrors the same tokens onto the reader's system
    setting. Done in CSS rather than with a pre-paint script so that it works
    without JavaScript and cannot desynchronise from server rendering.
    `.light` is an explicit opt-out, and `.dark` still wins on its own.
@@ -211,7 +211,7 @@
   --tint: rgb(93 202 165 / 0.13);
   --phase-na: #3a4049;
   --highlight: rgb(93 202 165 / 0.15);
-  /* the citation chip deliberately does NOT invert — it is the one warm
+  /* the citation chip deliberately does NOT invert, it is the one warm
      signal in the interface and stays the same in both modes */
 }
 }
@@ -335,7 +335,7 @@
     box-shadow: -3px 0 0 0 var(--accent-mid);
   }
 
-  /* Small uppercase system label — used for panel captions only. */
+  /* Small uppercase system label, used for panel captions only. */
   .sys-label {
     @apply font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground;
   }

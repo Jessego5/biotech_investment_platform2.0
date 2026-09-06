@@ -491,7 +491,7 @@ def test_40f_is_an_annual_form():
 def test_a_subsection_may_be_short():
     # the 2,000 floor exists to reject a contents line and was applied to a
     # subsection too. Monopar's intellectual property section is 1,795
-    # characters and was thrown away for it — a company with one licensed asset
+    # characters and was thrown away for it, a company with one licensed asset
     # has little to say and says it briefly
     body = ("Intellectual Property We hold one issued US patent covering our lead "
             "candidate and license further rights from a university. " * 12
@@ -526,7 +526,7 @@ def test_a_20f_finds_its_ip_section_inside_item_4():
 
 def test_patents_is_a_heading_too():
     # Johnson & Johnson heads the section "Patents", not "Intellectual
-    # Property" — its contents page reads "Raw materials 3  Patents 3
+    # Property", its contents page reads "Raw materials 3  Patents 3
     # Trademarks 3". Looking only for the biotech convention read one of the
     # most patent-dependent companies in the universe as having no patent
     # disclosure at all.

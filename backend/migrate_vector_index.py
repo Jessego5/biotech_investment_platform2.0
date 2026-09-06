@@ -45,9 +45,9 @@ INDEXES = [
     ("ix_trials_embedding_hnsw", "trials", "embedding"),
 ]
 
-# The second vector space — the passage with a line naming its filing prepended
-# — is still the experiment rather than the shipping search, and indexing it
-# costs the same again in build time and disk. Opt in once it wins.
+# The second vector space, the passage with a line naming its filing prepended,
+# is still the experiment rather than the shipping search, and indexing it costs
+# the same again in build time and disk. Opt in once it wins.
 CONTEXT_INDEX = ("ix_filing_chunks_embedding_ctx_hnsw", "filing_chunks", "embedding_ctx")
 
 
@@ -59,7 +59,7 @@ def main():
                     help="also index embedding_ctx, the contextual vector space")
     # Below the size of the graph, pgvector builds in two passes and spills to
     # disk: correct, and several times slower. The graph for this corpus is
-    # about 2 GB, so on anything small it spills whichever number goes here —
+    # about 2 GB, so on anything small it spills whichever number goes here,
     # the default is chosen to leave a 4 GB machine able to answer while it
     # builds, and is worth raising on the instance that will serve.
     ap.add_argument("--build-memory", type=int, default=1024, metavar="MB",
@@ -98,7 +98,7 @@ def main():
             mem = args.build_memory
             conn.execute(text(f"set maintenance_work_mem = '{mem}MB'"))
             print(f"building {name} over {rows:,} vectors "
-                  f"(~{estimate_gb:.1f} GB, {mem} MB build memory) — this is slow")
+                  f"(~{estimate_gb:.1f} GB, {mem} MB build memory), this is slow")
             t0 = time.time()
             conn.execute(text(
                 f"CREATE INDEX {name} ON {table} "
@@ -118,7 +118,7 @@ def main():
             f"explain (format text) select id from filing_chunks "
             f"order by embedding <=> '{zeros}'::vector limit 10")).fetchall()
         used = any("ix_filing_chunks_embedding_hnsw" in str(r[0]) for r in plan)
-        print("planner uses it:", "yes" if used else "NO — check the operator class")
+        print("planner uses it:", "yes" if used else "NO, check the operator class")
         for r in plan:
             print("   ", r[0])
 

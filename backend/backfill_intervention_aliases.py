@@ -120,7 +120,7 @@ def main():
     verb = "would record" if args.dry_run else "recorded"
     print(f"\nDONE. {verb} aliases for {stated} studies; {silent} state none; "
           f"{failed} could not be fetched.")
-    print("A study stating none is not a study whose drug has one name — it is "
+    print("A study stating none is not a study whose drug has one name, it is "
           "a sponsor who did not fill the field in.")
 
 

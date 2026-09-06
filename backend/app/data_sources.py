@@ -157,7 +157,7 @@ def _search_term(name):
     # the incorporation marker goes first, exactly as in _core_name. It was
     # fixed there and not here, so the comparison name was clean while the name
     # actually sent to the registry still asked for "VERTEX PHARMACEUTICALS INC
-    # MA" — and a search that returns nothing is a company with an empty
+    # MA", and a search that returns nothing is a company with an empty
     # pipeline, which reads as a fact about the company.
     name = _STATE_MARKER.sub("", (name or "").strip())
     # strip punctuation from each word but keep the original casing this time
@@ -386,7 +386,7 @@ def fetch_studies_by_nct(nct_ids, page_size=100):
     it for "Bio-Path Holdings, Inc." returns two studies belonging to LS
     BioPath, and asking for "Schrödinger, Inc." returns none at all, while the
     registry plainly holds studies under both names. When we already know which
-    studies a company ran — and registry_trials does know, by id — searching for
+    studies a company ran, and registry_trials does know, by id, searching for
     them by name is guessing at something we have.
     """
     studies = []
@@ -532,7 +532,7 @@ def _alias_index():
 # This is an allowlist and not a blocklist on purpose. "Merck" against "Merck
 # KGaA" and "Nova" against "Nova Scotia" are the two matches that did real
 # damage here, and what makes them wrong is not that KGaA and Scotia are known
-# to be dangerous — it is that they are not known to be harmless. Anything
+# to be dangerous, it is that they are not known to be harmless. Anything
 # unrecognised stays rejected.
 _DESCRIPTORS = {
     "pharma", "pharmaceutical", "pharmaceuticals", "therapeutic", "therapeutics",
@@ -576,9 +576,9 @@ def _distinctive(normalised):
     and five letters, and so is every name that has caused trouble here.
 
     Six rather than eight because eight was guesswork and six is measured. The
-    band between them is 30 sponsor pairs across the whole registry — Stryker's
+    band between them is 30 sponsor pairs across the whole registry, Stryker's
     divisions, Incyte Biosciences, Grifols Biologicals, uniQure Biopharma,
-    Arvinas Androgen Receptor, Immutep Australia — and every one of them is the
+    Arvinas Androgen Receptor, Immutep Australia, and every one of them is the
     company it was matched to.
     """
     words = normalised.split()
@@ -815,7 +815,7 @@ def parse_trials(payload, sponsor_name):
         # An industry-funded trial run by a university or a cooperative group
         # lists the institution as lead and the company as a collaborator. It is
         # still the company's asset and its readout, so dropping it loses real
-        # involvement — and loses it unevenly, penalising exactly the companies
+        # involvement, and loses it unevenly, penalising exactly the companies
         # that partner. But it is not a trial the company controls: it cannot set
         # the timeline and does not own the data. So the role is stored and
         # pipeline counts keep using lead alone.
@@ -848,7 +848,7 @@ def parse_trials(payload, sponsor_name):
                                       .get("conditions") or []) or None,
             # What the study is actually testing. The registry states this as
             # a structured list, and it was being folded into the embedding
-            # text and then thrown away — which left the candidate a company is
+            # text and then thrown away, which left the candidate a company is
             # developing recorded nowhere except inside a trial's title.
             # {name: [other names]} exactly as filed. See Trial.intervention_aliases.
             "intervention_aliases": json.dumps({
@@ -886,8 +886,8 @@ def summarize_pipeline(trials):
     Turn a trial list into pipeline signal: counts by phase and status.
 
     Counts the trials the company LEADS. A collaborator trial is real
-    involvement but not a programme the company runs — it cannot set the
-    timeline or own the data — and a large pharma partnering on academic studies
+    involvement but not a programme the company runs, it cannot set the
+    timeline or own the data, and a large pharma partnering on academic studies
     would otherwise show a pipeline it does not control. The collaborator count
     is reported alongside rather than folded in, so nothing is hidden and
     nothing is double-counted.

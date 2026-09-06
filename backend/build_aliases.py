@@ -236,8 +236,8 @@ def parse_subsidiaries(text):
 
 def for_company(company, years):
     """
-    [(ticker, cik, accession, fiscal_year, [names])] — one entry per annual
-    filing that carried a readable exhibit — or "failed" when the company's
+    [(ticker, cik, accession, fiscal_year, [names])], one entry per annual
+    filing that carried a readable exhibit, or "failed" when the company's
     filing list could not be fetched at all.
 
     Those two outcomes are kept apart deliberately. Folding a failed request into
@@ -347,7 +347,7 @@ def main():
         print(f"\n{done - without - failed} companies filed a readable exhibit, "
               f"{without} did not")
         if failed:
-            print(f"{failed} could not be checked at all — these say nothing "
+            print(f"{failed} could not be checked at all, these say nothing "
                   f"about the company and should be re-run")
         print(f"{kept} alias rows over {firms} companies; "
               f"{len(ambiguous)} names dropped as claimed by more than one")

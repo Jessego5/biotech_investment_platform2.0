@@ -67,7 +67,7 @@ async function stats(): Promise<Stats | null> {
 function corpusTiles(s: Stats): Tile[] {
   // a field the API does not send yet is a dash, not a crash. /stats has grown
   // three times, and each time a page built against the newer shape would have
-  // thrown on the older one — server-side, so the whole page went with it
+  // thrown on the older one, server-side, so the whole page went with it
   const n = (v?: number) => (typeof v === "number" ? v.toLocaleString("en-US") : "–");
   return [
     {
@@ -134,7 +134,7 @@ export default async function Home() {
       <div className="mx-auto max-w-[1180px] px-8 pb-4 pt-16 text-center">
         {/* Not "every US biotech": 107 of these file 20-F as foreign private
             issuers, so the universe is defined by filing with the SEC rather
-            than by country. And not simply "every filer" either — the rule is
+            than by country. And not simply "every filer" either, the rule is
             every SEC filer with a ticker that leads its own clinical trials and
             files real financials, which is the claim worth making because it
             says the list was not curated. */}

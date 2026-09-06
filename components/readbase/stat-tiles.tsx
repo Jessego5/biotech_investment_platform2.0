@@ -14,7 +14,7 @@ export type Tile = {
   icon: LucideIcon;
   n: string;
   label: string;
-  /** The span the figure covers. Never optional — a figure without one cannot be checked. */
+  /** The span the figure covers. Never optional, a figure without one cannot be checked. */
   note: string;
   /** The system it came from, which is what the chip colour keys to. */
   source: string;
@@ -24,7 +24,7 @@ export type Tile = {
 
 /**
  * The figures a reader wants first, each carrying the period it covers and the
- * system behind it. The chip colour is the source, not decoration — four
+ * system behind it. The chip colour is the source, not decoration, four
  * figures here come from four different places and the colour says which.
  */
 export function StatTiles({ tiles }: { tiles: Tile[] }) {

@@ -5,7 +5,7 @@
 #   ./run-local.sh stop     stop the containers and the frontend server
 #
 # The database keeps its data in a Docker volume, so this is safe to run
-# repeatedly — it does not re-fetch anything. Populating an empty database is a
+# repeatedly, it does not re-fetch anything. Populating an empty database is a
 # separate job and takes hours; see "if the database is empty" at the end.
 set -euo pipefail
 
@@ -28,7 +28,7 @@ if [ "${1:-}" = "stop" ]; then stop; exit 0; fi
 # Keys come from backend/.env rather than the shell, because that is where they
 # already live for the scripts. Compose reads them from the environment, so they
 # have to be exported here or the API starts without them and the chat is simply
-# off — which looks like a broken chat rather than a missing key.
+# off, which looks like a broken chat rather than a missing key.
 # parsed rather than sourced. Values in this file are unquoted and contain
 # spaces ("biotech-agent you@example.com"), so `. backend/.env` tries to run the
 # second word as a command and the script dies before it starts anything.
@@ -70,7 +70,7 @@ else
   echo "serving the frontend..."
   # fully detached: stdin closed and both streams redirected. A background job
   # that keeps the script's stdout open holds the pipe open too, so anything
-  # reading this script's output — a terminal pipeline, a CI step — waits
+  # reading this script's output, a terminal pipeline, a CI step, waits
   # forever on a server that has already started fine.
   #
   # Backgrounded from here rather than inside a subshell: $! inside one refers to

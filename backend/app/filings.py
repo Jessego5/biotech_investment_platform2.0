@@ -40,7 +40,7 @@ MIN_SECTION_CHARS = 2000
 
 # A subsection is not an Item and cannot be held to an Item's length. The floor
 # above exists to reject a table-of-contents line, which is a few dozen
-# characters before the next entry — it does not need to be 2,000 to do that.
+# characters before the next entry, it does not need to be 2,000 to do that.
 # Intellectual property runs to 1,795 characters at Monopar and was thrown away
 # for being short, when a company with one licensed asset has little to say and
 # says it briefly.
@@ -87,7 +87,7 @@ def annual_filings(cik, limit=5):
     The most recent `limit` annual reports, newest first.
 
     One per fiscal year. A company files more than one 10-K for a year more
-    often than it looks — an amendment, or a re-filing a fortnight later — and
+    often than it looks, an amendment, or a re-filing a fortnight later, and
     both carry the same period, so taking them in order would spend two of the
     five slots on the same year and silently shorten the history. The one filed
     latest is the one that stands.
@@ -111,7 +111,7 @@ def annual_filings(cik, limit=5):
         # out from it. A 52/53-week year does not end on the 31st of December:
         # Johnson & Johnson's 2022 ended on the 1st of January 2023, so calling
         # it "2023" collided with the year that really was 2023 and the later
-        # filing won — the 2022 annual report disappeared from a five-year
+        # filing won, the 2022 annual report disappeared from a five-year
         # history without anything to say it had. Two filings sharing a period
         # are an amendment or a re-filing, and there the latest one stands.
         period = (recent.get("reportDate") or [None] * len(forms))[i] or filed
@@ -211,7 +211,7 @@ def html_to_text(html):
     # Inline XBRL first. A modern filing carries its machine-readable facts in
     # the same document as its prose, inside <ix:hidden> and a header block that
     # are never displayed to a reader. Left in, they arrive as a wall of
-    # "jnj:PatentsAndTrademarksMember2025-12-28" — which is not merely noise:
+    # "jnj:PatentsAndTrademarksMember2025-12-28", which is not merely noise:
     # it matched "patent" twenty-four times inside Johnson & Johnson's Item 1
     # and produced "IntellectualPropertyMember" as a candidate heading at CRISPR
     # Therapeutics. It also inflates every position the section finder works
@@ -265,7 +265,7 @@ _TENK_BOUNDS = {
     # in. For most of this universe that is the only patent information that
     # exists anywhere: the Orange Book covers approved small molecules, and 85%
     # of these companies have nothing approved. It is also the only place the
-    # licensed-in question is answerable at all — a patent assigned to a
+    # licensed-in question is answerable at all, a patent assigned to a
     # university and exclusively licensed to the company shows the university as
     # assignee everywhere else.
     #
@@ -288,8 +288,8 @@ _TENK_BOUNDS = {
         # "IntellectualPropertyMember2025-01-01..." and without it CRISPR
         # extracted three thousand characters of tag soup.
         # "Patents" belongs here and its absence was a real gap. Johnson &
-        # Johnson heads the section that way — its own contents page reads
-        # "Raw materials 3  Patents 3  Trademarks 3" — and so do Theravance,
+        # Johnson heads the section that way, and its own contents page reads
+        # "Raw materials 3  Patents 3  Trademarks 3", and so do Theravance,
         # Vericel and Gyre. "Intellectual Property" is the clinical-stage
         # convention; the older and more diversified filers write "Patents", and
         # looking only for the former read those companies as having no patent
@@ -298,8 +298,8 @@ _TENK_BOUNDS = {
         # It is safe here in a way it is not in a 20-F, because a 10-K's section
         # must sit before Item 1A and a 20-F has no Item 1A to bound against.
         # The optional leading "Something and " matters more than it looks.
-        # Filers combine the heading — Colgate writes "Trademarks and Patents",
-        # Alx Oncology "Licensing and Intellectual Property" — and matching only
+        # Filers combine the heading: Colgate writes "Trademarks and Patents",
+        # Alx Oncology "Licensing and Intellectual Property", and matching only
         # the tail lands the start on a lowercase "and", which reads as running
         # prose and is thrown out. Anchoring at the first word of the heading
         # keeps it a heading.
@@ -313,8 +313,8 @@ _TENK_BOUNDS = {
          r"Trademarks", r"Seasonality", r"Raw\s+Materials",
          r"Item\s*1A[.:\s\-–—]*Risk\s*Factors"],
         # and it has to sit inside Item 1. The phrase appears far more often in
-        # the risk factors than in the business section — "the intellectual
-        # property landscape around gene editing is highly dynamic" — and the
+        # the risk factors than in the business section, "the intellectual
+        # property landscape around gene editing is highly dynamic", and the
         # search is case-insensitive, so prose matches as readily as a heading.
         r"Item\s*1A[.:\s\-–—]*Risk\s*Factors",
     ),
@@ -331,8 +331,8 @@ _TENK_BOUNDS = {
 _TWENTYF_BOUNDS = {
     "risk_factors": (
         # Case matters here. Matched case-insensitively this also finds the
-        # phrase in prose — Haleon's "the Company's risk factors and viability
-        # are set out on page 58" — which is not a heading and started the
+        # phrase in prose, Haleon's "the Company's risk factors and viability
+        # are set out on page 58", which is not a heading and started the
         # section in the middle of a directors' report.
         r"(?-i:RISK\s*FACTORS|Risk\s*[Ff]actors)",
         # A foreign issuer may file its own annual report as the 20-F and carry
@@ -351,12 +351,12 @@ _TWENTYF_BOUNDS = {
         [r"Item\s*6[.:\s\-–—]*Directors", r"Item\s*7[.:\s\-–—]*Major\s*Shareholders"],
     ),
     # A foreign issuer describes its IP under Item 4B, Business Overview, and
-    # frequently heads it "Patents" rather than "Intellectual Property" —
+    # frequently heads it "Patents" rather than "Intellectual Property",
     # Abivax uses that word sixteen times and the other twice. There is no Item
     # 1A here to bound against, so Item 5 does it: Item 4 always precedes it.
     "intellectual_property": (
-        # Tried in order. "Patents" is back — its absence cost Novo Nordisk,
-        # which heads the section exactly that — but it goes last, because it is
+        # Tried in order. "Patents" is back, its absence cost Novo Nordisk,
+        # which heads the section exactly that, but it goes last, because it is
         # also an ordinary word.
         [r"(?-i:(?:[A-Z][A-Za-z]+\s+and\s+)?"
          r"(?:INTELLECTUAL\s+PROPERTY|Intellectual\s+Property|Proprietary\s+Rights))\b",
@@ -458,7 +458,7 @@ _ITEM_HEADING = re.compile(r"Item\s*\d+[A-C]?[.:\s]", re.I)
 # "Part II," with a comma, or a "Part II." that a lowercase word runs into.
 # The comma alone was the tell, and Precision BioSciences and Structure
 # Therapeutics both point at their own management discussion with a full stop
-# instead — "identified in Part I. Item 1A. Risk Factors and Part II. Item 7.
+# instead, "identified in Part I. Item 1A. Risk Factors and Part II. Item 7.
 # Management's Discussion". The conjunction in front is what separates that
 # from the structural "PART II" that really does head Item 7: a part heading
 # does not follow the word "and".
@@ -569,7 +569,7 @@ def _is_contents_entry(text, pos, span=130):
     Counting sub-items as well needs a third match rather than a second,
     because a real Item 5 heading is genuinely followed by its own "5.A
     Operating results". What it is not followed by is 5.B as well, 130
-    characters later — in the document those are thousands of characters apart,
+    characters later, in the document those are thousands of characters apart,
     and only the contents puts them side by side.
     """
     window = text[pos:pos + span]
@@ -580,16 +580,16 @@ def _is_contents_entry(text, pos, span=130):
 # a heading followed by its page number, which is what a contents line looks
 # like once the layout is gone: "Patents 3 Trademarks 3 Seasonality 3"
 # A contents line LISTS things: name, page, name, page. One page number after a
-# heading is a page break landing there — Vericel's real "Patents and
-# Proprietary Rights" is followed by "9 Table of Contents" — so two pairs are
+# heading is a page break landing there, Vericel's real "Patents and
+# Proprietary Rights" is followed by "9 Table of Contents", so two pairs are
 # required before calling it a contents line.
-# "Patents and Licenses, etc. 82 5.D Trend Information 82 5.E" — a 20-F numbers
+# "Patents and Licenses, etc. 82 5.D Trend Information 82 5.E", a 20-F numbers
 # its contents entries, so what follows the page number is "5.D" and not a
 # capital letter. Takeda and Galapagos both had their contents line read as the
 # section because of it.
 # A page range counts too. GSK's 20-F carries an index mapping each item to the
-# pages it covers — "D. Risk Factors 248 - 251, 260 - 268 4 Information on the
-# Company" — and with only whole page numbers counted there was one marker where
+# pages it covers, "D. Risk Factors 248 - 251, 260 - 268 4 Information on the
+# Company", and with only whole page numbers counted there was one marker where
 # two were needed, so the index read as the section and took 220,000 characters.
 _PAGE_NUMBERED = re.compile(
     r"\s\d{1,3}\s*[-–—]\s*\d{1,3}\b"
@@ -616,8 +616,8 @@ def _is_contents_line(text, pos, span=90):
 # "Item 1A. Risk Factors Provided below is a cautionary discussion" is a real
 # heading followed by a real sentence: "Provided" is capitalised, so it reads as
 # part of the title, and 3M lost its risk factors in all five years to that.
-# A reference stops there — "Risk Factors below." — or carries on with a
-# preposition — "elsewhere in this Annual Report". It does not continue into a
+# A reference stops there, "Risk Factors below.", or carries on with a
+# preposition, "elsewhere in this Annual Report". It does not continue into a
 # verb, because the direction is then part of the predicate and not a pointer.
 _POINTS_ELSEWHERE = re.compile(
     r"[A-Z][\w,.]*(?:\s+(?:and|or|of|the|to|in|this|[A-Z0-9][\w,.]*)){0,16}"
@@ -728,9 +728,9 @@ def _find_section(text, start_pattern, end_patterns, limit=None,
     for start in starts:
         # The nearest closing heading, and then the next one if that is too
         # close to be real. A word that also heads a section appears inside the
-        # prose of the section before it — "a combination of patents,
+        # prose of the section before it, "a combination of patents,
         # trademarks, trade secrets" sits 168 characters into Treace's
-        # intellectual property section — and taking the first match and giving
+        # intellectual property section, and taking the first match and giving
         # up when it proved too near threw away sections that a later, real
         # heading would have closed properly.
         end = next((p for p in ends if p > start and (p - start) >= floor), None)
@@ -793,7 +793,7 @@ def extract_sections(text, form="10-K"):
         # and where it must start after. A 20-F puts its risk factors in Item 3
         # and its business description in Item 4, so "must precede Item 5" alone
         # lets the section match risk-factor prose sitting earlier in the
-        # document — which is how "If we are unable to obtain and maintain
+        # document, which is how "If we are unable to obtain and maintain
         # patent protection" was read as a description of a patent estate.
         floor_pos = None
         if must_follow:
@@ -827,9 +827,9 @@ def extract_sections(text, form="10-K"):
             continue
         body = text[found[0]:found[1]].strip()
         # A filing that says it is not providing the section does not have one.
-        # Electromed heads Item 1A and then declines it — "As a smaller
+        # Electromed heads Item 1A and then declines it, "As a smaller
         # reporting company, we are not required to provide the information
-        # required by this Item" — and what follows is Item 1B and the
+        # required by this Item", and what follows is Item 1B and the
         # cybersecurity disclosure, stored as though it were risk factors. A
         # missing section is better than a wrong one.
         if _DECLINED.match(body):

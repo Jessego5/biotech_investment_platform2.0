@@ -98,7 +98,7 @@ const store = {
  * @param shared a list arriving in the URL rather than from this browser.
  *
  * This is the whole of the answer to "my watchlist does not follow me to
- * another device". There are no accounts, so the list cannot be looked up —
+ * another device". There are no accounts, so the list cannot be looked up,
  * but it is four tickers, and four tickers fit in a link. Sending yourself one
  * moves the list; sending it to someone else shares it. Neither needs a user.
  */

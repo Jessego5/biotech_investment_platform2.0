@@ -32,7 +32,7 @@ function citedIn(nodes: AnswerNode[]): number[] {
  *
  * The chip-and-panel version asks the reader to click before it will say where
  * a claim came from. Here the source sits in the margin beside the sentence,
- * always visible — so the answer cannot be read without also reading what it
+ * always visible, so the answer cannot be read without also reading what it
  * rests on. The passage still has to be opened; what the margin removes is
  * having to ask which document a sentence belongs to.
  *

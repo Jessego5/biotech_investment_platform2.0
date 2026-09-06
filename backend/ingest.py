@@ -162,7 +162,7 @@ def write_company(db, row, trials, financials, trial_totals=None):
 
     # Hold on to the vectors before the rows go. Replacing a company's trials
     # drops their embeddings, and a scheduled run that did that nightly would
-    # leave trial search returning nothing until somebody re-embedded by hand —
+    # leave trial search returning nothing until somebody re-embedded by hand,
     # quietly, because the search filters out rows with no vector and refuses
     # rather than failing. Re-embedding all of them instead is money spent to
     # produce identical numbers.
@@ -260,8 +260,8 @@ def main():
           f"{WORKERS} fetches at a time, snapshot {date})...\n")
 
     # Recorded before the run rather than after, so an interrupted run still
-    # says what it was and what produced it. A partial snapshot is legitimate —
-    # a targeted re-ingest archives only what it touched — but a comparison has
+    # says what it was and what produced it. A partial snapshot is legitimate,
+    # a targeted re-ingest archives only what it touched, but a comparison has
     # to know that it is partial rather than read 739 absent companies as 739
     # companies that disappeared.
     store.put(manifest_key(date), {

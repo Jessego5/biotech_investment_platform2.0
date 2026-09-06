@@ -6,7 +6,7 @@
 *.sqlite
 *.sqlite3
 # a dated backup taken before a migration is still a database, and "*.db" does
-# not match it — biotech.db.bak-20260902 slipped into the context and filled
+# not match it, biotech.db.bak-20260902 slipped into the context and filled
 # the builder's disk.
 *.db.bak-*
 *.db-journal
@@ -49,7 +49,7 @@ requirements-dev.txt
 *.log
 
 # database dumps taken for a restore elsewhere. Large, and never part of an
-# image or a commit — a 1 GB backup in the build context already broke one
+# image or a commit, a 1 GB backup in the build context already broke one
 # build with "no space left on device".
 dumps/
 *.dump

@@ -40,7 +40,7 @@ async function load(accession: string): Promise<FilingDetail | null> {
  * One annual report, as the corpus holds it.
  *
  * The section list is the point of this page. A filing here is not the
- * document — it is the part of the document that was kept — and naming which
+ * document, it is the part of the document that was kept, and naming which
  * sections were stored, and how many passages each became, is what stops an
  * answer drawn from one section reading as drawn from the whole filing.
  */

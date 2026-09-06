@@ -21,7 +21,7 @@ export function SourceIndex({ sources }: { sources: Source[] }) {
       {sources.map((s) => {
         const current = s.n === open?.source;
         // Hovering a citation in the prose lights its row here, and vice
-        // versa. No motion — the brief is explicit that this is a colour
+        // versa. No motion, the brief is explicit that this is a colour
         // change, not an animation.
         const lit = current || s.n === hovered;
         return (

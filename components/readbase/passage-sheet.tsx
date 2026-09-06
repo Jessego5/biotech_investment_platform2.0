@@ -24,7 +24,7 @@ export function PassageSheet({ children }: { children?: React.ReactNode }) {
       >
         <SheetTitle className="sr-only">Stored passage</SheetTitle>
         <PassagePanel />
-        {/* the second check travels with the first — a drawer that showed only
+        {/* the second check travels with the first, a drawer that showed only
             what we read would drop the half that lets you disagree with it */}
         {original && <OriginalDocument record={original} />}
         {children}

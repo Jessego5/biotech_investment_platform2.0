@@ -75,7 +75,7 @@ export function Sparkline({ series }: { series: Series }) {
             strokeDasharray="2 3"
           />
         )}
-        {/* Draws once, the first time it is scrolled into view — not on
+        {/* Draws once, the first time it is scrolled into view, not on
             every scroll past. */}
         <motion.polyline
           points={points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")}

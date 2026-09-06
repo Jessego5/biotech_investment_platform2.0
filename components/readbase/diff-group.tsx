@@ -34,8 +34,8 @@ export function DiffGroupHead({ heading, count }: { heading: string; count: stri
 export function DiffRow({ row, index = 0 }: { row: Row; index?: number }) {
   const reduce = useReducedMotion();
   // The rows stagger so the eye travels down the changes. Every row this view
-  // produces is a change — there is no "unchanged, shown for context" row in
-  // the model — so there is nothing here to filter on. If such a row is ever
+  // produces is a change, there is no "unchanged, shown for context" row in
+  // the model, so there is nothing here to filter on. If such a row is ever
   // added it should render without the stagger.
 
   return (

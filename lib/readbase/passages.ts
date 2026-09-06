@@ -19,7 +19,7 @@ export type StoredPassage = {
   paragraphs?: string[];
 };
 
-/** The document a section was cut from — the second of the two checks. */
+/** The document a section was cut from, the second of the two checks. */
 export type OriginalRecord = {
   url: string | null;
   displayUrl: string;
@@ -58,7 +58,7 @@ export function isHeld(passage: StoredPassage | undefined): boolean {
 
 /**
  * The canvas reads "4 passages stored for this section". That is only true
- * when we hold every one of them, so the count is stated rather than assumed —
+ * when we hold every one of them, so the count is stated rather than assumed,
  * the same sentence appears verbatim when it is accurate.
  */
 function plural(n: number, word: string): string {

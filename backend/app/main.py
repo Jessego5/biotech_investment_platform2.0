@@ -146,7 +146,7 @@ def watchlist(tickers: str = ""):
 
     What it returns is what a watcher is watching FOR: the next readout, the
     nearest loss of protection, and how long the money lasts. Not a price, and
-    not a position — those would be the first figures here that are neither
+    not a position, those would be the first figures here that are neither
     computed from a filing nor traceable to one.
     """
     wanted = [t.strip().upper() for t in tickers.split(",") if t.strip()]
@@ -192,7 +192,7 @@ def filing_detail(accession: str):
     One annual report: what was stored from it, and how to reach the original.
 
     The section list and the passage counts are the point. A filing here is not
-    the document — it is the part of the document we kept — and showing which
+    the document, it is the part of the document we kept, and showing which
     sections were stored, and how many passages each became, is what stops a
     reader treating an answer drawn from it as drawn from the whole filing.
     """
@@ -542,8 +542,8 @@ def ask(q: Question):
 
 # arms that are not a candidate: a control tells you how the trial was designed,
 # not what the company is developing.
-# A control arm is often named after the drug it stands in for — "VX-661 Plus
-# Ivacaftor Combination Placebo" — so the word is looked for anywhere in the
+# A control arm is often named after the drug it stands in for, "VX-661 Plus
+# Ivacaftor Combination Placebo", so the word is looked for anywhere in the
 # name rather than only at the front, where an earlier version of this missed
 # it and counted the placebo as a candidate.
 _CONTROL = re.compile(
@@ -568,8 +568,8 @@ def _alias_edges(trials):
     """
     Pairs of names the registry says are the same thing.
 
-    An `otherNames` entry is often several aliases in one string — "VX-770, IVA"
-    — so it is split on commas here rather than at write time, where splitting
+    An `otherNames` entry is often several aliases in one string, "VX-770, IVA",
+    so it is split on commas here rather than at write time, where splitting
     would have destroyed what the sponsor actually filed. A name containing a
     comma is split wrongly by this, which is the cost of reading a field that
     was filled in by hand.
@@ -594,8 +594,8 @@ def studied_interventions(db, ticker):
     What this company's trials are testing, with names the registry itself
     states are the same thing merged into one row.
 
-    A candidate is filed under a code and a generic name — ivacaftor appears as
-    "IVA", "Ivacaftor" and "VX-770" — and counting the strings counts one drug
+    A candidate is filed under a code and a generic name, ivacaftor appears as
+    "IVA", "Ivacaftor" and "VX-770", and counting the strings counts one drug
     three times. ClinicalTrials.gov records the equivalence in `otherNames`, so
     the merge is the registry's claim rather than ours; where it says nothing,
     nothing is merged, and two rows for one drug is the honest outcome.
@@ -668,7 +668,7 @@ def studied_interventions(db, ticker):
     for entry in groups.values():
         names = entry.pop("names")
         # the name to show: one the FDA lists as an ingredient if there is one,
-        # else the one the sponsor used most, then the longest — a generic name
+        # else the one the sponsor used most, then the longest, a generic name
         # is usually longer than the code it replaced
         display = max(names, key=lambda n: (n.casefold() in marketed,
                                             names[n], len(n)))
@@ -822,7 +822,7 @@ def analyze_company(ticker: str):
         # what protects the approved products, and when that runs out. Absent
         # for a company with nothing approved, which is most of them, and the
         # signal says so in words rather than leaving a blank to be read as "no
-        # patents" — see app/exclusivity.py.
+        # patents", see app/exclusivity.py.
         "protection": protection,
         # trials with a readout still ahead of them, soonest first. Lead-only:
         # a readout the company does not run is not its catalyst to report.
@@ -834,11 +834,11 @@ def analyze_company(ticker: str):
         # and should be refused rather than answered from the nearest filing.
         "filings": company_filings(db, ticker) if company is not None else [],
         # What is actually approved, as the FDA lists it. A pipeline built from
-        # trials cannot show these — a marketed drug has stopped being a trial
-        # — and showing only trials would make an approved portfolio look empty.
+        # trials cannot show these, since a marketed drug has stopped being a
+        # trial, and showing only trials makes an approved portfolio look empty.
         "approved_products": approved_products(db, ticker) if company is not None else [],
         # what the trials test, grouped by the registry's own name for it. Not
-        # a programme list — see studied_interventions.
+        # a programme list, see studied_interventions.
         "interventions": studied_interventions(db, ticker) if company is not None else [],
     }
 

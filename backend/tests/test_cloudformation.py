@@ -269,7 +269,7 @@ def _secret_lists(container):
     """
     Every list of secrets the container could be deployed with.
 
-    The list is behind an !If — the OpenAI key is optional — and a check that
+    The list is behind an !If, the OpenAI key is optional, and a check that
     only read one branch would pass while the other shipped the password in
     plain sight.
     """

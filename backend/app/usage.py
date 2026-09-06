@@ -25,7 +25,7 @@ from .models import Base
 
 # Measured against the shape of a question rather than guessed: three rounds of
 # tool calls with nine schemas resent each time, six passages of about 3,000
-# characters accumulating in the history, then the answer call — roughly 31,000
+# characters accumulating in the history, then the answer call, roughly 31,000
 # input tokens at the worst, well under half a cent. 500 is therefore a ceiling
 # of a couple of dollars on the worst possible day, and far less on a real one.
 DEFAULT_BUDGET = 500
@@ -33,7 +33,7 @@ DEFAULT_BUDGET = 500
 
 class AskBudget(Base):
     """
-    One row per UTC day. Nothing is stored about who asked — the row is a
+    One row per UTC day. Nothing is stored about who asked, the row is a
     count, and a count is not a record of anybody.
     """
     __tablename__ = "ask_budget"
@@ -72,7 +72,7 @@ def claim_question(db, day=None):
     One statement, because two would be a race: read-then-write lets two
     requests arriving together both see room and both take the last slot. The
     WHERE on the conflict branch means the row is only incremented while it is
-    under the ceiling, so a refused question costs nothing — the count is
+    under the ceiling, so a refused question costs nothing, the count is
     questions answered, not questions attempted, and a page showing it would
     otherwise climb all day after the budget ran out.
     """
@@ -96,7 +96,7 @@ def claim_question(db, day=None):
 def spent_message(limit, resets):
     """
     What the reader is told. It says what ran out, when it comes back, and what
-    still works — the same three things any refusal here owes them.
+    still works, the same three things any refusal here owes them.
     """
     return (
         f"Today's budget for answering questions is spent: {limit} since "

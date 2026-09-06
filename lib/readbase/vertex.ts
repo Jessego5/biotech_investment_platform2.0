@@ -93,7 +93,7 @@ export const filingUrl =
   "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000875320&type=10-K";
 
 /**
- * The refusal. Not an error and not an empty state — it is an answer of a
+ * The refusal. Not an error and not an empty state, it is an answer of a
  * different kind, and it is traceable in exactly the same way: it shows which
  * accessors ran, what each returned, and what the system can do instead.
  */

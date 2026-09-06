@@ -168,7 +168,7 @@ def soonest_cliffs(db, as_of, limit=10):
     Companies whose approved products lose protection soonest.
 
     protection_for answers for one company, which cannot answer "who is closest
-    to a cliff" — a question the data fully supports and which was reachable
+    to a cliff", a question the data fully supports and which was reachable
     only by asking about every company in turn. This ranks them in one query.
 
     Only companies with something approved appear, which is the point rather

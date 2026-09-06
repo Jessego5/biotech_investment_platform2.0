@@ -57,7 +57,7 @@ def test_the_right_key_gets_through_to_the_handler(monkeypatch):
 def test_reading_endpoints_stay_open_when_a_key_is_set(monkeypatch):
     c, _ = client(monkeypatch, "s3cret")
     # the guard exists to cap spend, not to hide the corpus. What matters is
-    # that a read is never turned away for want of a key — whether it then
+    # that a read is never turned away for want of a key, whether it then
     # succeeds depends on the database this happens to run against, which is
     # not what this test is about.
     assert c.get("/stats", headers={}).status_code != 401

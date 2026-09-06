@@ -15,7 +15,7 @@ export const API_BASE =
   process.env.READBASE_API_URL ?? "http://127.0.0.1:8000";
 
 /**
- * Sent on the one endpoint that spends money. Server-side only — it lives in
+ * Sent on the one endpoint that spends money. Server-side only, it lives in
  * the route handlers, never in anything shipped to the browser, which is the
  * whole point of proxying through them.
  *
@@ -71,7 +71,7 @@ export type ChunkResponse = {
   chunk_id: number;
   text: string;
   section: string;
-  /** 0-indexed within the section — display position, not this. */
+  /** 0-indexed within the section, display position, not this. */
   ordinal: number;
   of: number;
   section_chunk_ids: number[];
@@ -135,7 +135,7 @@ export function sectionFromChunk(chunk: ChunkResponse): {
   index: number;
 } {
   // Older builds of the service return the section length but not its member
-  // ids. The length is still true, so it is still shown — but the passages
+  // ids. The length is still true, so it is still shown, but the passages
   // cannot be stepped to, and the panel has to say that rather than pretend
   // the section is one passage long.
   const indexed = Boolean(chunk.section_chunk_ids?.length);

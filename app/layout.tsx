@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./effects.css";
 
-// No webfont is loaded. The two families — serif for prose, mono for figures —
+// No webfont is loaded. The two families, serif for prose, mono for figures,
 // are system stacks declared in globals.css under @theme inline. Adding
 // next/font here would introduce a third typeface.
 

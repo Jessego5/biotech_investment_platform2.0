@@ -40,7 +40,7 @@ def code_version():
 
     A snapshot is only comparable to another taken by the same rules. When the
     matching rules changed, Church & Dwight appeared to register thirty-four
-    trials in four days — one of them a benzocaine study from 2007. It had
+    trials in four days, one of them a benzocaine study from 2007. It had
     always run them; we had only just started recognising its name. A diff
     cannot tell the world changing from us changing unless the snapshot says
     which code produced it.

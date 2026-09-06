@@ -14,7 +14,7 @@ import { notusPage } from "@/lib/readbase/notus-theme";
  * ?tickers=VRTX,MRNA is a list someone was sent.
  *
  * Read here rather than from the client, so the page knows on its first paint
- * whether it is showing this browser's list or a visitor's — the two say
+ * whether it is showing this browser's list or a visitor's, the two say
  * different things, and correcting one into the other afterwards would show
  * the reader a list that was never theirs.
  */

@@ -35,8 +35,8 @@ import {
 
 /**
  * Everything this page holds is on this page, so the tabs move to a section
- * rather than swapping a view. "Trials" has no section of its own — the trial
- * counts live in the pipeline table — so it is marked as having nowhere to go
+ * rather than swapping a view. "Trials" has no section of its own, the trial
+ * counts live in the pipeline table, so it is marked as having nowhere to go
  * instead of looking like the five that do.
  */
 const TABS: { label: string; target?: string }[] = [

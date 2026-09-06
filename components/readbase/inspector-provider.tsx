@@ -30,7 +30,7 @@ export type OpenCitation = {
   chipId: string;
   source: number;
   /** What to show in the panel's chip. Absent where the panel was not opened
-   *  from a citation — a section opened from a filing has no citation number,
+   *  from a citation, a section opened from a filing has no citation number,
    *  and showing the chunk id there would put an internal identifier in the
    *  one mark that means provenance. */
   label?: string;
@@ -225,7 +225,7 @@ export function useInspector(): InspectorValue {
 /**
  * For components that appear both with and without an inspector. On the Ask
  * screen there is no passage panel, so a chip there is a marker rather than a
- * control — it should render inert instead of pretending to open something.
+ * control, it should render inert instead of pretending to open something.
  */
 export function useOptionalInspector(): InspectorValue | null {
   return useContext(InspectorContext);

@@ -178,7 +178,7 @@ def _trial(nct, summary):
 def test_an_unchanged_trial_keeps_its_vector(db):
     # writing a company replaces its trial rows. Losing the vectors on every run
     # would leave trial search returning nothing until somebody re-embedded by
-    # hand — quietly, because the search filters rows with no vector out
+    # hand, quietly, because the search filters rows with no vector out
     write_company(db, {"ticker": "AAA", "name": "Alpha"},
                   [_trial("NCT1", "a summary")], {"available": False})
     db.commit()

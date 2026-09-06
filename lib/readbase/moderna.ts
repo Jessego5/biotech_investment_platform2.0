@@ -129,7 +129,7 @@ export const cashCallout = {
 
 /* ------------------------------------------------------------------- rail */
 
-/** Three states, visually distinct in kind — filled, outlined, dashed. */
+/** Three states, visually distinct in kind, filled, outlined, dashed. */
 export type ProtectionState = "protected" | "approved-unlisted" | "no-product";
 
 export const patentStates: {

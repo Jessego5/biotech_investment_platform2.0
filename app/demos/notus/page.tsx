@@ -19,8 +19,8 @@ import {
  * the five-step palette carrying the ordinal scale.
  *
  * The two are deliberately not the same colour. Green is the brand: actions,
- * links, provenance. The ramp is a measurement — pale for the earliest phase,
- * navy for approval — and it appears only where something is genuinely ordered.
+ * links, provenance. The ramp is a measurement, pale for the earliest phase,
+ * navy for approval, and it appears only where something is genuinely ordered.
  * Pale green to mint is 1.19:1, near identical to the eye, so the bars encode
  * phase in length as well and nobody has to order them by hue.
  *
@@ -30,7 +30,7 @@ import {
  * Page and cards are both white, so the border carries the separation and is
  * a little stronger than it would need to be over a grey page.
  *
- * This deliberately breaks four of the brief's non-negotiables — sans rather
+ * This deliberately breaks four of the brief's non-negotiables, sans rather
  * than serif, generous radii rather than near-sharp corners, shadows rather
  * than rules, and colour used as decoration. It is a comparison of design
  * languages, not an adjustment of one, so its tokens are declared here and
@@ -130,7 +130,7 @@ export default async function NotusDemo() {
 
   /**
    * The tiles are coloured by where the figure came from, not decoratively.
-   * Four figures, four different systems — and this register had no other
+   * Four figures, four different systems, and this register had no other
    * place to say so, which was its weakest point against the canvas.
    *
    * Glyph colour follows contrast rather than taste: navy reads on the three
@@ -234,7 +234,7 @@ export default async function NotusDemo() {
               <div className="mt-[2px] text-[13px]" style={{ color: "var(--n-ink-2)" }}>
                 {s.label}
               </div>
-              {/* the period the figure covers, and the system it came from —
+              {/* the period the figure covers, and the system it came from,
                   the two things this register had nowhere to put */}
               <div className="mt-3 border-t pt-2" style={{ borderColor: "var(--n-line)" }}>
                 <div className="font-mono text-[10.5px]" style={{ color: "var(--n-ink)" }}>
@@ -327,7 +327,7 @@ export default async function NotusDemo() {
                     style={{
                       width: `${(p.n / Math.max(...phases.map((x) => x.n))) * 100}%`,
                       // the step comes from the phase, not from the row's rank
-                      // by count — an earlier version coloured by position and
+                      // by count, an earlier version coloured by position and
                       // gave Phase 1 navy and Phase 4 mint, which inverted the
                       // one thing the ramp exists to say
                       background: p.level ? `var(--p${p.level})` : "#c7d0cb",

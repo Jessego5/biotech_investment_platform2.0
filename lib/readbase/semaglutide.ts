@@ -83,7 +83,7 @@ export const sources: Source[] = [
  * How much of the answer a source carries, counted from the chips that cite
  * it rather than stored alongside them. The canvas's own figures are exactly
  * these counts, and deriving them removes a field that could disagree with
- * the prose — and that previously held the literal string "open", which
+ * the prose, and that previously held the literal string "open", which
  * collided with the now-dynamic open state.
  */
 export function extentFor(source: number): string {
@@ -93,7 +93,7 @@ export function extentFor(source: number): string {
 
 /* ------------------------------------------------------------------ passage */
 
-/** What we read — the only text the model was allowed to see. */
+/** What we read, the only text the model was allowed to see. */
 export const passage = {
   header: ["NONOF", "20-F", "FY2025", "filed 2026-02-04", "intellectual property", "passage 1 of 4"],
   index: 1,
@@ -116,8 +116,8 @@ export const passage = {
  * intellectual-property section has stored text; the rest are real records
  * whose text we do not hold, which the panel states rather than hides.
  *
- * Sources 1 and 3 both land in `nonof-ip` — passages 1 and 4 of the same four
- * — so stepping from one reaches the other.
+ * Sources 1 and 3 both land in `nonof-ip`, passages 1 and 4 of the same four,
+ * so stepping from one reaches the other.
  */
 export const sections: Record<string, PassageSection> = {
   "nonof-ip": {

@@ -21,7 +21,7 @@ export const NOTUS = {
   "--n-accent-soft": "#e1f5ee",
   "--n-accent-deep": "#0f6e56",
   // the five, in order, for anything genuinely ordered. Only the last two
-  // carry type — the light three fail contrast on white and are fills.
+  // carry type, the light three fail contrast on white and are fills.
   "--p1": "#c8e8be",
   "--p2": "#a9d8b8",
   "--p3": "#7ca5b8",
@@ -61,7 +61,7 @@ export const notusCard =
  * As well as its own tokens it remaps the product's, so a component written
  * against `border-border` or `text-muted-foreground` renders in this register
  * without being rewritten. That keeps one implementation of each screen rather
- * than a Notus copy drifting away from a canvas original — and it means
+ * than a Notus copy drifting away from a canvas original, and it means
  * switching a page between registers is a change of wrapper, not a rewrite.
  *
  * Only the surface tokens are remapped. The citation chip is not: it means

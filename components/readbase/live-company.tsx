@@ -143,8 +143,8 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
   const state = protectionState(protection?.state);
   const products = data.approved_products ?? [];
   const filings = data.filings ?? [];
-  // the registry spells the same bucket more than one way — "N/A" and "NA" are
-  // one absence, not two — so they are merged on the label they display under
+  // the registry spells the same bucket more than one way, "N/A" and "NA" are
+  // one absence, not two, so they are merged on the label they display under
   const interventions = data.interventions ?? [];
 
   return (

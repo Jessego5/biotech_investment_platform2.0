@@ -85,7 +85,7 @@ function Stepper({
 /**
  * What we read. The first of the two checks: a filled reading surface under a
  * tinted header, holding the exact stored text and nothing else. It scrolls
- * internally under a pinned footer — the passage running past the fold is
+ * internally under a pinned footer, the passage running past the fold is
  * correct, because it stops anyone reading the excerpt as the whole section.
  *
  * When the text is not held, that is stated at the same weight rather than

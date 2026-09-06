@@ -174,7 +174,7 @@ def main():
     # Replacement happens per company, inside the loop, rather than by emptying
     # the tables first. A wipe would leave the chat with no filing text at all
     # for however long the run takes, and would lose everything if the run died
-    # halfway — which is exactly what happened to the first alias crawl.
+    # halfway, which is exactly what happened to the first alias crawl.
     # Re-read only what is missing a section, rather than everything. A rule
     # change usually affects one section, and the filings that already yield it
     # would be fetched and embedded again to arrive at the same rows. Widening

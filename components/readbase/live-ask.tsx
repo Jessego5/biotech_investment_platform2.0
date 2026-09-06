@@ -107,8 +107,8 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
   // the reader, because a suggestion that leads nowhere is worse than none.
   //
   // Only shown when the answer cites something. A refusal still has rows
-  // behind it — three lookups matched BIAFW, LONA and CTNM while declining a
-  // question about GSK — and calling those "companies behind this answer"
+  // behind it, three lookups matched BIAFW, LONA and CTNM while declining a
+  // question about GSK, and calling those "companies behind this answer"
   // would attribute the refusal to companies it never rested on.
   const cited = parseCitationMarkers(result?.answer ?? "").length > 0;
   const touched = cited
@@ -232,7 +232,7 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                     evidence={evidence}
                     dropped={dropped}
                     // Open when the answer cites nothing. Lookups returning
-                    // rows is not the same as the answer resting on them —
+                    // rows is not the same as the answer resting on them,
                     // "I don't have data on GSK since 2021" comes back after
                     // three successful lookups, and that is the answer where
                     // the working matters most.

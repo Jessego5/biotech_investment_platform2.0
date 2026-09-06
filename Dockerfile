@@ -16,7 +16,7 @@ RUN npm ci
 COPY . .
 
 # The build reads /stats to render the chrome. It must not reach for a real API
-# at build time — every page is dynamic and rendered per request — so nothing
+# at build time, every page is dynamic and rendered per request, so nothing
 # here points at one.
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

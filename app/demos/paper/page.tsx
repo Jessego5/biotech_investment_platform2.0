@@ -28,7 +28,7 @@ import { headerFor } from "@/lib/readbase/passages";
  * at the foot as a note on the reporting. It is the opposite trade from the
  * canvas: easier to read straight through, harder to audit line by line.
  *
- * The colours below are declared locally and are NOT the product palette —
+ * The colours below are declared locally and are NOT the product palette,
  * the brief forbids raw values in a component, and this demo exists to show
  * what a different ground would feel like, so it declares its own and keeps
  * them here.

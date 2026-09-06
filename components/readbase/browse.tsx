@@ -48,7 +48,7 @@ export function Browse({ corpus }: { corpus: string }) {
 
   useEffect(() => {
     const q = query.trim();
-    // nothing typed is not a result to store — it is a state to render, so it
+    // nothing typed is not a result to store, it is a state to render, so it
     // is derived below rather than assigned here
     if (!q) return;
     let cancelled = false;

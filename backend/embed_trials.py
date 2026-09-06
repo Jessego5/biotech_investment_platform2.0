@@ -70,7 +70,7 @@ def main():
         return
 
     # Loudly, not quietly. This used to print a note and return 0, which in a
-    # scheduled task is indistinguishable from success — the run goes green and
+    # scheduled task is indistinguishable from success, the run goes green and
     # the trials it just wrote have no vectors, so trial search returns nothing
     # and refuses without saying why.
     if not os.environ.get("OPENAI_API_KEY"):

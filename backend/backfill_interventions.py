@@ -88,7 +88,7 @@ def main():
     db.close()
 
     if unrecoverable:
-        print("\nThe nulls are trials whose stored text did not carry the list — "
+        print("\nThe nulls are trials whose stored text did not carry the list, "
               "mostly ones whose summary hit the 2,000 character cap before the "
               "interventions were reached. They are filled in when the company "
               "is next ingested, which is an honest gap rather than a claim "

@@ -72,7 +72,7 @@ function Rows({ sections }: { sections: Section[] }) {
  * The sections of one filing, each openable.
  *
  * The chunk id is used as the source number, so the same passage panel that
- * serves a citation on the Ask screen serves a section here — including the
+ * serves a citation on the Ask screen serves a section here, including the
  * stepper, which walks the section this passage belongs to.
  */
 export function FilingSections({ sections }: { sections: Section[] }) {

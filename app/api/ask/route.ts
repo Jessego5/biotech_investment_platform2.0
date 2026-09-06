@@ -17,7 +17,7 @@ const PER_MINUTE = 10;
 const PER_DAY = 50;
 
 // In the process, deliberately. The global budget is in Postgres because it has
-// to survive restarts and more than one task; this does not — a burst window
+// to survive restarts and more than one task; this does not, a burst window
 // that resets on deploy costs nothing, and two web tasks giving one caller two
 // windows is a rounding error against a limit that was already approximate.
 const seen = new Map<string, number[]>();
@@ -53,7 +53,7 @@ function caller(request: Request) {
  * Proxies the question to the Python service.
  *
  * The browser talks to its own origin so there is no CORS dance and no API
- * host baked into the client bundle — the backend URL stays server-side.
+ * host baked into the client bundle, the backend URL stays server-side.
  */
 export async function POST(request: Request) {
   let question = "";
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
   if (overLimit(caller(request))) {
     // shaped like the API's own refusal, and a 200, because being asked to
-    // slow down is not the request failing — the page renders it as a state,
+    // slow down is not the request failing, the page renders it as a state,
     // not as an error
     return NextResponse.json({
       answer:

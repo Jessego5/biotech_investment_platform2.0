@@ -52,7 +52,7 @@ def main():
             print(f"{INDEX} already exists; nothing to do")
         else:
             rows = conn.execute(text("select count(*) from filing_chunks")).scalar()
-            print(f"building {INDEX} over {rows:,} passages — this takes a few minutes")
+            print(f"building {INDEX} over {rows:,} passages, this takes a few minutes")
             t0 = time.time()
             conn.execute(text(
                 f"CREATE INDEX {INDEX} ON filing_chunks USING GIN ({EXPRESSION})"))
@@ -70,7 +70,7 @@ def main():
             f"where {EXPRESSION} @@ plainto_tsquery('english', 'patent expiry') "
             f"limit 10")).fetchall()
         used = any(INDEX in str(r[0]) for r in plan)
-        print("planner uses it:", "yes" if used else "NO — check the expression")
+        print("planner uses it:", "yes" if used else "NO, check the expression")
         for r in plan:
             print("   ", r[0])
 
