@@ -5,7 +5,10 @@
  * at, the accessor steps, the answer and the sources behind it. A citation
  * resolves to the document behind its evidence block, and blocks that computed a
  * figure have no document to open and say so rather than offering a control that
- * leads nowhere. Rendered by app/ask/page.tsx, which passes the corpus note.
+ * leads nowhere. An answer that rests on nothing is a refusal and gets the
+ * refusal card, which is a designed state carrying the same weight as an answer
+ * and not a greyed-out failure. Rendered by app/ask/page.tsx, which passes the
+ * corpus note.
  */
 
 import { useState } from "react";
@@ -14,6 +17,8 @@ import { SourceRow } from "@/components/readbase/source-row";
 import { PeriodLabel } from "@/components/readbase/period-label";
 import { notusCard } from "@/lib/readbase/notus-theme";
 import { AccessorSteps } from "@/components/readbase/accessor-steps";
+import { RefusalCard } from "@/components/readbase/refusal-card";
+import { accessorResults } from "@/lib/readbase/accessors";
 import Link from "next/link";
 import { InspectorProvider } from "@/components/readbase/inspector-provider";
 import { PassageSheet } from "@/components/readbase/passage-sheet";
@@ -71,6 +76,38 @@ const EXAMPLES: { q: string; shows: string }[] = [
   },
 ];
 
+/**
+ * The frame around a live refusal. The sentence in the middle is the model's own
+ * and the rows under it are the accessors that actually ran, so only the
+ * heading, the caption and the remedy are written here. The remedy names what
+ * this corpus holds, which is a fact about the corpus and true of every refusal,
+ * rather than a guess at what the reader should have asked instead.
+ *
+ * Two refusals, because they are not the same event. The lookups can run and
+ * come back with nothing the answer could stand on, or the question can be one
+ * this never answers, declined before anything was read. Calling the second one
+ * "no data" would blame the corpus for a boundary the system chose.
+ */
+const REFUSAL_CAPTION = "What was queried";
+
+const CORPUS =
+  "The corpus holds up to five years of annual reports per company, ten years " +
+  "of reported figures, 30,823 trials and the FDA's patent and exclusivity tables.";
+
+const REFUSAL = {
+  noData: {
+    heading: "No data for this",
+    remedy:
+      `${CORPUS} A question reaching outside that has nothing here to rest on. ` +
+      "It can answer a company's pipeline by phase, its figures year by year, " +
+      "what a filing says on a topic, or which companies match a filter.",
+  },
+  outOfScope: {
+    heading: "Outside what this answers",
+    remedy: `${CORPUS} It reports what those sources say and goes no further.`,
+  },
+};
+
 export function LiveAsk({ corpusNote }: { corpusNote: string }) {
   const [question, setQuestion] = useState("");
   const [asked, setAsked] = useState<string | null>(null);
@@ -116,6 +153,27 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
     : [];
   const listings = evidence.map(listingFor);
   const dropped = result?.dropped_citations ?? 0;
+  // A refusal is an answer resting on nothing: the model looked, found nothing
+  // it could stand behind and said so, which is why it cites nothing. It is a
+  // designed state and gets the refusal card rather than the answer card. The
+  // greeting is not one, it is the canned reply to "what can you do" and never
+  // looked anything up; the budget ceiling and a failed request are their own
+  // states above.
+  const tools = result?.tools_used ?? [];
+  const refused =
+    Boolean(result?.answer) &&
+    !cited &&
+    !result?.budget &&
+    !result?.error &&
+    !tools.includes("greeting");
+  // Declined before anything was read, rather than read and found wanting.
+  const declined = tools.includes("decline");
+  // The refusal card lists what ran, so the rows under it are only worth their
+  // space when one of them can be opened. Under an answer they always are: they
+  // are what the citations point at.
+  const showListings = refused
+    ? listings.some((l) => l.chunkId || l.url)
+    : listings.length > 0;
 
   return (
     <InspectorProvider
@@ -225,19 +283,12 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 )}
               </div>
 
-              {!pending && result && (
+              {/* Not under a refusal: the card below carries the same
+                  accessors, and the working shown twice on one screen reads as
+                  two different traces. */}
+              {!pending && result && !refused && (
                 <div className="mb-5">
-                  <AccessorSteps
-                    tools={result.tools_used ?? []}
-                    evidence={evidence}
-                    dropped={dropped}
-                    // Open when the answer cites nothing. Lookups returning
-                    // rows is not the same as the answer resting on them,
-                    // "I don't have data on GSK since 2021" comes back after
-                    // three successful lookups, and that is the answer where
-                    // the working matters most.
-                    defaultOpen={parseCitationMarkers(result.answer ?? "").length === 0}
-                  />
+                  <AccessorSteps tools={tools} evidence={evidence} dropped={dropped} />
                 </div>
               )}
 
@@ -286,7 +337,7 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 </div>
               )}
 
-              {result?.answer && !result.budget && (
+              {result?.answer && !result.budget && !refused && (
                 <div className={`${notusCard} px-6 py-6`} style={{ borderColor: "var(--n-line)" }}>
                   <AnswerProse
                     paragraphs={toAnswerNodes(result.answer, evidence.length)}
@@ -294,6 +345,16 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                     paragraphClassName="mb-4 max-w-[70ch] last:mb-0"
                   />
                 </div>
+              )}
+
+              {refused && (
+                <RefusalCard
+                  {...(declined ? REFUSAL.outOfScope : REFUSAL.noData)}
+                  statement={result?.answer ?? ""}
+                  queriedCaption={REFUSAL_CAPTION}
+                  queried={accessorResults(tools, evidence)}
+                  className={notusCard}
+                />
               )}
 
               {touched.length > 0 && (
@@ -314,7 +375,7 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 </div>
               )}
 
-              {listings.length > 0 && (
+              {showListings && (
                 <div className={`${notusCard} mt-5 px-6 py-2`} style={{ borderColor: "var(--n-line)" }}>
                   {listings.map((l) => (
                     <SourceRow

@@ -1,0 +1,7 @@
+# Nothing here is meant to be indexed yet. The site is on a load balancer
+# hostname while it is being shown to a handful of people, and the pages built
+# from canvas fixtures render the real chrome over invented identifiers, which
+# a search snippet would carry without the banner that explains them.
+# Delete these two lines when there is a domain and the corpus should be found.
+User-agent: *
+Disallow: /

@@ -30,14 +30,19 @@ function Stepper({
 }) {
   const step = (n: number) => onSelect(Math.min(Math.max(n, 1), section.total));
 
+  // Wraps rather than squeezes. The canvas draws a section of four, where the
+  // strip fits on one line; a 10-K risk-factor section is twenty-seven, and a
+  // flex row without shrink-0 answers that by compressing every box until "1"
+  // is narrower than "27" and the count reads as ragged. Nothing shrinks, and
+  // what does not fit goes to the next line.
   return (
-    <div className="mt-[11px] flex items-center gap-[5px]">
+    <div className="mt-[11px] flex flex-wrap items-center gap-x-[5px] gap-y-[6px]">
       <button
         type="button"
         onClick={() => step(index - 1)}
         disabled={index === 1}
         aria-label="Previous passage"
-        className="px-[3px] font-mono text-[11px] text-muted-foreground disabled:opacity-40"
+        className="shrink-0 px-[3px] font-mono text-[11px] text-muted-foreground disabled:opacity-40"
       >
         &lsaquo;
       </button>
@@ -50,7 +55,7 @@ function Stepper({
             onClick={() => step(n)}
             aria-current={n === index ? "true" : undefined}
             aria-label={`Passage ${n} of ${section.total}${held ? "" : ", text not held"}`}
-            className={`grid h-[20px] w-[22px] place-items-center border font-mono text-[10.5px] ${
+            className={`grid h-[20px] min-w-[22px] shrink-0 place-items-center border px-[3px] font-mono text-[10.5px] ${
               n === index
                 ? // filled: accent-ink lightens in dark, so the label takes the
                   // surface colour rather than white
@@ -71,11 +76,11 @@ function Stepper({
         onClick={() => step(index + 1)}
         disabled={index === section.total}
         aria-label="Next passage"
-        className="px-[3px] font-mono text-[11px] text-muted-foreground disabled:opacity-40"
+        className="shrink-0 px-[3px] font-mono text-[11px] text-muted-foreground disabled:opacity-40"
       >
         &rsaquo;
       </button>
-      <span className="ml-2 font-mono text-[10px] tracking-[0.06em] text-muted-foreground">
+      <span className="ml-2 shrink-0 whitespace-nowrap font-mono text-[10px] tracking-[0.06em] text-muted-foreground">
         {passageNote(section)}
       </span>
     </div>

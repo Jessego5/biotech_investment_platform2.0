@@ -15,6 +15,7 @@ typed accessors are what the model actually calls.
 import json
 import os
 import re
+from functools import lru_cache
 
 import numpy as np
 
@@ -102,14 +103,29 @@ def _load():
         db.close()
 
 
-def _embed_query(text):
+@lru_cache(maxsize=256)
+def _embedding(text):
+    """
+    The stored vector for a piece of query text, kept for the life of the
+    process.
+
+    The same string always embeds to the same vector, so asking for it twice
+    buys nothing and costs a network round trip inside the question the reader
+    is waiting on. A question asked again, and the worked examples are asked
+    constantly, skips it entirely. Returned as a tuple because a cache has to
+    hand back something no caller can mutate underneath the next one.
+    """
     from openai import OpenAI
+    return tuple(OpenAI().embeddings.create(
+        model=EMBED_MODEL, input=[text]).data[0].embedding)
+
+
+def _embed_query(text):
     import faiss
-    # embed the query text with the same model used for the trials
-    v = OpenAI().embeddings.create(model=EMBED_MODEL, input=[text]).data[0].embedding
-    # FAISS wants a 2D float32 array, so shape it as a single row
-    q = np.asarray([v], dtype=np.float32)
-    # normalize it too so it lines up with the unit-length trial vectors
+    # a fresh array each time, since normalize_L2 works in place and the cache
+    # behind _embedding is shared
+    q = np.asarray([_embedding(text)], dtype=np.float32)
+    # normalize it so it lines up with the unit-length stored vectors
     faiss.normalize_L2(q)
     return q
 

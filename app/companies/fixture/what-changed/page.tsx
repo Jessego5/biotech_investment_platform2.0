@@ -6,6 +6,8 @@
  * event would be the bug this screen exists to prevent.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import {
@@ -29,7 +31,15 @@ import {
 } from "@/lib/readbase/diff";
 import { company } from "@/lib/readbase/moderna";
 
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
+
 export default function WhatChangedPage() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <div className="min-h-svh bg-card text-foreground">
       <Chrome

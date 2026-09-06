@@ -4,8 +4,16 @@
  * are not the product and some of them break rules the brief sets on purpose.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import Link from "next/link";
 import { Chrome } from "@/components/readbase/chrome";
+
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
 
 const DEMOS: [string, string, string][] = [
   [
@@ -36,6 +44,8 @@ const DEMOS: [string, string, string][] = [
 ];
 
 export default function DemosPage() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <div className="min-h-svh bg-card text-foreground">
       <Chrome crumb={["demos"]} />

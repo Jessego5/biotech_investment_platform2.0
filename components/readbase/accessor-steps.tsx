@@ -8,8 +8,8 @@
  * and not a gap in the display, which the refusal card has always shown and an
  * answer has no reason to show less of. So the steps are built from tools_used
  * rather than from the evidence, and a lookup with no block against it reads "no
- * rows" instead of being dropped. Rendered by live-ask.tsx, open by default when
- * the answer cites nothing.
+ * rows" instead of being dropped. Rendered by live-ask.tsx under an answer; a
+ * refusal lists the same accessors inside its own card instead.
  */
 
 import { useState } from "react";
@@ -19,32 +19,23 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { notusCard } from "@/lib/readbase/notus-theme";
+import { pairAccessors } from "@/lib/readbase/accessors";
 import type { EvidenceBlock } from "@/lib/readbase/api";
 
 export function AccessorSteps({
   tools,
   evidence,
   dropped = 0,
-  defaultOpen = false,
 }: {
   tools: string[];
   evidence: EvidenceBlock[];
   dropped?: number;
-  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  if (!tools.length) return null;
-
-  // One row per call, in the order they were made, each matched to the first
-  // block it produced. The same accessor can run twice, so a block is claimed
-  // once and not offered to the next call of the same name.
-  const claimed = new Set<number>();
-  const steps = tools.map((tool) => {
-    const index = evidence.findIndex((e, i) => e.tool === tool && !claimed.has(i));
-    if (index === -1) return { tool, block: undefined };
-    claimed.add(index);
-    return { tool, block: evidence[index] };
-  });
+  const [open, setOpen] = useState(false);
+  // One row per call, in the order they were made, each matched to the block it
+  // produced. The refusal card lists the same calls, so the join is shared.
+  const steps = pairAccessors(tools, evidence);
+  if (!steps.length) return null;
   const withRows = steps.filter((s) => s.block).length;
 
   return (

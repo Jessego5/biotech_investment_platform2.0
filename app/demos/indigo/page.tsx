@@ -4,8 +4,16 @@
  * from the live corpus rather than from fixtures.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { API_BASE } from "@/lib/readbase/api";
 import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbase/company";
+
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
 
 /**
  * The Notus register again, on the five-step palette.
@@ -112,6 +120,8 @@ function Donut({ slices }: { slices: { label: string; n: number }[] }) {
 }
 
 export default async function IndigoDemo() {
+  if (!fixturesVisible()) notFound();
+
   const data = await load("VRTX");
   if (!data?.ticker) {
     return <div className="p-10">The API is not reachable.</div>;

@@ -33,7 +33,7 @@ export type TextDiffPart = { kind: "same" | "del" | "ins"; text: string };
 const later: Snapshot = {
   role: "Later snapshot",
   document: "10-K · FY2025 · filed 2026-02-20",
-  detail: "accession 0001682852-26-000011",
+  detail: "accession 0001682852-26-000033",
   extractor: "v2.4.1",
   ingested: "ingested 2026-02-27",
 };
@@ -43,7 +43,7 @@ export const comparable = {
   earlier: {
     role: "Earlier snapshot",
     document: "10-K · FY2024 · filed 2025-02-21",
-    detail: "accession 0001682852-25-000016",
+    detail: "accession 0001682852-25-000022",
     extractor: "v2.4.1",
     ingested: "ingested 2025-03-11",
   } satisfies Snapshot,
@@ -55,7 +55,7 @@ export const notComparable = {
   earlier: {
     role: "Earlier snapshot",
     document: "10-K · FY2024 · filed 2025-02-21",
-    detail: "accession 0001682852-25-000016",
+    detail: "accession 0001682852-25-000022",
     extractor: "v2.3.0",
     ingested: "ingested 2025-02-28",
   } satisfies Snapshot,

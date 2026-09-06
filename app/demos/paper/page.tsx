@@ -9,6 +9,8 @@
  * would feel like.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { Chrome } from "@/components/readbase/chrome";
 import {
   answer,
@@ -19,6 +21,12 @@ import {
   sources,
 } from "@/lib/readbase/semaglutide";
 import { headerFor } from "@/lib/readbase/passages";
+
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
 
 /**
  * The FT Origami register, applied to the same answer.
@@ -42,6 +50,8 @@ const PAPER = {
 } as React.CSSProperties;
 
 export default function PaperDemo() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <div className="min-h-svh bg-card text-foreground">
       <Chrome crumb={["demos", "paper"]} />

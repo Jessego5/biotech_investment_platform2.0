@@ -57,12 +57,12 @@ export const sources: SourceListing[] = [
   {
     n: 1,
     document: "Vertex Pharmaceuticals · 10-K · FY2025 · consolidated statements of operations",
-    locator: "filed 2026-02-12 · CIK 0000875320 · accession 0000875320-26-000009 · passage 2 of 3",
+    locator: "filed 2026-02-13 · CIK 0000875320 · accession 0000875320-26-000056 · passage 2 of 3",
   },
   {
     n: 2,
     document: "Vertex Pharmaceuticals · 10-K · FY2025 · management’s discussion and analysis",
-    locator: "filed 2026-02-12 · CIK 0000875320 · accession 0000875320-26-000009 · passage 1 of 6",
+    locator: "filed 2026-02-13 · CIK 0000875320 · accession 0000875320-26-000056 · passage 1 of 6",
   },
 ];
 
@@ -73,12 +73,12 @@ export const sources: SourceListing[] = [
 export const sections: Record<string, PassageSection> = {
   "vrtx-ops": unstoredSection(
     "vrtx-ops",
-    ["VRTX", "10-K", "FY2025", "filed 2026-02-12", "consolidated statements of operations"],
+    ["VRTX", "10-K", "FY2025", "filed 2026-02-13", "consolidated statements of operations"],
     3,
   ),
   "vrtx-mdna": unstoredSection(
     "vrtx-mdna",
-    ["VRTX", "10-K", "FY2025", "filed 2026-02-12", "management’s discussion and analysis"],
+    ["VRTX", "10-K", "FY2025", "filed 2026-02-13", "management’s discussion and analysis"],
     6,
   ),
 };

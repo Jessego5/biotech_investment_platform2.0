@@ -5,6 +5,8 @@
  * control. The passage text is written in register and is not the filing.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";
@@ -28,11 +30,19 @@ import {
   sources,
 } from "@/lib/readbase/semaglutide";
 
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
+
 /** The chip the reader arrived on. Source 1 is cited twice; only this one is open. */
 const INITIAL_CHIP = "1a";
 const INITIAL_SOURCE = 1;
 
 export default function SourceInspectorPage() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <InspectorProvider
       sections={sections}

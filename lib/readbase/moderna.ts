@@ -45,7 +45,7 @@ export const pipeline: Programme[] = [
   { code: "mRNA-1010", indication: "Seasonal influenza", phase: 3, phaseLabel: "Phase 3", lead: "NCT05827068", trials: 12 },
   { code: "mRNA-1083", indication: "Influenza + COVID-19 combination", phase: 3, phaseLabel: "Phase 3", lead: "NCT06694389", trials: 4 },
   { code: "mRNA-1647", indication: "Cytomegalovirus", phase: 3, phaseLabel: "Phase 3", lead: "NCT05085366", trials: 7 },
-  { code: "mRNA-1468", indication: "Varicella zoster", phase: 2, phaseLabel: "Phase 1/2", lead: "NCT05934851", trials: 3 },
+  { code: "mRNA-1468", indication: "Varicella zoster", phase: 2, phaseLabel: "Phase 1/2", lead: "–", trials: 3 },
   { code: "mRNA-3927", indication: "Propionic acidemia", phase: 2, phaseLabel: "Phase 1/2", lead: "NCT05130437", trials: 2 },
   { code: "mRNA-1195", indication: "Epstein–Barr virus", phase: 1, phaseLabel: "Phase 1", lead: "NCT05831111", trials: 1 },
 ];
@@ -124,7 +124,7 @@ export const cashCallout = {
   figure: "$1.723B",
   caveat:
     "Not a point on the series above. This is the quarter end, 2026-06-30, and it counts cash only. The annual line includes investments. Do not read it as FY2026.",
-  source: ["10-Q · Q2 2026", "filed 2026-08-07", "accession 0001682852-26-000073"],
+  source: ["10-Q · Q2 2026", "filed 2026-08-07", "not held in the corpus"],
 };
 
 /* ------------------------------------------------------------------- rail */
@@ -169,9 +169,9 @@ export const readouts = [
 ];
 
 export const filingsHeld = [
-  { when: "FY2025", what: "10-K · filed 2026-02-20", id: "0001682852-26-000011 · 41 sections stored" },
-  { when: "FY2024", what: "10-K · filed 2025-02-21", id: "0001682852-25-000016 · 40 sections stored" },
-  { when: "FY2023", what: "10-K · filed 2024-02-23", id: "0001682852-24-000021 · 40 sections stored" },
-  { when: "FY2022", what: "10-K · filed 2023-02-24", id: "0001682852-23-000017 · 38 sections stored" },
-  { when: "FY2021", what: "10-K · filed 2022-02-25", id: "0001682852-22-000010 · 38 sections stored" },
+  { when: "FY2025", what: "10-K · filed 2026-02-20", id: "0001682852-26-000033 · 93 passages stored" },
+  { when: "FY2024", what: "10-K · filed 2025-02-21", id: "0001682852-25-000022 · 91 passages stored" },
+  { when: "FY2023", what: "10-K · filed 2024-02-23", id: "0001682852-24-000015 · 94 passages stored" },
+  { when: "FY2022", what: "10-K · filed 2023-02-24", id: "0001682852-23-000011 · 99 passages stored" },
+  { when: "FY2021", what: "10-K · filed 2022-02-25", id: "0001682852-22-000012 · 109 passages stored" },
 ];

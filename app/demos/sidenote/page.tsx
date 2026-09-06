@@ -4,6 +4,8 @@
  * audit line by line, which is the trade it exists to show.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { Chrome } from "@/components/readbase/chrome";
 import { PeriodLabel } from "@/components/readbase/period-label";
 import { AccessorTrace } from "@/components/readbase/accessor-trace";
@@ -17,6 +19,12 @@ import {
 } from "@/lib/readbase/semaglutide";
 import { headerFor, isHeld } from "@/lib/readbase/passages";
 import type { AnswerNode } from "@/lib/readbase/types";
+
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
 
 /** The sources a paragraph leans on, in the order it cites them. */
 function citedIn(nodes: AnswerNode[]): number[] {
@@ -41,6 +49,8 @@ function citedIn(nodes: AnswerNode[]): number[] {
  * treatment stops being an improvement.
  */
 export default function SidenoteDemo() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <div className="min-h-svh bg-card text-foreground">
       <Chrome crumb={["demos", "sidenote"]} />

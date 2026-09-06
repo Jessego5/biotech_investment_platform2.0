@@ -4,6 +4,8 @@
  * green as the primary and the five-step palette carrying anything ordered.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { API_BASE } from "@/lib/readbase/api";
 import { NOTUS, notusCard } from "@/lib/readbase/notus-theme";
 import {
@@ -13,6 +15,12 @@ import {
   toSeries,
   type CompanyResponse,
 } from "@/lib/readbase/company";
+
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
 
 /**
  * The Notus register on a white ground, with green as the primary colour and
@@ -100,6 +108,8 @@ function Donut({ slices }: { slices: { label: string; n: number }[] }) {
 }
 
 export default async function NotusDemo() {
+  if (!fixturesVisible()) notFound();
+
   const data = await load("VRTX");
   if (!data?.ticker) {
     return <div className="p-10">The API is not reachable.</div>;

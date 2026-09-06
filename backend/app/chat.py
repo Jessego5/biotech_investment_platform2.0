@@ -61,6 +61,16 @@ GREETING = (
 # be, and the whole app rests on that line.
 MAX_ROUNDS = 3
 
+# A ceiling on what a tool-choosing round may generate. The tool calls
+# themselves are small, the longest seen is 69 tokens for a round that called
+# two of them, so this is wide margin; what it actually cuts is the answer the
+# model writes when it has finished choosing, which is thrown away because the
+# answer is written afterwards under the stricter prompt. That discarded draft
+# ran to 300 and 500 tokens and was most of the wait on every question. A round
+# that hits the ceiling while calling tools is asked again without it, since a
+# tool call cut off mid-argument is unusable.
+LOOP_TOKENS = 128
+
 # How much of a retrieved passage the model is given. This used to be 600
 # characters of a passage stored at 3,000, which quietly broke the promise the
 # interface makes: the panel headed "What we read" showed the whole passage, and
@@ -183,15 +193,33 @@ TOOL_SYSTEM = (
     "You know no company data yourself and must never state a figure that a tool "
     "did not return. Call the tools you need, more than one if the question "
     "needs composing, for example finding companies first and then checking one "
-    "of them. When you have enough, stop calling tools. "
+    "of them. When you have enough, stop calling tools and reply with the single "
+    "word DONE. A separate step writes the answer from the rows the tools "
+    "returned, so anything you write here is thrown away and only costs the "
+    "reader the wait. "
     "Every figure comes from SEC filings and ClinicalTrials.gov. Never predict, "
     "never advise buying or selling: call decline for those."
 )
 
 
+_openai = None
+
+
 def _client():
-    from openai import OpenAI
-    return OpenAI()  
+    """
+    One client for the process rather than one per call.
+
+    Every call built a fresh OpenAI(), and a fresh client is a fresh connection:
+    DNS, TLS and a new pool for what is usually the third or fourth request of
+    the same question. The client holds nothing per-question, so keeping one
+    open costs nothing and saves the setup each time, about a tenth of a second
+    a call on a question that makes four of them.
+    """
+    global _openai
+    if _openai is None:
+        from openai import OpenAI
+        _openai = OpenAI()
+    return _openai
 
 
 def _money(entry):
@@ -526,6 +554,13 @@ def answer_question(question, db, as_of=None):
     The loop is bounded. Composing takes more than one call, find the companies,
     then check one of them, but agentic retrieval costs a round trip and tokens
     each time, so it stops at MAX_ROUNDS whether or not the model would continue.
+
+    The round that ends the loop is a question, not an answer: it asks whether
+    anything else needs looking up, and whatever prose comes back with "no" is
+    discarded, because the answer is written afterwards under the stricter
+    prompt. Left to itself the model writes that whole discarded answer first,
+    which was two seconds of every question spent on text nobody would ever see,
+    so TOOL_SYSTEM asks for one word instead.
     """
     if not os.environ.get("OPENAI_API_KEY"):
         return {"answer": "The chat needs an OpenAI API key. Set OPENAI_API_KEY in "
@@ -551,8 +586,15 @@ def answer_question(question, db, as_of=None):
     try:
         for _ in range(MAX_ROUNDS):
             resp = _client().chat.completions.create(
-                model=CHAT_MODEL, messages=messages, tools=TOOLS)
-            msg = resp.choices[0].message
+                model=CHAT_MODEL, messages=messages, tools=TOOLS,
+                max_tokens=LOOP_TOKENS)
+            choice = resp.choices[0]
+            msg = choice.message
+            if choice.finish_reason == "length" and msg.tool_calls:
+                # ran out of room mid-call, so ask again with none
+                msg = _client().chat.completions.create(
+                    model=CHAT_MODEL, messages=messages,
+                    tools=TOOLS).choices[0].message
             if not msg.tool_calls:
                 break
             messages.append({

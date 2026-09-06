@@ -6,6 +6,8 @@
  * identifiers here are fixtures and the banner says so.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { Section } from "@/components/readbase/section";
@@ -33,6 +35,12 @@ import {
   readouts,
 } from "@/lib/readbase/moderna";
 
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
+
 /**
  * Everything this page holds is on this page, so the tabs move to a section
  * rather than swapping a view. "Trials" has no section of its own, the trial
@@ -54,6 +62,8 @@ const TABS: { label: string; target?: string }[] = [
  * programme table shows a shape the corpus cannot yet produce.
  */
 export default function CompanyFixturePage() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <div id="top" className="min-h-full bg-card text-foreground scroll-mt-0">
       <Chrome crumb={["companies", "fixture", company.name]} />

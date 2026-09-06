@@ -5,6 +5,8 @@
  * this page are fixtures and the banner says so.
  */
 
+import { notFound } from "next/navigation";
+import { fixturesVisible } from "@/lib/readbase/fixtures";
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";
@@ -20,12 +22,21 @@ import {
   answeredAt,
   filingUrl,
   question,
+  refusal,
   sections,
   sourceLocation,
   sources,
 } from "@/lib/readbase/vertex";
 
+// Rendered per request, not at build. Prerendering would bake the decision into
+// the build output, and SHOW_FIXTURES would then be a flag that cannot turn
+// anything on in the deployment it exists for.
+export const dynamic = "force-dynamic";
+
+
 export default function AskFixturePage() {
+  if (!fixturesVisible()) notFound();
+
   return (
     <InspectorProvider sections={sections} locate={sourceLocation}>
       <div className="min-h-svh bg-card text-foreground">
@@ -58,7 +69,10 @@ export default function AskFixturePage() {
               ))}
             </div>
 
-            <RefusalCard />
+            <RefusalCard
+              {...refusal}
+              className="mt-11 border border-border border-l-[3px] border-l-primary bg-secondary"
+            />
           </div>
         </div>
 

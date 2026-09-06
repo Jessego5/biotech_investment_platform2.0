@@ -166,7 +166,7 @@ export const original = {
   href: "https://www.sec.gov/Archives/edgar/data/353278/000117184326001204/nonof-20f_2025.htm",
   fields: [
     ["CIK", "0000353278"],
-    ["Accession", "0001171843-26-001204"],
+    ["Accession", "0000353278-26-000012"],
     ["Form", "20-F · fiscal year ended 2025-12-31"],
     ["Retrieved", "2026-02-06 · 1,184 pages"],
   ] as const,
