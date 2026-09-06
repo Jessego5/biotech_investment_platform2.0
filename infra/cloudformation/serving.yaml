@@ -190,7 +190,7 @@ Resources:
   DiscoveryNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
-      Name: !Sub "readbase-${Environment}.internal"
+      Name: !Sub "biobase-${Environment}.internal"
       Vpc: !Ref VpcId
 
   ApiDiscoveryService:
@@ -244,7 +244,7 @@ Resources:
   ApiTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub "readbase-${Environment}-api"
+      Family: !Sub "biobase-${Environment}-api"
       RequiresCompatibilities: [FARGATE]
       NetworkMode: awsvpc
       Cpu: "1024"
@@ -271,7 +271,7 @@ Resources:
           Secrets:
             - Name: OPENAI_API_KEY
               ValueFrom: !Ref OpenAiSecretArn
-            - Name: READBASE_API_KEY
+            - Name: BIOBASE_API_KEY
               ValueFrom: !Ref ApiKeySecret
           HealthCheck:
             # / is a cheap handler that does not touch the database, so an
@@ -292,7 +292,7 @@ Resources:
   WebTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub "readbase-${Environment}-web"
+      Family: !Sub "biobase-${Environment}-web"
       RequiresCompatibilities: [FARGATE]
       NetworkMode: awsvpc
       Cpu: "512"
@@ -310,11 +310,11 @@ Resources:
             - ContainerPort: 3000
           Environment:
             # the private name, resolvable only inside this VPC
-            - Name: READBASE_API_URL
-              Value: !Sub "http://api.readbase-${Environment}.internal:8000"
+            - Name: BIOBASE_API_URL
+              Value: !Sub "http://api.biobase-${Environment}.internal:8000"
           Secrets:
             # read server-side by the route handlers; it never reaches a browser
-            - Name: READBASE_API_KEY
+            - Name: BIOBASE_API_KEY
               ValueFrom: !Ref ApiKeySecret
           LogConfiguration:
             LogDriver: awslogs
@@ -430,7 +430,7 @@ Outputs:
   ApiInternalHost:
     Description: >-
       The API's private name. Resolvable only inside the VPC, which is the point.
-    Value: !Sub "http://api.readbase-${Environment}.internal:8000"
+    Value: !Sub "http://api.biobase-${Environment}.internal:8000"
 
   ApiKeySecretArn:
     Description: Where the generated /ask secret lives, for rotation.

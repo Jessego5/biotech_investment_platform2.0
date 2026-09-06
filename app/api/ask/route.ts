@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       // the guard turned us away: say so plainly rather than passing a bare
       // 401 to a page that will read it as "no answer"
       return NextResponse.json(
-        { error: "The API rejected this server's key. Check READBASE_API_KEY." },
+        { error: "The API rejected this server's key. Check BIOBASE_API_KEY." },
         { status: 502 },
       );
     }

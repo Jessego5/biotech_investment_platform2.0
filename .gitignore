@@ -39,7 +39,7 @@ backend/raw/
 *.log
 logs/
 
-# Node / Next.js (Readbase frontend)
+# Node / Next.js (BioBase frontend)
 node_modules/
 .next/
 next-env.d.ts
@@ -58,3 +58,4 @@ next-env.d.ts
 # build with "no space left on device".
 dumps/
 *.dump
+

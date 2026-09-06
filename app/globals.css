@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-   Readbase, app/globals.css
+   BioBase, app/globals.css
    Drop-in replacement for the file `shadcn@latest init` generates.
    Tailwind v4 (CSS-first config). No tailwind.config.js needed.
    --------------------------------------------------------------------------- */
@@ -23,7 +23,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   1. shadcn's own tokens, repointed at the Readbase palette.
+   1. shadcn's own tokens, repointed at the BioBase palette.
    Every shadcn component reads these, so restyling them here restyles
    Table, Tabs, Dialog, Badge, etc. all at once.
    --------------------------------------------------------------------------- */
@@ -78,7 +78,7 @@
   --sidebar-ring: #1d9e75;
 
   /* -------------------------------------------------------------------------
-     2. Readbase-specific tokens. shadcn has no concept of these.
+     2. BioBase-specific tokens. shadcn has no concept of these.
      ------------------------------------------------------------------------- */
 
   --ink-2: #5f5e5a;               /* secondary prose, metadata */

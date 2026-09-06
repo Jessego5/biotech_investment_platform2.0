@@ -14,9 +14,9 @@ from fastapi.testclient import TestClient
 
 def client(monkeypatch, key=None):
     if key is None:
-        monkeypatch.delenv("READBASE_API_KEY", raising=False)
+        monkeypatch.delenv("BIOBASE_API_KEY", raising=False)
     else:
-        monkeypatch.setenv("READBASE_API_KEY", key)
+        monkeypatch.setenv("BIOBASE_API_KEY", key)
     from app import main
     importlib.reload(main)
     # a handler that raises should come back as a response rather than escaping
@@ -43,14 +43,14 @@ def test_key_configured_rejects_a_request_without_one(monkeypatch):
 def test_key_configured_rejects_the_wrong_one(monkeypatch):
     c, _ = client(monkeypatch, "s3cret")
     r = c.post("/ask", json={"question": "anything"},
-               headers={"X-Readbase-Key": "not-it"})
+               headers={"X-BioBase-Key": "not-it"})
     assert r.status_code == 401
 
 
 def test_the_right_key_gets_through_to_the_handler(monkeypatch):
     c, _ = client(monkeypatch, "s3cret")
     r = c.post("/ask", json={"question": "  "},
-               headers={"X-Readbase-Key": "s3cret"})
+               headers={"X-BioBase-Key": "s3cret"})
     assert r.status_code == 400  # past the guard, stopped by the empty question
 
 
@@ -66,6 +66,6 @@ def test_reading_endpoints_stay_open_when_a_key_is_set(monkeypatch):
 @pytest.fixture(autouse=True)
 def _restore(monkeypatch):
     yield
-    monkeypatch.delenv("READBASE_API_KEY", raising=False)
+    monkeypatch.delenv("BIOBASE_API_KEY", raising=False)
     from app import main
     importlib.reload(main)

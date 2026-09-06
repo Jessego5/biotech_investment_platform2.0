@@ -1,4 +1,4 @@
-# Readbase
+# BioBase
 
 **Grounded question answering over SEC filings, clinical trials and FDA data.**
 

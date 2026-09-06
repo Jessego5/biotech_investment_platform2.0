@@ -62,7 +62,7 @@ services:
       # Shared secret for /ask. Unset, the endpoint stays open, which is what
       # a local run wants; set, only a caller holding it can spend the key
       # above. See app/main.py require_key.
-      READBASE_API_KEY: ${READBASE_API_KEY:-}
+      BIOBASE_API_KEY: ${BIOBASE_API_KEY:-}
       SEC_USER_AGENT: ${SEC_USER_AGENT:-}
       # the API reads the archive as well as writing it: /snapshots, /changes and
       # /company/{ticker}/changes all answer out of it. Without this the archive
@@ -89,10 +89,10 @@ services:
     environment:
       # the service name, not localhost. Every call the browser makes goes to
       # the frontend's own route handlers, which reach the API from in here.
-      READBASE_API_URL: http://api:8000
+      BIOBASE_API_URL: http://api:8000
       # must match the API's. Unset on both, /ask stays open, which is what a
       # local run wants.
-      READBASE_API_KEY: ${READBASE_API_KEY:-}
+      BIOBASE_API_KEY: ${BIOBASE_API_KEY:-}
     depends_on:
       api:
         condition: service_started

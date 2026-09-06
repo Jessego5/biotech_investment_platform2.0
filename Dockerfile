@@ -42,6 +42,6 @@ COPY --from=build --chown=readbase:readbase /app/public ./public
 USER readbase
 EXPOSE 3000
 
-# READBASE_API_URL and READBASE_API_KEY are read at request time, not baked in,
+# BIOBASE_API_URL and BIOBASE_API_KEY are read at request time, not baked in,
 # so one image serves every environment.
 CMD ["node", "server.js"]

@@ -1,4 +1,4 @@
-# Deploying Readbase
+# Deploying BioBase
 
 Three stacks. `storage` and `pipeline` already existed and run the ingestion;
 `serving` is what answers a request.
@@ -103,7 +103,7 @@ Into Secrets Manager, not a parameter file:
 
 ```bash
 aws secretsmanager create-secret \
-  --name readbase/prod/openai --secret-string 'sk-…'
+  --name biobase/prod/openai --secret-string 'sk-…'
 ```
 
 Keep the ARN. `serve.sh` takes it and passes it to ECS by reference, so the key
@@ -121,7 +121,7 @@ read the same one, and rotating it is a stack update.
 ./infra/deploy.sh prod s3://<artifacts-bucket> 'postgresql+psycopg://…'
 
 # serving: load balancer, frontend, API
-./infra/serve.sh prod 'postgresql+psycopg://…' arn:aws:secretsmanager:…:readbase/prod/openai
+./infra/serve.sh prod 'postgresql+psycopg://…' arn:aws:secretsmanager:…:biobase/prod/openai
 ```
 
 `serve.sh` builds and pushes both images under a dated tag, reads the cluster
@@ -183,7 +183,7 @@ Without a key that second half exits non-zero rather than leaving the task green
 and the vectors missing — but a failing daily task is still a failing daily task.
 
 ```bash
-OPENAI_SECRET_ARN=arn:aws:secretsmanager:…:readbase/prod/openai \
+OPENAI_SECRET_ARN=arn:aws:secretsmanager:…:biobase/prod/openai \
   ./infra/deploy.sh prod s3://<artifacts-bucket> 'postgresql+psycopg://…'
 ```
 
@@ -219,12 +219,12 @@ exercises what gets deployed rather than something that resembles it:
 
 ```bash
 export OPENAI_API_KEY=…  SEC_USER_AGENT='you@example.com'
-export READBASE_API_KEY="$(openssl rand -hex 24)"   # optional; see below
+export BIOBASE_API_KEY="$(openssl rand -hex 24)"   # optional; see below
 docker compose up -d --build
 open http://localhost:3000
 ```
 
-With `READBASE_API_KEY` set on both services, `/ask` requires it and a direct
+With `BIOBASE_API_KEY` set on both services, `/ask` requires it and a direct
 call to the API without it returns 401. Unset on both, `/ask` stays open, which
 is what a local run wants and why the test suite needs no configuration.
 

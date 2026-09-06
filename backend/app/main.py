@@ -63,15 +63,15 @@ app = FastAPI(title="Biotech Agent API", version="0.3.0")
 # The key is optional on purpose: unset, the API behaves exactly as it did, so
 # a local run and the test suite need no configuration. Set, it is required,
 # and the frontend is the only thing that holds it.
-API_KEY = os.environ.get("READBASE_API_KEY") or ""
+API_KEY = os.environ.get("BIOBASE_API_KEY") or ""
 
 
-def require_key(x_readbase_key: str = Header(default="")):
+def require_key(x_biobase_key: str = Header(default="")):
     if not API_KEY:
         return
     # compare in constant time: a plain == leaks the key a character at a time
     # to anyone willing to measure
-    if not hmac.compare_digest(x_readbase_key, API_KEY):
+    if not hmac.compare_digest(x_biobase_key, API_KEY):
         raise HTTPException(
             status_code=401,
             detail="This endpoint needs a key. The read-only endpoints do not.",

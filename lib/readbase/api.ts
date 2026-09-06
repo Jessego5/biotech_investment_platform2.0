@@ -12,7 +12,7 @@ import type { PassageSection } from "@/lib/readbase/passages";
 import { parseCitationMarkers, resolveCitation } from "@/lib/readbase/citations";
 
 export const API_BASE =
-  process.env.READBASE_API_URL ?? "http://127.0.0.1:8000";
+  process.env.BIOBASE_API_URL ?? "http://127.0.0.1:8000";
 
 /**
  * Sent on the one endpoint that spends money. Server-side only, it lives in
@@ -22,10 +22,10 @@ export const API_BASE =
  * Unset in development, where the API asks for nothing.
  */
 export function apiHeaders(): Record<string, string> {
-  const key = process.env.READBASE_API_KEY;
-  // the header name stays as it is: it has to match require_key on the API,
-  // and renaming it means changing both sides in the same deploy
-  return key ? { "X-Readbase-Key": key } : {};
+  const key = process.env.BIOBASE_API_KEY;
+  // has to match require_key on the API. Both sides were renamed in one change,
+  // which was free before anything was deployed and would not have been after
+  return key ? { "X-BioBase-Key": key } : {};
 }
 
 /** One document behind a retrieval, as the service names it. */
