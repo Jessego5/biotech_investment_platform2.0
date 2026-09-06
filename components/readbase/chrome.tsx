@@ -1,6 +1,10 @@
 import { API_BASE } from "@/lib/readbase/api";
 
-/** The wordmark. The D carries the one piece of colour in the chrome. */
+/**
+ * This is the wordmark and the top bar for the canvas register, where the D
+ * carries the one piece of colour in the chrome. The live screens use
+ * notus-chrome.tsx instead; this one is kept for the fixture artboards.
+ */
 export function Wordmark() {
   return (
     <div className="font-mono text-[13px] font-semibold tracking-[0.26em] text-foreground">

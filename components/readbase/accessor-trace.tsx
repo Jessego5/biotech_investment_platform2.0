@@ -1,7 +1,9 @@
 /**
- * Which typed accessors ran, and how much of what they returned was used.
- * The model picks among the accessors and narrates what they return; this line
- * is the record of that, and it appears on refusals as well as answers.
+ * This is the one line saying which typed accessors ran and how much of what
+ * they returned was used. The model picks among the accessors and narrates what
+ * they return, and this is the record of that, appearing on refusals as well as
+ * answers. Rendered by the fixture answer screens; live-ask.tsx uses
+ * accessor-steps.tsx instead.
  */
 export function AccessorTrace({
   accessors,

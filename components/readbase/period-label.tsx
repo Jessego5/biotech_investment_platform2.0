@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Every figure shows the period it covers. A number without one is a bug,
- * so this is deliberately a component rather than a loose className.
+ * This is the period a figure covers. Every figure shows one, and a number
+ * without one is a bug, which is why this is a component rather than a loose
+ * className that can be forgotten.
  */
 export function PeriodLabel({
   children,

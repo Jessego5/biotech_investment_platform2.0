@@ -4,11 +4,11 @@ import { original } from "@/lib/readbase/semaglutide";
 import type { OriginalRecord } from "@/lib/readbase/passages";
 
 /**
- * The original document. This is the second of the two checks, and it is
- * deliberately not the same control as the first: it sits on the recessed
- * plane, below a heavier rule, behind an outlined outbound button rather than
- * a filled one. The sentence at the bottom exists so nobody has to infer the
- * difference from the styling alone.
+ * This is the original document, the second of the two checks, and it is
+ * deliberately not the same control as the first. It sits on the recessed plane,
+ * below a heavier rule, behind an outlined outbound button rather than a filled
+ * one, and the sentence at the bottom exists so nobody has to infer the
+ * difference from the styling alone. Rendered under the passage panel.
  */
 export function OriginalDocument({ record }: { record?: OriginalRecord }) {
   const source = record

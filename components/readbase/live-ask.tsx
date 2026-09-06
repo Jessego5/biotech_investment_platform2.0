@@ -22,9 +22,11 @@ import type { SourceListing } from "@/lib/readbase/types";
 import { parseCitationMarkers } from "@/lib/readbase/citations";
 
 /**
- * A citation resolves to the document behind its evidence block. Blocks that
- * computed a figure have no document to open, and say so rather than offering
- * a control that leads nowhere.
+ * This is the Ask screen: the question box, the worked examples a reader arrives
+ * at, the accessor steps, the answer and the sources behind it. A citation
+ * resolves to the document behind its evidence block, and blocks that computed a
+ * figure have no document to open and say so rather than offering a control that
+ * leads nowhere. Rendered by app/ask/page.tsx, which passes the corpus note.
  */
 function listingFor(block: EvidenceBlock): SourceListing & {
   chunkId?: number;

@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * This lists the sections stored from one annual report and opens the same
+ * passage panel a citation opens, so reading a filing from the filing page and
+ * reading it from an answer land on identical text. A section that was found but
+ * held no passages still gets a row, because a gap in extraction is a fact about
+ * the filing rather than a reason to show nothing. Rendered by
+ * app/filings/[accession].
+ */
+
 import { InspectorProvider } from "@/components/readbase/inspector-provider";
 import { PassageSheet } from "@/components/readbase/passage-sheet";
 import { useOptionalInspector } from "@/components/readbase/inspector-provider";

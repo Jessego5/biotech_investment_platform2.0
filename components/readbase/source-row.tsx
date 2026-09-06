@@ -4,9 +4,10 @@ import { useInspector } from "@/components/readbase/inspector-provider";
 import type { SourceListing } from "@/lib/readbase/types";
 
 /**
- * A source under an answer, with its two actions. These are deliberately not
- * the same control: "Read passage" is filled and opens the stored text we were
- * allowed to see; "sec.gov" is outlined and leaves for the whole document.
+ * This is one source under an answer, with its two actions, which are
+ * deliberately not the same control. "Read passage" is filled and opens the
+ * stored text the model was allowed to see, while "sec.gov" is outlined and
+ * leaves for the whole document.
  */
 export function SourceRow({
   source,

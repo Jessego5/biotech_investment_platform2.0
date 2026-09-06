@@ -1,16 +1,14 @@
 /**
- * Says, on the page itself, that nothing here is real.
- *
- * These screens were drawn before there was a corpus, and their identifiers —
- * the accession numbers, the CIKs, the NCT numbers — are plausible in format
- * and were written from memory. The 20-F passage is written in register and is
- * not the filing. The panel showing it still says "stored verbatim · no
- * summarisation", which is true of how the fixture is displayed and false
- * about where the words came from.
- *
- * That is only safe while a reader knows. Removing the link from the front
- * page is not enough: a URL can be shared, and the chrome above reports the
- * real corpus size, so the page reads as live unless it says otherwise.
+ * This says, on the page itself, that nothing on it is real. These screens were
+ * drawn before there was a corpus, and their identifiers, the accession numbers
+ * and CIKs and NCT numbers, are plausible in format and were written from
+ * memory, while the 20-F passage is written in register and is not the filing.
+ * The panel showing it still says "stored verbatim, no summarisation", which is
+ * true of how the fixture is displayed and false about where the words came
+ * from. That is only safe while a reader knows, and removing the link from the
+ * front page is not enough, since a URL can be shared and the chrome above
+ * reports the real corpus size, so the page reads as live unless it says
+ * otherwise. Rendered at the top of all four fixture pages.
  */
 export function FixtureNotice({ what }: { what: string }) {
   return (

@@ -1,13 +1,12 @@
 import { refusal } from "@/lib/readbase/vertex";
 
 /**
- * Refusal is a designed state, not an error state. It gets the same
- * typographic weight as an answer — same size, same face, full contrast — and
- * its left rule is accent-ink, never warn, because nothing has gone wrong.
- *
- * It is also traceable in the same way an answer is: it shows which accessors
- * ran, what each returned and the row counts, then names what can be done
- * instead.
+ * This is a refusal, which is a designed state and not an error state. It gets
+ * the same typographic weight as an answer, the same size and face and full
+ * contrast, and its left rule is accent-ink and never warn, because nothing has
+ * gone wrong. It is traceable the same way an answer is, showing which accessors
+ * ran, what each returned and the row counts, then naming what can be done
+ * instead. Rendered on the fixture Ask screen from the copy in lib/readbase/vertex.
  */
 export function RefusalCard() {
   return (

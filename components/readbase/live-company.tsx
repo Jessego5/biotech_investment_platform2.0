@@ -1,3 +1,14 @@
+/**
+ * This is the live company page: pipeline by phase, the financial series with
+ * every value printed, what the company has approved and what protects it, and
+ * the trials it leads. Every figure carries the period it covers, and where two
+ * figures come from different periods or different definitions the page says so
+ * rather than letting them sit on one line as if they agreed. The interventions
+ * table merges names the registry itself calls equivalent, so one drug filed
+ * under three names is one row. Rendered by app/companies/[ticker], which
+ * fetches the company server-side.
+ */
+
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusCard, notusPage } from "@/lib/readbase/notus-theme";
 import { StatTiles, PhaseDonut, type Tile } from "@/components/readbase/stat-tiles";

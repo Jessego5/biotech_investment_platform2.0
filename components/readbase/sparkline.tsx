@@ -26,9 +26,10 @@ function plot(values: number[]) {
 }
 
 /**
- * Ten fiscal years. The line is never read on its own — all ten values are
- * printed beneath it in mono, so the sparkline is an aid to the numbers
- * rather than a substitute for them.
+ * This draws ten fiscal years. The line is never read on its own, since all ten
+ * values are printed beneath it in mono, so the sparkline is an aid to the
+ * numbers rather than a substitute for them. It draws itself in once on first
+ * intersection, and not at all under prefers-reduced-motion.
  */
 export function Sparkline({ series }: { series: Series }) {
   const years = series.years ?? fiscalYears;

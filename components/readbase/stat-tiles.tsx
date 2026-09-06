@@ -2,9 +2,13 @@ import type { LucideIcon } from "lucide-react";
 import { notusCard } from "@/lib/readbase/notus-theme";
 
 export type Tile = {
-  /** What the figure is of — a flask for trials, a page for filings. The chip
-   *  says which source it came from; the icon says what was counted, so the
-   *  two carry different halves of the same sentence. */
+  /**
+ * This is the row of tiles counting what the corpus holds. The chip colour says
+ * which source a figure came from and the icon says what was counted, a flask
+ * for trials and a page for filings, so the two carry different halves of the
+ * same sentence. It also exports PhaseDonut. Rendered on the front page and at
+ * the top of a company.
+ */
   icon: LucideIcon;
   n: string;
   label: string;

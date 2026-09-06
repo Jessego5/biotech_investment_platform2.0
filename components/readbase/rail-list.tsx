@@ -1,7 +1,8 @@
 /**
- * The rail's two-column rows: a mono date or fiscal year, then what it is.
- * The date carries accent-ink in the canvas for both lists — it is the handle
- * you navigate by, not decoration.
+ * This renders the rail's two-column rows: a mono date or fiscal year, then what
+ * it is. The date carries accent-ink in the canvas for both lists, because it is
+ * the handle you navigate by rather than decoration. Used for upcoming readouts
+ * and for the filings held.
  */
 export function RailList({
   items,

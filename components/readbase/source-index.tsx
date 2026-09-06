@@ -5,9 +5,9 @@ import { extentFor } from "@/lib/readbase/semaglutide";
 import type { Source } from "@/lib/readbase/types";
 
 /**
- * Every source the answer stands on, including the ones not currently open.
- * The count is the point: four sources, and you can see all four without
- * opening anything. Rows open the same panel the chips do.
+ * This lists every source the answer stands on, including the ones not currently
+ * open. The count is the point, since four sources means you can see all four
+ * without opening anything, and the rows open the same panel the chips do.
  */
 export function SourceIndex({ sources }: { sources: Source[] }) {
   const { open, openCitation, hovered, setHovered } = useInspector();

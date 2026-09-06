@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * These are the rows of a year-over-year diff: the group heads with their
+ * counts, one row per change, and the inline text diff. Only changed rows are
+ * rendered and only changed rows stagger in, so the eye goes to the change
+ * rather than to the animation. Used by the what-changed screens.
+ */
+
 import { motion, useReducedMotion } from "motion/react";
 import type { DiffRow as Row, Mark, TextDiffPart } from "@/lib/readbase/diff";
 

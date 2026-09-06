@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * This is the watchlist: a row per company showing the next readout, the nearest
+ * loss of protection and how long the money lasts. There is no price and no
+ * position, because those would be the first figures here neither computed from
+ * a filing nor traceable to one. The list of tickers lives in this browser under
+ * readbase.watchlist, since with no accounts a server-side list would be one
+ * list shared by everyone, and the rows themselves are read from the corpus on
+ * every visit. A list arriving in the URL is someone else's and never edits this
+ * browser's. Rendered by app/watchlist/page.tsx, which reads the shared list
+ * from searchParams.
+ */
+
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

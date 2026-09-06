@@ -24,10 +24,11 @@ function SnapshotCell({ snapshot, emphasise }: { snapshot: Snapshot; emphasise?:
 }
 
 /**
- * Names the two snapshots being compared, including the extractor version and
- * ingest date for each, and states whether they can honestly be diffed at all.
- * The system can genuinely say "these are not comparable", so the strip has to
- * be able to say it — presenting a rule change as an event would be the bug.
+ * This names the two snapshots being compared, including the extractor version
+ * and ingest date for each, and states whether they can honestly be diffed at
+ * all. The system can genuinely say that two filings are not comparable, so the
+ * strip has to be able to say it, because presenting a rule change as an event
+ * would be the bug. Rendered at the top of the what-changed screens.
  */
 export function ProvenanceStrip({
   earlier,

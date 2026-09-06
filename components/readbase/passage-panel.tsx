@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * This is the passage panel, the first of the two checks: the exact stored text
+ * the model was allowed to read, headed by the document it came from and marked
+ * one of four so nobody mistakes one passage for the whole section. It scrolls
+ * internally under a pinned footer, and the passage being cut off at the fold is
+ * correct, since it stops anyone reading the excerpt as the whole document. It
+ * renders nothing when the inspector has nothing open.
+ */
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInspector } from "@/components/readbase/inspector-provider";
 import {

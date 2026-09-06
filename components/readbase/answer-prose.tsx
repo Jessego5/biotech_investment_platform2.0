@@ -2,9 +2,10 @@ import { CiteChip } from "@/components/readbase/cite-chip";
 import type { AnswerNode } from "@/lib/readbase/types";
 
 /**
- * The answer. A cited sentence is marked in place rather than merely followed
- * by a chip, so it is visible which words the citation is standing behind, and
- * figures are set in mono inside the serif so they stay countable.
+ * This renders the answer itself. A cited sentence is marked in place rather
+ * than merely followed by a chip, so it is visible which words the citation
+ * stands behind, and figures are set in mono inside the serif so they stay
+ * countable. Give it the nodes from toAnswerNodes in lib/readbase/citations.
  */
 export function AnswerProse({
   paragraphs,

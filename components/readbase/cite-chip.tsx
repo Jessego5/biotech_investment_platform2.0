@@ -3,13 +3,12 @@
 import { useOptionalInspector } from "@/components/readbase/inspector-provider";
 
 /**
- * A citation chip. It is an identifier, not a badge — it names a position in
- * the source index, and where there is a panel to open, opening it opens the
- * passage the figure came from. The warm colour is reserved for provenance and
- * is defined once, in globals.css, as .cite-chip.
- *
- * Without an inspector in the tree there is nothing to open, so the chip
- * renders as a plain marker rather than a control that does nothing.
+ * This is a citation chip. It is an identifier and not a badge: it names a
+ * position in the source index, and where there is a panel to open, opening it
+ * opens the passage the figure came from. The warm colour is reserved for
+ * provenance and is defined once, in globals.css, as .cite-chip. Without an
+ * inspector in the tree there is nothing to open, so the chip renders as a plain
+ * marker rather than a control that does nothing.
  */
 export function CiteChip({ id, source }: { id: string; source: number }) {
   const inspector = useOptionalInspector();

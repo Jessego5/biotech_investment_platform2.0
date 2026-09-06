@@ -10,16 +10,15 @@ import { notusCard } from "@/lib/readbase/notus-theme";
 import type { EvidenceBlock } from "@/lib/readbase/api";
 
 /**
- * What ran, and what each lookup came back with.
- *
- * The collapsible-steps shape is morphic's, where it shows the tool calls
- * behind an answer and folds itself away once the answer arrives. It is a good
- * fit here for a reason it does not have there: an accessor that ran and found
- * nothing is a fact about the corpus, not a gap in the display. The refusal
- * card has always shown this; there is no reason an answer should show less.
- *
- * So the steps are built from tools_used rather than from the evidence, and a
- * lookup with no block against it reads "no rows" instead of being dropped.
+ * This shows what ran and what each lookup came back with. The collapsible steps
+ * shape is morphic's, where it shows the tool calls behind an answer and folds
+ * itself away once the answer arrives, and it fits here for a reason it does not
+ * have there: an accessor that ran and found nothing is a fact about the corpus
+ * and not a gap in the display, which the refusal card has always shown and an
+ * answer has no reason to show less of. So the steps are built from tools_used
+ * rather than from the evidence, and a lookup with no block against it reads "no
+ * rows" instead of being dropped. Rendered by live-ask.tsx, open by default when
+ * the answer cites nothing.
  */
 export function AccessorSteps({
   tools,

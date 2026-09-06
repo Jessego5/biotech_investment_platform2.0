@@ -1,10 +1,11 @@
 import { cashCallout } from "@/lib/readbase/moderna";
 
 /**
- * Two figures from different periods and different definitions must not sit on
- * one line as if they agreed. This gets the citation palette because what it is
- * really saying is "this came from somewhere else" — and it says so in words,
- * not by being a different shade of the same thing.
+ * This is the callout for two figures that come from different periods and
+ * different definitions and must not sit on one line as if they agreed. It takes
+ * the citation palette because what it is really saying is that this came from
+ * somewhere else, and it says so in words rather than by being a different shade
+ * of the same thing. Rendered on the company page beside the annual series.
  */
 export function CashCallout() {
   return (
