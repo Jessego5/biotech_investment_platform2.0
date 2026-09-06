@@ -1,32 +1,24 @@
 """
-Reorder retrieved passages by reading them.
-
-Retrieval ranks by similarity between a question and a passage, which is a
-proxy for "answers this question" and sometimes a bad one: a passage can be
-about exactly the right subject and still not contain the answer. A reranker
-looks at the candidates against the question and puts the ones that actually
-answer it first. It is the standard second stage, and it earns its place only
-if it moves the number in eval_retrieval.py — which is why it is a separate
-module that the eval can switch on and off rather than something wired into the
-search.
-
-There is no cross-encoder here. The usual choice is a small local model, and
-that means torch, which is two gigabytes to make a reordering decision that this
-project already has an LLM on hand for. So this is a listwise LLM reranker: all
-candidates in one call, scored together, which lets the model compare them
-against each other rather than judge each in isolation.
-
-Two things it deliberately does NOT do:
-
-  - It does not invent a score for the answer to stand on. The cosine similarity
-    stays on every hit, untouched, and the relevance floor still applies to it.
-    The reranker only changes ORDER.
-
-  - It does not decide what the answer reads. Candidates are truncated to keep
-    the ranking call cheap, and that truncation is why this is kept apart from
-    the passage the model answers from — that one arrives whole. Confusing the
-    two is exactly the bug that made the interface claim the model had read a
-    3,000 character passage it had seen a fifth of.
+This reorders retrieved passages by reading them. Retrieval ranks by similarity
+between a question and a passage, which is a proxy for answering the question and
+sometimes a bad one, since a passage can be about exactly the right subject and
+still not contain the answer, so a reranker looks at the candidates against the
+question and puts the ones that actually answer it first. It is the standard
+second stage and earns its place only if it moves the number in
+eval_retrieval.py, which is why it is a separate module the eval can switch on
+and off rather than something wired into the search. There is no cross-encoder
+here: the usual choice is a small local model, which means torch, two gigabytes
+to make a reordering decision this project already has an LLM on hand for, so
+this is a listwise LLM reranker with all candidates in one call, scored together,
+which lets the model compare them against each other rather than judge each in
+isolation. It deliberately does not invent a score for the answer to stand on,
+since the cosine similarity stays on every hit untouched and the relevance floor
+still applies to it, and it changes order only. It also does not decide what the
+answer reads: candidates are truncated to keep the ranking call cheap, and that
+truncation is why this is kept apart from the passage the model answers from,
+which arrives whole, since confusing the two is exactly the bug that made the
+interface claim the model had read a 3,000 character passage it had seen a fifth
+of. Imported by semantic.py, which calls it when reranking is on.
 """
 
 import json
@@ -36,7 +28,7 @@ RERANK_MODEL = "gpt-4o-mini"
 
 # How many retrieved passages to consider. Reranking is only useful if the right
 # passage is somewhere in the candidates, so this wants to be comfortably deeper
-# than the number kept — but every candidate is tokens in the prompt.
+# than the number kept, but every candidate is tokens in the prompt.
 CANDIDATES = 20
 
 # How much of each passage the ranker sees. Enough to tell whether a passage
@@ -73,7 +65,7 @@ def rerank(query, hits, keep=6, candidates=CANDIDATES):
 
     Falls back to the order it was given if there is no API key or the call
     fails. A reranker that cannot run should cost the ranking nothing, not take
-    the search down with it — retrieval already returned usable results.
+    the search down with it, retrieval already returned usable results.
     """
     pool = hits[:candidates]
     if len(pool) < 2 or not os.environ.get("OPENAI_API_KEY"):

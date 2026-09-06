@@ -1,10 +1,8 @@
 """
-Tests for the retrieval eval's scoring.
-
-A measurement instrument that is wrong in the flattering direction is worse than
-no instrument, because it gets quoted. These check the three ways this one could
-flatter: counting a near miss as a hit, counting a miss as a hit, and averaging
-in a way that hides misses.
+This tests the retrieval eval's scoring. A measurement instrument that is wrong
+in the flattering direction is worse than no instrument, because it gets quoted,
+so these check the three ways this one could flatter: counting a near miss as a
+hit, counting a miss as a hit, and averaging in a way that hides misses.
 """
 
 import eval_retrieval as E
@@ -36,7 +34,7 @@ def test_a_different_filing_is_not_credited():
 
 def test_the_chunk_next_door_is_adjacent_but_not_exact():
     # chunks overlap by 300 characters, so this is a near miss and is reported
-    # as one — never as a hit
+    # as one, never as a hit
     hits = [_hit(101, ordinal=6)]
     exact, adjacent, document = E._rank_of(hits, CASE)
     assert exact is None

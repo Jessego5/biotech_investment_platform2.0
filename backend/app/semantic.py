@@ -1,14 +1,15 @@
 """
-This file searches the trial text by meaning, for the questions the structured
-fields can't answer like mechanisms, mutations, or therapies such as CAR-T. Each
-trial's text gets embedded once by embed_trials.py, and here the query is embedded
-the same way and ranked against them by cosine similarity.
-
-How that ranking happens depends on the database. Postgres does it itself, since
-the embeddings are a real vector column there. SQLite has no such thing, so every
-stored vector is loaded into a FAISS index in memory instead, rebuilt on the first
-query after each process start: about 4.7 seconds at 12,943 trials against 1
-second once warm, which is fine now and is the reason the Postgres path exists.
+This searches the trial and filing text by meaning, for the questions the
+structured fields cannot answer, such as mechanisms, mutations or therapies like
+CAR-T. Each trial's text is embedded once by embed_trials.py and each filing
+passage by embed_filings.py, and here the query is embedded the same way and
+ranked against them by cosine similarity. How that ranking happens depends on the
+database: Postgres does it itself, since the embeddings are a real vector column
+there, while SQLite has no such thing, so every stored vector is loaded into a
+FAISS index in memory instead and rebuilt on the first query after each process
+start, about 4.7 seconds at 12,943 trials against 1 second once warm, which is
+fine now and is the reason the Postgres path exists. Imported by chat.py, whose
+typed accessors are what the model actually calls.
 """
 
 import json
@@ -251,7 +252,7 @@ def _attach_urls(db, hits):
     Put an EDGAR link on each hit, in one query rather than one per hit.
 
     The CIK is the last piece of the path and lives on the company, not the
-    filing, so it has to be looked up — but only for the handful of companies
+    filing, so it has to be looked up, but only for the handful of companies
     that actually matched, not for all 787.
     """
     if not hits:
@@ -315,7 +316,7 @@ def search_filings(query, k=6, ticker=None, year=None, all_years=False,
     Searches the most recent annual report only, unless a year is named or
     all_years is set. Once several years of a filing are stored, "what does this
     company say about its risks" would otherwise return whichever year happened
-    to score best — a 2021 passage and a 2025 passage read identically, and the
+    to score best, a 2021 passage and a 2025 passage read identically, and the
     answer would be about a company as it was four years ago with nothing to
     say so. Asking across years has to be a choice, not the default.
 
@@ -400,7 +401,7 @@ def _fts_config():
 
 # A lexeme in more than this share of passages tells the search nothing: it is
 # in most filings either way, so matching it selects almost the whole corpus.
-# Measured rather than guessed — see build_fts_stats.py.
+# Measured rather than guessed, see build_fts_stats.py.
 DF_CEILING = 0.05
 
 # How many of the query's rarest lexemes to require. Four distinctive words is
@@ -412,7 +413,7 @@ _FTS_STATS = None
 
 def _fts_stats():
     """Document frequency per lexeme, loaded once. Missing file means no stats,
-    which makes every word look rare and the AND below very strict — a worse
+    which makes every word look rare and the AND below very strict, a worse
     search, not a broken one."""
     global _FTS_STATS
     if _FTS_STATS is None:
@@ -436,7 +437,7 @@ def _query_lexemes(db, query):
 
     Postgres does the stemming and stopword removal, because doing it in Python
     would be a second implementation of the 'english' configuration that could
-    disagree with the one the index was built with — and a lexeme that does not
+    disagree with the one the index was built with, and a lexeme that does not
     match the index is a lexeme that matches nothing.
     """
     from sqlalchemy import text as sql
@@ -456,7 +457,7 @@ def _query_lexemes(db, query):
 
 
 def _distinctive_lexemes(db, query):
-    """The rarest few words of the question — the ones worth requiring."""
+    """The rarest few words of the question, the ones worth requiring."""
     lexemes = _query_lexemes(db, query)
     return [lx for share, lx in lexemes if share <= DF_CEILING][:MAX_LEXICAL_TERMS]
 
@@ -467,7 +468,7 @@ def _lexical_filings(db, query, k, ticker, year, all_years):
 
     This is what the dense side cannot do: match a company name, a drug name, an
     NCT id or an accession as the literal string it is. ts_rank_cd is a cover
-    density ranker rather than BM25 — Postgres has no BM25 without an extension —
+    density ranker rather than BM25, Postgres has no BM25 without an extension,
     but fusion uses the ORDER it produces, not its numbers, so the difference
     matters much less here than it would if the score were being compared.
 
@@ -488,7 +489,7 @@ def _lexical_filings(db, query, k, ticker, year, all_years):
     # Two queries, doing two different jobs. The narrow one decides WHICH
     # passages are eligible and is built only from rare words, so it stays fast
     # and selective. The wide one decides the ORDER among those, and includes
-    # the common words too — without them the best match for "Bionano Genomics
+    # the common words too, without them the best match for "Bionano Genomics
     # internal controls" is the cover page of Bionano's filing, where the name
     # appears most densely and the subject does not appear at all.
     wide = func.to_tsquery("simple", " | ".join(f"'{lx}'" for _s, lx in lexemes))
@@ -537,7 +538,7 @@ def _rrf(rankings):
 
     Each ranking is a list of ids already in rank order. An id absent from a
     ranking simply earns nothing from it rather than being penalised, which is
-    what makes this safe to use on lists of different lengths — the lexical side
+    what makes this safe to use on lists of different lengths, the lexical side
     routinely returns three passages where the dense side returns thirty.
     """
     points = {}
@@ -605,7 +606,7 @@ def search_filings_filtered(query, k=6, ticker=None, year=None, all_years=False,
 
     This exists because the plain fusion was measured and the measurement said
     something specific. Fusing the two rankings raised how often the right
-    FILING came back — 55.0% to 62.5% of named questions — and lowered how often
+    FILING came back, 55.0% to 62.5% of named questions, and lowered how often
     the right PASSAGE did, from MRR 0.182 to 0.145. The lexical side knows who
     filed the document and does not know which paragraph answers the question:
     asked what Bionano Genomics says about its internal controls it returns the
@@ -615,8 +616,8 @@ def search_filings_filtered(query, k=6, ticker=None, year=None, all_years=False,
     So the lexical result is used for what it is good at and nothing else. Its
     hits name candidate FILINGS; the dense search then ranks passages within
     them. The unrestricted dense ranking is fused in as well rather than
-    replaced, because when the words pick the wrong filing — and on topical
-    questions, which name no company, they often have nothing to go on — the
+    replaced, because when the words pick the wrong filing, and on topical
+    questions, which name no company, they often have nothing to go on, the
     unrestricted ranking is the only thing keeping the answer findable.
     """
     if not _uses_pgvector():

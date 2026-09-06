@@ -1,26 +1,22 @@
 """
-Measure how common each word is in the filing corpus, so the lexical half of
-hybrid retrieval can ignore the words that carry no information.
-
-The naive lexical query is the reason this file exists. Asking Postgres for
-passages matching any word of a real question — "what risks does Bionano
-Genomics face regarding its internal controls" — matches 294,793 of the 334,624
-passages and takes 48 seconds to rank, because almost every annual report
-contains "risk", "financial" and "reporting". ANDing the words instead matches
-nothing, because no single passage contains all of them.
-
-Neither failure is about the index. Both are about asking the words to do a job
-the vectors already do well. Dense retrieval is good at subject matter; the
-lexical side is only worth running for what the vectors are bad at, which is
-rare exact tokens — a company name, a drug name, an NCT id, an accession. So
-the search keeps the query's RAREST words and drops the rest, and rarity has to
-be measured against this corpus rather than guessed: "clinical" and "patent" are
-distinctive in English and ordinary here.
-
-A 2% sample is enough. Document frequency at three decimal places does not move
-between a 2% sample and a full count, and the full count is a scan of 3.6 GB.
-
-    python build_fts_stats.py        # writes app/fts_stats.json, takes ~2 seconds
+This measures how common each word is in the filing corpus, so the lexical half
+of hybrid retrieval can ignore the words that carry no information. The naive
+lexical query is why it exists: asking Postgres for passages matching any word of
+a real question, such as what risks Bionano Genomics faces regarding its internal
+controls, matches 294,793 of the 334,624 passages and takes 48 seconds to rank,
+because almost every annual report contains "risk", "financial" and "reporting",
+while ANDing the words instead matches nothing, because no single passage
+contains all of them. Neither failure is about the index; both are about asking
+the words to do a job the vectors already do well. Dense retrieval is good at
+subject matter, so the lexical side is only worth running for what the vectors
+are bad at, which is rare exact tokens like a company name, a drug name, an NCT
+id or an accession, and the search keeps the query's rarest words and drops the
+rest. Rarity has to be measured against this corpus rather than guessed, since
+"clinical" and "patent" are distinctive in English and ordinary here. A 2% sample
+is enough, because document frequency at three decimal places does not move
+between a sample and a full count, and the full count is a scan of 3.6 GB. Run it
+with python build_fts_stats.py, which writes app/fts_stats.json in a couple of
+seconds.
 """
 
 import json
@@ -45,7 +41,7 @@ OUT = os.path.join(os.path.dirname(__file__), "app", "fts_stats.json")
 SAMPLE_PCT = 2
 
 # how many of the commonest lexemes to keep. Everything below this is rare
-# enough that its exact frequency does not change any decision — the search
+# enough that its exact frequency does not change any decision, the search
 # treats an unlisted word as rare, which is what it is.
 KEEP = 5000
 

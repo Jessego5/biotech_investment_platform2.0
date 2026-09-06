@@ -108,7 +108,7 @@ async function renderWatchlist() {
     body.innerHTML = `<p class="watch-empty">Nothing watched yet. Open a company and
       use <strong>Watch</strong> to follow it.<br><span class="muted-cell">A watchlist here is
       tickers, not holdings: the next readout, the nearest loss of protection, and how long
-      the money lasts. No prices and no positions — those would be the first figures in this
+      the money lasts. No prices and no positions, those would be the first figures in this
       tool that did not come from a filing.</span></p>`;
     return;
   }
@@ -262,7 +262,7 @@ async function askQuestion(preset, openWorkspace) {
     }
 
     // the retrieval trace. The chat picks its own tools now, so which ones it
-    // called is the honest account of how the answer was reached — and it is
+    // called is the honest account of how the answer was reached, and it is
     // what makes a wrong answer diagnosable rather than merely wrong.
     const tools = (data.tools_used || []).filter((t) => t !== "greeting");
     if (tools.length) {
@@ -333,7 +333,7 @@ async function askQuestion(preset, openWorkspace) {
         "",
         `Question: ${q}`,
         `Retrieved: ${new Date().toISOString().slice(0, 10)}` +
-          (uniqueSteps.length ? ` — ${uniqueSteps.join(" → ")}` : ""),
+          (uniqueSteps.length ? `, ${uniqueSteps.join(" → ")}` : ""),
       ];
       if (sources.length) {
         lines.push(`Companies behind this answer: ${sources.join(", ")}`);
@@ -419,7 +419,7 @@ if (coverGo) {
 //
 // The same answer as the chat, laid out for reading rather than conversing:
 // scope stated above it, evidence beside it, and the rows each lookup returned
-// kept apart. The handoff carries the whole result over — nothing is re-asked,
+// kept apart. The handoff carries the whole result over, nothing is re-asked,
 // because re-running would risk a different answer and the point is to inspect
 // THIS one.
 let LAST_ANSWER = null;
@@ -496,7 +496,7 @@ function showWorkspace(data) {
 
 // The rail filters the evidence pane by the source behind each block, which is
 // the only thing it can honestly do: a lookup either read the registry or it
-// read a filing, and that is recorded on the block. It was inert before —
+// read a filing, and that is recorded on the block. It was inert before,
 // attributes and no handler, so the two middle items rendered and did nothing,
 // which is worse than the disabled one because that at least says why.
 // One entry per source we actually hold. Trials and Filings alone left the FDA
@@ -530,7 +530,7 @@ function renderEvidence(which) {
     // an empty section states which of the sources it wanted and that this
     // answer did not reach it, rather than showing a blank pane
     const what = WS_WANTED[which] || "that source";
-    pane.innerHTML = `<div class="ws-ev"><div class="b">This answer did not read ${what}. ${all.length} other lookup${all.length === 1 ? "" : "s"} stand behind it — see Answer.</div></div>`;
+    pane.innerHTML = `<div class="ws-ev"><div class="b">This answer did not read ${what}. ${all.length} other lookup${all.length === 1 ? "" : "s"} stand behind it, see Answer.</div></div>`;
     return;
   }
   keep.forEach((e) => {
@@ -564,7 +564,7 @@ el("ws-back").addEventListener("click", () => showBrowse());
 // description EDGAR supplied for a filing code we do not label ourselves, which
 // is how a biotech screener ends up offering "Cigarettes" and "Wholesale-Beer,
 // Wine & Distilled Alcoholic Beverages" as sectors. Those companies belong in
-// the universe — they run real clinical trials — but they do not belong at the
+// the universe, they run real clinical trials, but they do not belong at the
 // same level as Biologics in a dropdown of 34.
 const CURATED_SECTORS = [
   "Pharma preparations", "Biologics", "Medical devices", "Diagnostics",
@@ -577,8 +577,8 @@ document.querySelectorAll(".starter").forEach((b) =>
   b.addEventListener("click", () => showDetail(b.dataset.ticker)));
 
 // and the question starters inside the ask surface. Each demonstrates a
-// different lookup — a cross-company ranking, a date query, a sector filter,
-// a composed one — rather than four flavours of the same thing.
+// different lookup, a cross-company ranking, a date query, a sector filter,
+// a composed one, rather than four flavours of the same thing.
 document.querySelectorAll(".ask-starters button").forEach((b) =>
   b.addEventListener("click", () => askQuestion(b.dataset.ask)));
 
@@ -633,7 +633,7 @@ async function loadSectors() {
   } catch (e) {
     // Never swallow this. The banner is the first thing on the page and it
     // starts on "Loading the universe…", so a failure here leaves that sitting
-    // there forever with nothing to say what went wrong — which is exactly how
+    // there forever with nothing to say what went wrong, which is exactly how
     // a slow endpoint looked identical to a broken one from the browser.
     const banner = el("stat-banner");
     if (banner) {
@@ -677,7 +677,7 @@ async function runFilters() {
     // almost every real question is one company or a handful.
     browseCount.textContent = "";
     // Held rather than rendered. Hiding 787 rows still builds 787 rows, which
-    // is most of the work for none of the benefit — and it is not really
+    // is most of the work for none of the benefit, and it is not really
     // declining to list them, only declining to show the list.
     LAST_ROWS = data.companies;
     // a filter is a request to see the result, so narrowing the set opens the
@@ -1039,8 +1039,8 @@ function readoutsCard(readouts) {
       <td class="nct"><a href="https://clinicaltrials.gov/study/${encodeURIComponent(r.nct_id)}"
         target="_blank" rel="noopener">${escapeHtml(r.nct_id)}</a></td>
       <td class="phase-tag">${escapeHtml(r.phase || "")}</td>
-      <td>${escapeHtml((r.conditions || "").split(";")[0] || "—")}</td>
-      <td class="num">${r.enrollment == null ? "—" : r.enrollment.toLocaleString()}</td>
+      <td>${escapeHtml((r.conditions || "").split(";")[0] || "–")}</td>
+      <td class="num">${r.enrollment == null ? "–" : r.enrollment.toLocaleString()}</td>
       <td class="num">${escapeHtml(r.completion_date || "")}</td>
     </tr>`).join("");
   return card(`
@@ -1103,7 +1103,7 @@ function trialsCard(trials, total, sponsorTotal, truncated, collaborating) {
   const rows = trials.map((t) => `
     <tr>
       <td class="nct"><a href="https://clinicaltrials.gov/study/${t.nct_id}" target="_blank" rel="noopener">${t.nct_id}</a></td>
-      <td class="muted-cell">${escapeHtml((t.conditions || "").split(";")[0] || "—")}</td>
+      <td class="muted-cell">${escapeHtml((t.conditions || "").split(";")[0] || "–")}</td>
       <td>${escapeHtml(t.title || "")}
         ${t.role === "collaborator"
           ? `<span class="role-tag" title="Led by ${escapeHtml(t.lead_sponsor || "another sponsor")}. Not counted in the pipeline figures above.">collaborator</span>`

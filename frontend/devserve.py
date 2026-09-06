@@ -27,7 +27,7 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         The no-cache headers above are necessary and are not sufficient. A
         browser that already holds app.js from an earlier visit can keep serving
         it from memory for the life of the tab, so edits appear to have no
-        effect — the page renders, nothing errors, and it is simply the old
+        effect, the page renders, nothing errors, and it is simply the old
         code. Stamping each URL with the file's modification time makes it a
         different URL whenever the file changes, which nothing can hold onto.
         """

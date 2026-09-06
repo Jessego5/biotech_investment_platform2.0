@@ -1,10 +1,9 @@
 """
-Tests for the parts of hybrid retrieval that do not need a database.
-
-The ranking itself needs Postgres, a GIN index and 334,624 embedded passages, so
-it is measured by eval_retrieval.py rather than asserted here. What IS asserted
+This tests the parts of hybrid retrieval that do not need a database. The ranking
+itself needs Postgres, a GIN index and 334,624 embedded passages, so it is
+measured by eval_retrieval.py rather than asserted here, and what is asserted
 here is the arithmetic underneath it, because a fusion that silently favours one
-ranking is the kind of defect that shows up as "retrieval got slightly worse"
+ranking is the kind of defect that shows up as retrieval getting slightly worse
 and never as an error.
 """
 

@@ -1,11 +1,12 @@
 """
 These are the database models for the biotech universe. It runs on SQLite for
-dev but uses plain SQLAlchemy so it can move to Postgres later, and the one place
-the two databases really differ, the trial embedding, is handled by a column type
-that stores whichever form each can search. Every row carries timestamps. For now
-we only keep the current snapshot, but keeping fetched_at and updated_at means we
-can store several snapshots later without a redesign, which is what makes
-monitoring and backtesting possible down the road.
+development but uses plain SQLAlchemy so it can move to Postgres, and the one
+place the two databases really differ, the embedding column, is handled by a
+column type that stores whichever form each can search. Every row carries
+timestamps: only the current snapshot is kept for now, but keeping fetched_at and
+updated_at means several snapshots can be stored later without a redesign, which
+is what makes monitoring and backtesting possible. Import the models, and call
+init_db from database.py to create anything missing.
 """
 
 from datetime import datetime, timezone
@@ -140,23 +141,23 @@ class Trial(Base):
 
     # What the trial is for, and when it reports. Both were being fetched and
     # thrown away, which left the pipeline able to say "Phase 3, recruiting" and
-    # not "Phase 3, atopic dermatitis, reading out in Q2 2026" — the second being
+    # not "Phase 3, atopic dermatitis, reading out in Q2 2026", the second being
     # the fact anyone actually wants.
     # Not indexed. A btree cannot hold a value over about 2,700 bytes, and
     # Illumina's condition lists are longer than that, so the index refused the
     # insert and the trial could not be stored at all. Nothing filters on this
-    # column — it is read and displayed — so the index bought nothing and cost a
+    # column, it is read and displayed, so the index bought nothing and cost a
     # ceiling on what a trial was allowed to be about.
     conditions = Column(Text)
     # What is actually being tested, as the registry's structured list, "; "
     # joined. This is the closest the data comes to naming the candidate a
-    # company is developing — a programme has no record of its own, only the
+    # company is developing, a programme has no record of its own, only the
     # trials testing it. Text rather than String and unindexed for the same
     # reason as conditions: combination arms make these long.
     interventions = Column(Text)
     # The registry's own statement that two names are the same thing, as JSON
     # {name: [other names]}. Sponsors file one candidate under a code and a
-    # generic name — ivacaftor is entered as IVA, Ivacaftor and VX-770 — and
+    # generic name, ivacaftor is entered as IVA, Ivacaftor and VX-770, and
     # this is the only field that says so. Stored raw, exactly as given: an
     # entry is often several aliases crammed into one string, and repairing
     # that at write time would lose what the registry actually said.
@@ -260,8 +261,8 @@ class FilingChunk(Base):
     embedding = Column(Embedding)
 
     # The same passage embedded again, with a line naming the document it came
-    # from prepended to it. A passage is stored without its own identity — a
-    # risk factor reads the same in every filing that has one — so the vector
+    # from prepended to it. A passage is stored without its own identity, a
+    # risk factor reads the same in every filing that has one, so the vector
     # for "we may be unable to protect our intellectual property" is nearly the
     # same vector whoever filed it, and the search cannot tell the companies
     # apart. Filled by embed_contextual.py, and null until it is: the searches

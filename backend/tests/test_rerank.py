@@ -1,10 +1,9 @@
 """
-Tests for the reranker's behaviour around the model rather than the model.
-
-Whether the judgement is any good is a question for eval_retrieval.py. What can
-be pinned down here is that a reranker which cannot reach the model, or gets
-nonsense back from it, leaves the search exactly as good as it was — the whole
-stage is an optimisation, and an optimisation that can break retrieval is a
+This tests the reranker's behaviour around the model rather than the model
+itself. Whether the judgement is any good is a question for eval_retrieval.py,
+and what can be pinned down here is that a reranker which cannot reach the model,
+or gets nonsense back from it, leaves the search exactly as good as it was: the
+whole stage is an optimisation, and an optimisation that can break retrieval is a
 liability.
 """
 

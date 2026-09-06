@@ -1,11 +1,13 @@
 """
-This is the grounded chat. The model never answers from its own memory. First it
-turns the question into a structured query plan, then we run that plan against the
-real database, and then the model phrases an answer using only the rows we got
-back. Because the lookup is a database query and not a vector search, the results
-are exact and complete. If nothing relevant comes back, the honest answer is that
-there is no data on that, not a made up one. It uses OpenAI and needs
-OPENAI_API_KEY. Without the key the chat is simply off.
+This is the grounded chat, and the model never answers from its own memory. It
+picks among typed accessors, we run those against the real database, and then the
+model phrases an answer using only the rows that came back; because the lookup is
+a database query rather than a vector search, the results are exact and complete.
+If nothing relevant comes back the honest answer is that there is no data on
+that, not a made up one, and a citation pointing at a block that was never
+returned is stripped and counted rather than shown. It uses OpenAI and needs
+OPENAI_API_KEY, and without the key the chat is simply off. Called by main.py's
+/ask, which checks the day's budget before spending anything.
 """
 
 import datetime
@@ -94,7 +96,7 @@ TOOLS = [
         "description": "How a company's figures have MOVED over the years: "
                        "revenue, cash, R&D spend, net income, debt, shares. Use "
                        "this for any question about a trend, a direction, or a "
-                       "comparison across years — growing, shrinking, since, "
+                       "comparison across years, growing, shrinking, since, "
                        "over time, peak, runway shortening. company_report gives "
                        "the current figure only.",
         "parameters": {"type": "object", "properties": {
@@ -104,7 +106,7 @@ TOOLS = [
     {"type": "function", "function": {
         "name": "search_trials",
         "description": "Semantic search over trial descriptions. Use for what a "
-                       "trial studies or tests — mechanisms, mutations, therapies — "
+                       "trial studies or tests, mechanisms, mutations, therapies, "
                        "which no structured field holds.",
         "parameters": {"type": "object", "properties": {
             "query": {"type": "string"}}, "required": ["query"]}}},
@@ -179,7 +181,7 @@ TOOL_SOURCES = {
 TOOL_SYSTEM = (
     "You answer questions about a biotech company database by choosing tools. "
     "You know no company data yourself and must never state a figure that a tool "
-    "did not return. Call the tools you need — more than one if the question "
+    "did not return. Call the tools you need, more than one if the question "
     "needs composing, for example finding companies first and then checking one "
     "of them. When you have enough, stop calling tools. "
     "Every figure comes from SEC filings and ClinicalTrials.gov. Never predict, "
@@ -207,7 +209,7 @@ def _sector_labels(db):
     Hardcoded in the prompt, this list went stale the moment the universe
     widened past its original filing codes. It named three labels while the
     database held ten, so 124 medical-device companies could not be reached by
-    any filter question at all — the model had no label to ask for. Reading it
+    any filter question at all, the model had no label to ask for. Reading it
     from the data means adding a sector cannot silently make companies
     invisible.
     """
@@ -474,7 +476,7 @@ def strip_invalid_citations(answer, count):
     Remove citations pointing at blocks that do not exist.
 
     The model is asked to cite the numbered blocks it was given, and mostly
-    does. When it invents one — [4] against three blocks — the marker would
+    does. When it invents one, [4] against three blocks, the marker would
     render as a link to nothing, which is worse than no marker at all: the whole
     point of a citation here is that it can be followed.
     """
@@ -521,8 +523,8 @@ def answer_question(question, db, as_of=None):
     nothing but the retrieved text. Choosing a tool is not inventing a number,
     and that separation is what keeps it that way.
 
-    The loop is bounded. Composing takes more than one call — find the companies,
-    then check one of them — but agentic retrieval costs a round trip and tokens
+    The loop is bounded. Composing takes more than one call, find the companies,
+    then check one of them, but agentic retrieval costs a round trip and tokens
     each time, so it stops at MAX_ROUNDS whether or not the model would continue.
     """
     if not os.environ.get("OPENAI_API_KEY"):
@@ -542,7 +544,7 @@ def answer_question(question, db, as_of=None):
     # Evidence is kept as blocks rather than one concatenated string. The string
     # is what the answer is allowed to use and is still returned for the eval
     # suite, but a reader checking a claim needs to know WHICH lookup produced
-    # WHICH rows — an undifferentiated wall of text cannot be audited, only
+    # WHICH rows, an undifferentiated wall of text cannot be audited, only
     # trusted.
     facts, sources, called, evidence = [], [], [], []
 

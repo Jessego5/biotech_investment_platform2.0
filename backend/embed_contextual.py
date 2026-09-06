@@ -1,45 +1,29 @@
 """
-Embed each filing passage again, with a line saying which document it is from.
-
-The retrieval eval shows the failure this is aimed at. Ask what Bionano Genomics
-says about its internal controls and the dense search returns passages about
-internal controls filed by other companies, because a stored passage carries no
-trace of who filed it: "we may be unable to remediate the material weakness" is
-almost the same sentence, and so almost the same vector, in every filing that
-contains it. The company, the year and the section live in the filings table,
-which the vector never sees.
-
-So the vector is given them. Each passage is embedded as
-
-    Vertex Pharmaceuticals (VRTX) · 10-K · fiscal year 2025 · intellectual property
-
-    <the passage>
-
-which is the cheap, deterministic half of what the literature calls contextual
-retrieval. The expensive half asks a model to write a sentence situating the
-passage in the argument of the document around it; that is worth trying next,
-and it is a per-chunk LLM call rather than a string format, so it belongs behind
-its own decision rather than inside this one.
-
-Two properties worth keeping:
-
-  - It writes to embedding_ctx, never to embedding. The shipping search is
-    untouched until something is measured, and both spaces exist side by side so
-    the comparison is a switch rather than a migration.
-
-  - It is resumable. Only passages with a null embedding_ctx are fetched, so an
-    interrupted run continues where it stopped instead of paying twice.
-
-    python embed_contextual.py --dry-run     # what it would cost, no API calls
-    python embed_contextual.py               # do it
-
-Run order matters, and getting it wrong is not subtle. models.py declares
+This embeds each filing passage again, with a line saying which document it is
+from. The retrieval eval shows the failure it is aimed at: ask what Bionano
+Genomics says about its internal controls and the dense search returns passages
+about internal controls filed by other companies, because a stored passage
+carries no trace of who filed it, and "we may be unable to remediate the material
+weakness" is almost the same sentence, and so almost the same vector, in every
+filing that contains it, while the company, the year and the section live in the
+filings table the vector never sees. So the vector is given them, each passage
+being embedded under a line reading company, ticker, form, fiscal year and
+section, which is the cheap deterministic half of what the literature calls
+contextual retrieval; the expensive half asks a model to write a sentence
+situating the passage in the argument around it, which is a per-chunk LLM call
+rather than a string format and belongs behind its own decision. It writes to
+embedding_ctx and never to embedding, so the shipping search is untouched until
+something is measured and both spaces exist side by side, making the comparison a
+switch rather than a migration, and it is resumable, fetching only passages with
+a null embedding_ctx so an interrupted run continues instead of paying twice. Run
+order matters and getting it wrong is not subtle: models.py declares
 embedding_ctx, so once that code is deployed SQLAlchemy selects the column in
-every filing_chunks query — including the ones that have nothing to do with
-contextual embeddings. Against a database without the column, all of them fail
-with UndefinedColumn, and the offline tests cannot warn about it because they
-build their schema from the model and therefore always have it. ensure_column()
-below adds it, and has to run before the new model code serves traffic.
+every filing_chunks query, including the ones with nothing to do with contextual
+embeddings, and against a database without the column all of them fail with
+UndefinedColumn, which the offline tests cannot warn about because they build
+their schema from the model and therefore always have it. ensure_column below
+adds it and has to run before the new model code serves traffic. Run it with
+python embed_contextual.py, or --dry-run first for what it would cost.
 """
 
 import argparse
@@ -75,14 +59,14 @@ CHARS_PER_TOKEN = 4
 
 # How many embedding requests to have in flight. The work is entirely waiting on
 # a network call, so one at a time runs the whole corpus at about 43 passages a
-# second — a little over two hours. The ceiling is the account's tokens-per-
+# second, a little over two hours. The ceiling is the account's tokens-per-
 # minute, not this number, so it stays modest and retries rather than racing.
 WORKERS = 4
 
 # Retries per batch. At this corpus size a 429 is not an exception, it is the
 # steady state: the account's tokens-per-minute ceiling is the real limit and
 # every worker meets it. So retries are generous and the wait between them is
-# capped — doubling to 8 and 16 seconds spends far longer asleep than the limit
+# capped, doubling to 8 and 16 seconds spends far longer asleep than the limit
 # window it is waiting out, which showed up as throughput falling below the
 # single-threaded run.
 ATTEMPTS = 8
@@ -114,7 +98,7 @@ def context_line(company_name, ticker, form, fiscal_year, section):
 def estimate(db):
     """How much is left to do, without dragging it all into memory.
 
-    The obvious version of this — select the pending rows, then measure them —
+    The obvious version of this, select the pending rows, then measure them,
     loads 334,624 passages of 3,000 characters, which is a gigabyte of text held
     to print two numbers. The database can count and add without handing any of
     it over.

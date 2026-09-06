@@ -9,7 +9,7 @@
 :root {
   /* The palette is warm rather than cool: bone and stone instead of blue-grey,
      which is what stops a dense table of numbers reading as a spreadsheet.
-     Teal is the one hue, and it never decorates — if colour appears it means
+     Teal is the one hue, and it never decorates, if colour appears it means
      something. */
   --plane: #f2f1ed;
   --surface: #ffffff;
@@ -264,7 +264,7 @@ button.ghost.small { padding: 4px 10px; font-size: 13px; }
 /* - tables */
 .table-scroll { overflow-x: auto; }
 /* The dense register. Rows are for scanning, so they are tighter than the rest
-   of the page and every number in them is tabular — a column of figures that
+   of the page and every number in them is tabular, a column of figures that
    does not line up cannot be compared down its length, which is the only reason
    to put it in a column. */
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -508,7 +508,7 @@ td.nct a:hover { text-decoration: underline; }
   background: var(--surface);
   /* the global button rule paints text white for a solid accent button. This
      one has a white background, so without setting the colour back the company
-     name is white on white — which is exactly how it first rendered. */
+     name is white on white, which is exactly how it first rendered. */
   color: var(--ink);
   cursor: pointer;
   font: inherit;
@@ -526,7 +526,7 @@ td.nct a:hover { text-decoration: underline; }
 
    The serif is doing real work rather than decoration. It marks the model's
    voice apart from the interface's, which is the distinction this whole project
-   rests on — the interface states facts it computed, the model only phrases
+   rests on, the interface states facts it computed, the model only phrases
    them, and the reader should be able to see which is which without being told.
    ============================================================ */
 :root {
@@ -539,7 +539,7 @@ td.nct a:hover { text-decoration: underline; }
 }
 
 /* the retrieval trace. The chat now chooses its own tools, so which ones it
-   called is the honest account of how an answer was reached — and it is what
+   called is the honest account of how an answer was reached, and it is what
    makes a wrong answer diagnosable instead of merely wrong. */
 .ask-trace {
   display: inline-flex;
@@ -625,7 +625,7 @@ td.nct a:hover { text-decoration: underline; }
 .num, .mn, .protect-dates strong, .kpi .v { font-variant-numeric: tabular-nums; }
 
 /* A blank cell means two different things and used to render as one.
-   "generates cash" is a finding — operations threw off cash, so there is no
+   "generates cash" is a finding, operations threw off cash, so there is no
    burn to divide into. "no data" is a gap in what we hold. 175 companies are
    the first and 21 are the second, and both read "n/a" before this: AbbVie,
    with $61B of revenue, looked identical to a filer nothing could be parsed
@@ -679,7 +679,7 @@ td.nct a:hover { text-decoration: underline; }
 
 /* the mode toggle sits in the nav, not as a floating control */
 /* It sits in the white nav row, not on the teal band. Styled white the first
-   time, which made it invisible — the same mistake as the starter buttons, and
+   time, which made it invisible, the same mistake as the starter buttons, and
    for the same reason: the global button rule paints text white for a solid
    accent button and anything on a light ground has to set the colour back. */
 .mode-toggle {
@@ -711,7 +711,7 @@ html[data-mode="dark"] .starter { background: var(--surface); color: var(--ink);
 html[data-mode="dark"] .ask-card { background: var(--surf-2); }
 
 /* ============================================================
-   WORKSPACE REGISTER — the dense analyst surface
+   WORKSPACE REGISTER, the dense analyst surface
    Radius 0, hairlines instead of cards, 11-12px body, rows that scan. The
    density is the signal: you can tell which surface you are on without a label.
    ============================================================ */
@@ -785,7 +785,7 @@ html[data-mode="dark"] .ask-card { background: var(--surf-2); }
 
 
 /* ============================================================
-   PAGE SHELL — quiet, so the surfaces are what the eye lands on
+   PAGE SHELL, quiet, so the surfaces are what the eye lands on
    ============================================================ */
 body { background: var(--plane); font-size: 13px; }
 .page { max-width: 1080px; margin: 0 auto; padding: 26px 20px 80px; }
@@ -824,7 +824,7 @@ body { background: var(--plane); font-size: 13px; }
 .scope-line.banner-error { color: var(--cite-fg); }
 
 /* ============================================================
-   ASK REGISTER — generous: radius, padding, a bar of its own
+   ASK REGISTER, generous: radius, padding, a bar of its own
    ============================================================ */
 .ask {
   background: var(--surf-2);
@@ -885,7 +885,7 @@ body { background: var(--plane); font-size: 13px; }
 .ws-ev .b .gone { color: var(--warn); text-decoration: line-through; }
 
 /* ============================================================
-   COVER — the reference opens on a title page rather than dropping the reader
+   COVER, the reference opens on a title page rather than dropping the reader
    into the instrument. Full height, then the tool scrolls up under it.
    ============================================================ */
 .cover {

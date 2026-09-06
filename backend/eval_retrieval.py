@@ -1,46 +1,33 @@
 """
-Retrieval evaluation for the two paths that search text instead of computing a
-figure. `evaluate.py` already measures the structured side: it computes the true
-set of companies from the raw rows and checks the system's set against it. The
-text side had nothing equivalent, which meant the one component that is hardest
-to get right — ranking 334,624 filing passages — was also the one component with
-no number attached to it.
-
-The problem with evaluating retrieval is that nobody has labelled this corpus,
-and labelling it by hand is not on. So the labels are made the standard way for
-a known-item test: take a passage out of the corpus, ask a model to write the
-question that passage answers, then throw the question at the whole corpus and
-see whether that exact passage comes back. The passage is the answer by
-construction, so no human has to judge relevance.
-
-Three things make the resulting number honest rather than flattering:
-
-  - The query set is generated ONCE and stored (`eval_retrieval_set.json`).
-    Every later run reads it. A retrieval change is only worth a number if the
-    before and the after were asked the same questions, and a set regenerated
-    per run would hide a regression inside its own sampling noise.
-
-  - Each passage gets TWO questions. The "named" one mentions the company, which
-    is how people really ask; the "topical" one deliberately does not, which
-    leaves the searcher to find one passage in 334,624 on subject matter alone.
-    They measure different things and are reported apart, because a system that
-    can only find a passage when it is handed the ticker is doing much less work
-    than one number would suggest.
-
-  - Retrieval runs with the relevance floor OFF, and the floor is applied
-    afterwards in the report. Otherwise a passage that ranked first and was then
-    cut by the floor is indistinguishable from one that never ranked at all,
-    and those two failures have opposite fixes.
-
-Neighbouring chunks overlap by 300 characters and usually continue the same
-argument, so landing on the chunk next door is not the same kind of miss as
-landing in another company's filing. The report separates exact, adjacent, and
-same-document hits rather than calling everything but an exact match a failure.
-
-Build the set once, then run it as often as you like:
-
-    python eval_retrieval.py --build          # costs a few cents, writes the set
-    python eval_retrieval.py                  # free, reads the set
+This is the retrieval evaluation for the two paths that search text instead of
+computing a figure. evaluate.py already measures the structured side, computing
+the true set of companies from the raw rows and checking the system's set against
+it, while the text side had nothing equivalent, so the component that is hardest
+to get right, ranking 334,624 filing passages, was also the one with no number
+attached. Nobody has labelled this corpus and labelling it by hand is not on, so
+the labels are made the standard way for a known-item test: take a passage out of
+the corpus, ask a model to write the question that passage answers, then throw
+the question at the whole corpus and see whether that exact passage comes back,
+which makes the passage the answer by construction and means no human has to
+judge relevance. Three things keep the number honest rather than flattering. The
+query set is generated once and stored in eval_retrieval_set.json, because a
+retrieval change is only worth a number if the before and the after were asked
+the same questions and a set regenerated per run would hide a regression inside
+its own sampling noise. Each passage gets two questions, a named one mentioning
+the company, which is how people really ask, and a topical one that deliberately
+does not, leaving the searcher to find one passage in 334,624 on subject matter
+alone; they measure different things and are reported apart, because a system
+that can only find a passage when handed the ticker is doing much less work than
+one number would suggest. And retrieval runs with the relevance floor off, the
+floor being applied afterwards in the report, because otherwise a passage that
+ranked first and was then cut is indistinguishable from one that never ranked at
+all and those two failures have opposite fixes. Neighbouring chunks overlap by
+300 characters and usually continue the same argument, so landing on the chunk
+next door is not the same kind of miss as landing in another company's filing,
+and the report separates exact, adjacent and same-document hits rather than
+calling everything but an exact match a failure. Build the set once with python
+eval_retrieval.py --build, which costs a few cents, then run python
+eval_retrieval.py as often as you like for free.
 """
 
 import argparse
@@ -82,7 +69,7 @@ SAMPLE_SEED = 0.42
 
 # Questions with no answer anywhere in the corpus. The floor is supposed to send
 # these back empty, and the measured distributions that set it at 0.30 live in a
-# comment in semantic.py — this turns that comment into a test.
+# comment in semantic.py, this turns that comment into a test.
 OFF_TOPIC = [
     "the weather forecast tomorrow",
     "time travel and wormholes",
@@ -308,7 +295,7 @@ def filtered_rerank_retriever(query, k):
 
     Stacked on `filtered` rather than on `hybrid` on purpose: a reranker can only
     promote what retrieval already found, so it belongs on top of whichever
-    retriever puts the right passage in the pool most often — not on top of the
+    retriever puts the right passage in the pool most often, not on top of the
     one that lost.
     """
     pool = search_filings_filtered(query, k=max(k, rerank_mod.CANDIDATES),
@@ -337,7 +324,7 @@ def ctx_filtered_rerank_retriever(query, k):
 
 def contextual_rerank_retriever(query, k):
     """
-    Contextual vectors, then the reranker — and no lexical filter.
+    Contextual vectors, then the reranker, and no lexical filter.
 
     The configuration the measurements point at rather than one that was planned.
     Contextual embeddings put the right document in the top ten 96.7% of the time
