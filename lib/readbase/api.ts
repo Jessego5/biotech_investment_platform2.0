@@ -153,7 +153,7 @@ export function sectionFromChunk(chunk: ChunkResponse): {
         url,
         displayUrl: url ? url.replace(/^https?:\/\/(www\.)?/, "") : "not on EDGAR",
         fields: [
-          ["CIK", chunk.company.cik ?? "—"],
+          ["CIK", chunk.company.cik ?? "–"],
           ["Accession", chunk.filing.accession],
           [
             "Form",

@@ -114,7 +114,7 @@ export default async function FilingPage({
 
         <NotusSection title="The original document" period="SEC EDGAR">
           <p className="mb-4 break-all text-[13px]" style={{ color: "var(--n-accent-deep)" }}>
-            {f.url ?? "no EDGAR link — this company has no CIK recorded"}
+            {f.url ?? "no EDGAR link: this company has no CIK recorded"}
           </p>
           {f.url && (
             <a
@@ -130,7 +130,7 @@ export default async function FilingPage({
           <p className="mt-4 max-w-[74ch] text-[13px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             These are not the same thing. What is listed above is the text this
             system was allowed to read. The filing is the complete document it
-            was cut from — go there to check that the cut was fair.
+            was cut from. Go there to check that the cut was fair.
           </p>
         </NotusSection>
       </div>

@@ -40,7 +40,7 @@ function Stepper({
             type="button"
             onClick={() => step(n)}
             aria-current={n === index ? "true" : undefined}
-            aria-label={`Passage ${n} of ${section.total}${held ? "" : " — text not held"}`}
+            aria-label={`Passage ${n} of ${section.total}${held ? "" : ", text not held"}`}
             className={`grid h-[20px] w-[22px] place-items-center border font-mono text-[10.5px] ${
               n === index
                 ? // filled: accent-ink lightens in dark, so the label takes the
@@ -132,7 +132,7 @@ export function PassagePanel() {
               ? "Fetching the stored text"
               : "No stored text for this passage"}
         </span>
-        <span>{current?.characters ?? "—"}</span>
+        <span>{current?.characters ?? "–"}</span>
       </div>
 
       <ScrollArea className="min-h-0 flex-1 bg-card">
@@ -160,7 +160,7 @@ export function PassagePanel() {
             (isHeld(current) ? "record held · text not loaded" : "record held · text not stored")}
         </span>
         <span className="font-mono text-[11px] tracking-[0.01em] text-ink-2">
-          {current?.checksum ?? "—"}
+          {current?.checksum ?? "–"}
         </span>
       </div>
     </>

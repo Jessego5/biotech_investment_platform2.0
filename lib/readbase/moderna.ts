@@ -123,7 +123,7 @@ export const cashCallout = {
   label: "Cash and cash equivalents",
   figure: "$1.723B",
   caveat:
-    "Not a point on the series above. This is the quarter end, 2026-06-30, and it counts cash only — the annual line includes investments. Do not read it as FY2026.",
+    "Not a point on the series above. This is the quarter end, 2026-06-30, and it counts cash only. The annual line includes investments. Do not read it as FY2026.",
   source: ["10-Q · Q2 2026", "filed 2026-08-07", "accession 0001682852-26-000073"],
 };
 

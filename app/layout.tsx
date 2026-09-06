@@ -9,7 +9,7 @@ import "./effects.css";
 export const metadata: Metadata = {
   title: "BioBase",
   description:
-    "Grounded question answering over biotech's primary sources — SEC filings, ClinicalTrials.gov and FDA data.",
+    "Grounded question answering over biotech's primary sources: SEC filings, ClinicalTrials.gov and FDA data.",
 };
 
 export default function RootLayout({

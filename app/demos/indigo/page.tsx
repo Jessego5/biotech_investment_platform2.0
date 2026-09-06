@@ -127,9 +127,9 @@ export default async function IndigoDemo() {
   // against 244 with nothing on the page to explain the twelve missing
 
   const stats = [
-    { n: String(data.pipeline?.total_trials ?? 0), label: "Registered trials", delta: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "—"}` },
-    { n: String((data.approved_products ?? []).length), label: "Approved products", delta: data.protection?.state ?? "—" },
-    { n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—", label: "R&D, latest year", delta: rd ? rd.peakLabel : "—" },
+    { n: String(data.pipeline?.total_trials ?? 0), label: "Registered trials", delta: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "–"}` },
+    { n: String((data.approved_products ?? []).length), label: "Approved products", delta: data.protection?.state ?? "–" },
+    { n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "–", label: "R&D, latest year", delta: rd ? rd.peakLabel : "–" },
     { n: String((data.filings ?? []).length), label: "Annual reports held", delta: "five-year window" },
   ];
 
@@ -165,7 +165,7 @@ export default async function IndigoDemo() {
             <span style={{ color: "var(--n-accent)" }}>filing</span>
           </h1>
           <p className="mx-auto mb-7 max-w-[52ch] text-[16px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
-            {data.name} — pipeline, financials and protection, drawn from SEC
+            {data.name}: pipeline, financials and protection, drawn from SEC
             filings and ClinicalTrials.gov, with the passage behind each claim
             one click away.
           </p>

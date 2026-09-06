@@ -93,7 +93,7 @@ export default function CompanyFixturePage() {
               <span
                 key={tab.label}
                 aria-disabled="true"
-                title="No separate trials view — trial counts are in the pipeline table"
+                title="No separate trials view: trial counts are in the pipeline table"
                 className="border-b-2 border-dashed border-line-hi pb-[11px] font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground"
               >
                 {tab.label}

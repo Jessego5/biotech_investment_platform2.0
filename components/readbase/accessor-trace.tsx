@@ -19,7 +19,7 @@ export function AccessorTrace({
           <b className="font-normal text-primary">{a}</b>
         </span>
       ))}
-      {" — "}
+      {": "}
       {result}
     </span>
   );

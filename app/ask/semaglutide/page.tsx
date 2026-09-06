@@ -60,7 +60,7 @@ export default function SourceInspectorPage() {
                       <b className="font-normal text-primary">{a}</b>
                     </span>
                   ))}
-                  {" — "}
+                  {": "}
                   {accessorTrace.result}
                 </span>
               </div>

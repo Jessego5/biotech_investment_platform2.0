@@ -97,7 +97,7 @@ export default function SidenoteDemo() {
                         {headerFor(section, at.index).join(" · ")}
                       </span>
                       <span className="mt-1 block font-mono text-[9.5px] tracking-[0.06em] text-muted-foreground">
-                        {held ? "passage stored — open to read it" : "record held · text not stored"}
+                        {held ? "passage stored · open to read it" : "record held · text not stored"}
                       </span>
                     </div>
                   );
@@ -114,7 +114,7 @@ export default function SidenoteDemo() {
 
         <p className="mt-8 max-w-[70ch] font-mono text-[10px] leading-[1.6] text-muted-foreground">
           Every paragraph names its sources in the margin, including the last
-          one — which cites the Orange Book and then says the two sources
+          one, which cites the Orange Book and then says the two sources
           disagree on scope. In the chip version that disagreement is a sentence
           you have to read; here the two documents sit side by side while you
           read it.

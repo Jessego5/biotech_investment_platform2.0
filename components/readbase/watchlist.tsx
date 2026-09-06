@@ -174,7 +174,7 @@ export function Watchlist({ shared = null }: { shared?: string[] | null }) {
           <h1 className="text-[30px] font-medium tracking-[-0.02em]">Watchlist</h1>
           <p className="mt-2 max-w-[64ch] text-[15px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             What a watcher is watching for: the next readout, the nearest loss of
-            protection, and how long the money lasts. No price and no position —
+            protection, and how long the money lasts. No price and no position:
             those would be the first figures here neither computed from a filing
             nor traceable to one.
           </p>
@@ -261,7 +261,7 @@ export function Watchlist({ shared = null }: { shared?: string[] | null }) {
           </p>
           <p className="mt-3 max-w-[62ch] text-[13px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             The list is kept in this browser. There are no accounts, so it does
-            not follow you to another device by itself — but it fits in a link,
+            not follow you to another device by itself. But it fits in a link,
             and once there is something here you can copy one and send it to
             yourself or to anyone else.
           </p>
@@ -402,7 +402,7 @@ export function Watchlist({ shared = null }: { shared?: string[] | null }) {
 
           <p className="px-6 py-4 text-[12px]" style={{ color: "var(--n-ink-2)" }}>
             Read from the corpus on each visit. The list is kept in this browser,
-            not on the server — a link carries the tickers, and the rows are
+            not on the server. A link carries the tickers, and the rows are
             rebuilt from the corpus at the other end.
           </p>
         </div>

@@ -73,9 +73,9 @@ export const financialRows: DiffRow[] = [
 ];
 
 export const pipelineRows: DiffRow[] = [
-  { mark: "plus", label: "mRNA-1283 mNEXSPIKE", sub: "approved 2025-05-31 · moved out of clinical stage", before: "Phase 3", after: "Approved", delta: "—", direction: "na" },
-  { mark: "minus", label: "mRNA-1073 influenza + COVID", sub: "no longer listed; superseded by mRNA-1083", before: "Phase 1/2", after: "Not listed", delta: "—", direction: "na" },
-  { mark: "plus", label: "mRNA-1195 Epstein–Barr virus", sub: "first appearance in an annual report", before: "—", after: "Phase 1", delta: "—", direction: "na" },
+  { mark: "plus", label: "mRNA-1283 mNEXSPIKE", sub: "approved 2025-05-31 · moved out of clinical stage", before: "Phase 3", after: "Approved", delta: "–", direction: "na" },
+  { mark: "minus", label: "mRNA-1073 influenza + COVID", sub: "no longer listed; superseded by mRNA-1083", before: "Phase 1/2", after: "Not listed", delta: "–", direction: "na" },
+  { mark: "plus", label: "mRNA-1195 Epstein–Barr virus", sub: "first appearance in an annual report", before: "–", after: "Phase 1", delta: "–", direction: "na" },
 ];
 
 export const riskFactor = {

@@ -135,7 +135,7 @@ export default async function NotusDemo() {
     {
       n: String(data.pipeline?.total_trials ?? 0),
       label: "Registered trials",
-      note: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "—"}`,
+      note: `${phases[0]?.n ?? 0} in ${phases[0]?.label ?? "–"}`,
       source: "ClinicalTrials.gov",
       chip: "var(--p1)",
       glyph: "#020887",
@@ -143,15 +143,15 @@ export default async function NotusDemo() {
     {
       n: String((data.approved_products ?? []).length),
       label: "Approved products",
-      note: data.protection?.state ?? "—",
+      note: data.protection?.state ?? "–",
       source: "FDA Orange Book",
       chip: "var(--p2)",
       glyph: "#020887",
     },
     {
-      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—",
+      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "–",
       label: "Research and development",
-      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "—",
+      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "–",
       source: "SEC XBRL company facts",
       chip: "var(--p3)",
       glyph: "#020887",
@@ -161,7 +161,7 @@ export default async function NotusDemo() {
       label: "Annual reports held",
       note: (data.filings ?? []).length
         ? `FY${data.filings[data.filings.length - 1].fiscal_year}–FY${data.filings[0].fiscal_year}`
-        : "—",
+        : "–",
       source: "SEC EDGAR",
       chip: "var(--p4)",
       glyph: "#ffffff",
@@ -200,7 +200,7 @@ export default async function NotusDemo() {
             <span style={{ color: "var(--n-accent)" }}>filing</span>
           </h1>
           <p className="mx-auto mb-7 max-w-[52ch] text-[16px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
-            {data.name} — pipeline, financials and protection, drawn from SEC
+            {data.name}: pipeline, financials and protection, drawn from SEC
             filings and ClinicalTrials.gov, with the passage behind each claim
             one click away.
           </p>
@@ -303,7 +303,7 @@ export default async function NotusDemo() {
             </span>
           </div>
           <p className="mb-5 text-[13px]" style={{ color: "var(--n-ink-2)" }}>
-            The step is the phase itself — pale at Phase 1, indigo at Phase 4 —
+            The step is the phase itself, pale at Phase 1 and indigo at Phase 4,
             and length carries it too, so the two palest steps never have to be
             told apart by hue alone. Navy is held back for approval, which is
             not a phase. A trial whose phase the registry never stated sits off
@@ -376,10 +376,10 @@ export default async function NotusDemo() {
         </div>
 
         <p className="mx-auto mt-10 max-w-[70ch] text-center text-[13px] leading-[1.7]" style={{ color: "var(--n-ink-2)" }}>
-          Green is the brand and the five-step palette is the measurement — they
+          Green is the brand and the five-step palette is the measurement. They
           are kept apart on purpose, so a colour never means two things. Same
           corpus and figures as /companies/VRTX. What this register gives
-          up is the period stamp on every number and the provenance chip — both
+          up is the period stamp on every number and the provenance chip, both
           would have to be reintroduced before it could carry the product&rsquo;s
           claim.
         </p>

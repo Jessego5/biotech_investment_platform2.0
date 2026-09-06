@@ -19,7 +19,7 @@ const LIVE: [string, string, string][] = [
   [
     "/browse",
     "Browse",
-    "Everything held, searchable by name, ticker, brand or accession — companies, approved products, annual reports and trials.",
+    "Everything held, searchable by name, ticker, brand or accession: companies, approved products, annual reports and trials.",
   ],
   [
     "/ask",
@@ -67,7 +67,7 @@ function corpusTiles(s: Stats): Tile[] {
   // a field the API does not send yet is a dash, not a crash. /stats has grown
   // three times, and each time a page built against the newer shape would have
   // thrown on the older one — server-side, so the whole page went with it
-  const n = (v?: number) => (typeof v === "number" ? v.toLocaleString("en-US") : "—");
+  const n = (v?: number) => (typeof v === "number" ? v.toLocaleString("en-US") : "–");
   return [
     {
       icon: FlaskConical,

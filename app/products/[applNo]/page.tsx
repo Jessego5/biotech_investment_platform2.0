@@ -97,7 +97,7 @@ export default async function ProductPage({
     },
     {
       icon: CalendarClock,
-      n: soonest ?? "—",
+      n: soonest ?? "–",
       label: "Nearest expiry",
       note: soonest ? "first protection to lapse" : "no dated patent",
       source: "FDA Orange Book",
@@ -108,7 +108,7 @@ export default async function ProductPage({
       icon: Lock,
       n: String(p.exclusivity.length),
       label: "Exclusivity periods",
-      note: last ? `patents run to ${last}` : "—",
+      note: last ? `patents run to ${last}` : "–",
       source: "FDA exclusivity codes",
       chip: "var(--p1)",
       glyph: "#020887",
@@ -191,7 +191,7 @@ export default async function ProductPage({
                         .join(" · ") || "method of use only"}
                     </td>
                     <td className="border-b py-3" style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}>
-                      {x.use_code ?? "—"}
+                      {x.use_code ?? "–"}
                     </td>
                     <td className="border-b py-3 tabular-nums" style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}>
                       {x.products}

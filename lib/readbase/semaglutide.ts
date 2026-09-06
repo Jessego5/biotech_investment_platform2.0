@@ -53,7 +53,7 @@ export const answer: AnswerNode[][] = [
   [
     {
       kind: "text",
-      text: "Separately from the patents, semaglutide products carry regulatory exclusivity that runs on its own clock — twelve years of reference product exclusivity in the United States for biologics, and eight years of data exclusivity plus two years of market protection in the European Union.",
+      text: "Separately from the patents, semaglutide products carry regulatory exclusivity that runs on its own clock: twelve years of reference product exclusivity in the United States for biologics, and eight years of data exclusivity plus two years of market protection in the European Union.",
     },
     { kind: "chip", id: "3a", source: 3 },
   ],
@@ -172,7 +172,7 @@ export const original = {
   ] as const,
   action: "Open filing on sec.gov ↗",
   distinction:
-    "These are not the same thing. The panel above is the only text the model could see. The filing is the complete document it was cut from — go there to check that the cut was fair.",
+    "These are not the same thing. The panel above is the only text the model could see. The filing is the complete document it was cut from. Go there to check that the cut was fair.",
 };
 
 export type { AnswerNode, Source } from "@/lib/readbase/types";

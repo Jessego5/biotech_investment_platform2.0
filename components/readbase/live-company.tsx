@@ -92,7 +92,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       icon: FlaskConical,
       n: String(data.pipeline?.total_trials ?? 0),
       label: "Registered trials",
-      note: `${byPhase[0]?.[1] ?? 0} in ${byPhase[0]?.[0] ?? "—"}`,
+      note: `${byPhase[0]?.[1] ?? 0} in ${byPhase[0]?.[0] ?? "–"}`,
       source: "ClinicalTrials.gov",
       chip: "var(--p1)",
       glyph: "#020887",
@@ -101,16 +101,16 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       icon: Pill,
       n: String((data.approved_products ?? []).length),
       label: "Approved products",
-      note: data.protection?.state ?? "—",
+      note: data.protection?.state ?? "–",
       source: "FDA Orange Book",
       chip: "var(--p2)",
       glyph: "#020887",
     },
     {
       icon: ChartColumn,
-      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "—",
+      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "–",
       label: "Research and development",
-      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "—",
+      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "–",
       source: "SEC XBRL company facts",
       chip: "var(--p3)",
       glyph: "#020887",
@@ -121,7 +121,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
       label: "Annual reports held",
       note: (data.filings ?? []).length
         ? `FY${data.filings[data.filings.length - 1].fiscal_year}–FY${data.filings[0].fiscal_year}`
-        : "—",
+        : "–",
       source: "SEC EDGAR",
       chip: "var(--p4)",
       glyph: "#ffffff",
@@ -221,7 +221,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                         <PhaseBar phase={4} label="Approved" />
                       </TableCell>
                       <TableCell className="px-0 py-2 pr-[10px] align-middle font-mono text-[12px] tabular-nums">
-                        {p.approval_date ?? "—"}
+                        {p.approval_date ?? "–"}
                       </TableCell>
                       <TableCell className="px-0 py-2 text-right align-middle font-mono text-[12px] tabular-nums">
                         {p.applications.length}
@@ -280,7 +280,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                           )}
                         </TableCell>
                         <TableCell className="whitespace-normal px-0 py-2 pr-[10px] align-middle text-[13.5px]">
-                          {iv.conditions.join(", ") || "—"}
+                          {iv.conditions.join(", ") || "–"}
                         </TableCell>
                         <TableCell className="px-0 py-2 pr-[10px] align-middle">
                           {phaseLevel(iv.phase) ? (
@@ -295,7 +295,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                           )}
                         </TableCell>
                         <TableCell className="px-0 py-2 pr-[10px] align-middle font-mono text-[12px] tabular-nums">
-                          {iv.lead_nct ?? "—"}
+                          {iv.lead_nct ?? "–"}
                         </TableCell>
                         <TableCell className="px-0 py-2 text-right align-middle font-mono text-[12px] tabular-nums">
                           {iv.trials}
@@ -307,11 +307,11 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                 <div className="mt-3 max-w-[80ch] space-y-2 font-mono text-[10px] leading-[1.6] text-muted-foreground">
                   <p>
                     Grouped by the name the registry gives it, and cut to the
-                    twelve furthest along — the count in the heading says how
+                    twelve furthest along. The count in the heading says how
                     many there are, so a short table is not read as a short
                     pipeline. Names are merged only where the registry states they are the
                     same thing. Ivacaftor is filed as IVA and VX-770, and
-                    ClinicalTrials.gov says so, so those rows are one — and the
+                    ClinicalTrials.gov says so, so those rows are one, and the
                     names it absorbed are listed under it, because a count that
                     quietly combined three things cannot be checked. Where a
                     sponsor never filled that field in, one drug can still
@@ -384,7 +384,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                       </span>
                     </TableCell>
                     <TableCell className="whitespace-normal px-0 py-2 pr-[10px] align-top text-[13.5px]">
-                      {t.conditions || "—"}
+                      {t.conditions || "–"}
                     </TableCell>
                     <TableCell className="px-0 py-2 pr-[10px] align-top">
                       {phaseLevel(t.phase) ? (
@@ -399,7 +399,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
                       {t.status?.replace(/_/g, " ").toLowerCase()}
                     </TableCell>
                     <TableCell className="px-0 py-2 align-top font-mono text-[12px] tabular-nums">
-                      {t.completion_date ?? "—"}
+                      {t.completion_date ?? "–"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -420,7 +420,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
               </div>
               <p className="mt-4 max-w-[70ch] font-mono text-[10px] leading-[1.6] text-muted-foreground">
                 Cash here is cash and equivalents as reported, not cash plus
-                investments — the two are different definitions and the series
+                investments. The two are different definitions, and the series
                 shows the one the filing states.
               </p>
             </Section>
@@ -457,7 +457,7 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
             <Section id="readouts" title="Upcoming readouts" period="primary completion dates">
               <RailList
                 items={data.readouts.slice(0, 6).map((r) => ({
-                  when: r.completion_date?.slice(0, 7) ?? "—",
+                  when: r.completion_date?.slice(0, 7) ?? "–",
                   what: r.title,
                   id: `${r.nct_id} · ${phaseLabel(r.phase)}`,
                 }))}

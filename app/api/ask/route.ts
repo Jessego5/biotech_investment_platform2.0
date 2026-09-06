@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       answer:
         "That is more questions than one reader gets in a minute. Nothing is " +
-        "wrong and nothing is lost — wait a moment and ask again.\n\nThe limit " +
+        "wrong and nothing is lost. Wait a moment and ask again.\n\nThe limit " +
         "is here because answering costs money and there is one budget for " +
         "everyone. Browse, the company pages and the watchlist are unaffected.",
       sources: [],

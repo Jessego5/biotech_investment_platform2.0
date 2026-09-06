@@ -94,9 +94,9 @@ def protection_for(db, ticker, as_of):
             listed = sum(1 for b in biologics if b.patent_list_provided)
             note = (f"{len(biologics)} licensed biologic(s), and no exclusivity "
                     f"still running as of {as_of}. Biologic patents are largely "
-                    f"unpublished — the disputes run through the confidential "
-                    f"BPCIA exchange — so this is a gap in the source rather "
-                    f"than an absence of protection.")
+                    f"unpublished, since the disputes run through the "
+                    f"confidential BPCIA exchange, so this is a gap in the "
+                    f"source rather than an absence of protection.")
             if listed:
                 note += (f" FDA does record a patent list for {listed} of them, "
                          f"so a patent position exists on the record even though "

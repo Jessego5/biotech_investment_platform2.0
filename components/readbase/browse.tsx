@@ -86,7 +86,7 @@ export function Browse({ corpus }: { corpus: string }) {
           className="mx-auto max-w-[56ch] text-[15px] leading-[1.6]"
           style={{ color: "var(--n-ink-2)" }}
         >
-          Search by name, ticker, brand or accession — each result opens the
+          Search by name, ticker, brand or accession. Each result opens the
           thing it actually is, whether that is a company, an approved product,
           an annual report or a trial.
         </p>
@@ -140,9 +140,9 @@ export function Browse({ corpus }: { corpus: string }) {
             Nothing held under &ldquo;{query.trim()}&rdquo;.
           </p>
           <p className="mt-2 text-[13px]" style={{ color: "var(--n-ink-2)" }}>
-            This matches names, tickers, brands and accession numbers as written
-            — it is not the semantic search the chat uses, so a near-miss will
-            not be guessed at.
+            This matches names, tickers, brands and accession numbers as
+            written. It is not the semantic search the chat uses, so a near-miss
+            will not be guessed at.
           </p>
         </div>
       )}

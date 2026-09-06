@@ -22,7 +22,7 @@ export const answer: AnswerNode[][] = [
     { kind: "figure", text: "$3.20B" },
     { kind: "text", text: " for fiscal year 2025, against " },
     { kind: "figure", text: "$3.83B" },
-    { kind: "text", text: " in fiscal 2024 — a decrease of " },
+    { kind: "text", text: " in fiscal 2024, a decrease of " },
     { kind: "figure", text: "16.4%" },
     { kind: "text", text: "." },
     { kind: "chip", id: "1a", source: 1 },
@@ -101,10 +101,10 @@ export const refusal = {
   statement: "I don’t have data on how GSK’s pipeline has changed since 2021.",
   queriedCaption: "What was queried",
   queried: [
-    { accessor: "filing_section", returned: "GSK plc · 20-F · FY2021 — not in corpus", rows: "0 rows" },
+    { accessor: "filing_section", returned: "GSK plc · 20-F · FY2021, not in corpus", rows: "0 rows" },
     { accessor: "filing_diff", returned: "needs two annual reports; earliest held is FY2023", rows: "0 rows" },
-    { accessor: "trial_search", returned: "sponsor GSK — 604 trials, no phase history before 2023-11", rows: "604 rows" },
+    { accessor: "trial_search", returned: "sponsor GSK, 604 trials, no phase history before 2023-11", rows: "604 rows" },
   ] satisfies AccessorResult[],
   remedy:
-    "Annual reports go back five years per company, so FY2021 is outside the window for every issuer. Trial records reach further back but only hold current status, not the date a programme changed phase — so a pipeline comparison against 2021 isn’t something I can support from these sources. I can compare GSK’s FY2023 and FY2025 filings, or list the 604 registered trials by current phase.",
+    "Annual reports go back five years per company, so FY2021 is outside the window for every issuer. Trial records reach further back but only hold current status, not the date a programme changed phase, so a pipeline comparison against 2021 isn’t something I can support from these sources. I can compare GSK’s FY2023 and FY2025 filings, or list the 604 registered trials by current phase.",
 };

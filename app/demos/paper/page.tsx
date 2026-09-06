@@ -134,7 +134,7 @@ export default function PaperDemo() {
             style={{ color: "var(--paper-ink-2)" }}
           >
             Note what this register costs. The superscripts read as a
-            newspaper&rsquo;s footnotes — a gesture at authority — where the
+            newspaper&rsquo;s footnotes, a gesture at authority, where the
             warm chip was a control that opened the exact text. Gathering
             sources at the foot separates a claim from its evidence by the
             length of the article, which is exactly the distance this product
