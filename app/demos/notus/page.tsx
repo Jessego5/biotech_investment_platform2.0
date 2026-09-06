@@ -1,3 +1,9 @@
+/**
+ * This is the Notus register applied to a real company, and it is the demo the
+ * product was eventually built from. White ground, grotesque sans, pill actions,
+ * green as the primary and the five-step palette carrying anything ordered.
+ */
+
 import { API_BASE } from "@/lib/readbase/api";
 import { NOTUS, notusCard } from "@/lib/readbase/notus-theme";
 import {

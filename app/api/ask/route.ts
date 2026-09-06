@@ -1,16 +1,18 @@
+/**
+ * This proxies a question to the Python service. The browser talks to its own
+ * origin, so there is no CORS dance and no API host in the client bundle, and
+ * the key never leaves the server. It also holds the per-caller burst limit,
+ * which is a fairness limit and not a defence: anyone determined enough changes
+ * address and has a fresh allowance, and a browser behind a shared address
+ * counts as one caller for everybody using it. What actually caps the spend is
+ * the daily budget in the API, counted where the money goes and for everyone at
+ * once; this only stops one script taking the day's budget before anybody else
+ * arrives.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE, apiHeaders } from "@/lib/readbase/api";
 
-/**
- * How many questions one caller may ask, and how quickly.
- *
- * This is a fairness limit, not a defence. Anyone determined enough to want
- * around it changes address and has a fresh allowance, and a browser behind a
- * shared address counts as one caller for everybody using it. What actually
- * caps the spend is the daily budget in the API, counted where the money goes
- * and for everyone at once; this only stops one script monopolising the day's
- * budget before anybody else arrives.
- */
 const PER_MINUTE = 10;
 const PER_DAY = 50;
 

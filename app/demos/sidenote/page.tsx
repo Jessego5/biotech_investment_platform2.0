@@ -1,3 +1,9 @@
+/**
+ * This is the Tufte register applied to the same answer, with provenance in the
+ * margin rather than in a panel. It reads well straight through and is harder to
+ * audit line by line, which is the trade it exists to show.
+ */
+
 import { Chrome } from "@/components/readbase/chrome";
 import { PeriodLabel } from "@/components/readbase/period-label";
 import { AccessorTrace } from "@/components/readbase/accessor-trace";

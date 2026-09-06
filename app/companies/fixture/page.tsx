@@ -1,3 +1,11 @@
+/**
+ * This is artboard 3 as drawn, on fixtures, and the reference for the dense mono
+ * company register. Everything the page holds is on the page, so the tabs move
+ * to a section rather than swapping a view, and Trials is marked as having
+ * nowhere to go because the trial counts live in the pipeline table. The
+ * identifiers here are fixtures and the banner says so.
+ */
+
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { Section } from "@/components/readbase/section";

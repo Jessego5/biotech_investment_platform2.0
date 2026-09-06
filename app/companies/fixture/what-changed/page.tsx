@@ -1,3 +1,11 @@
+/**
+ * This is artboard 4 as drawn, on fixtures: a year-over-year diff of two
+ * filings, in both variants. The comparable one carries a teal verdict; the
+ * other withholds the financial rows because segment normalisation changed
+ * between extractor versions, and says so, since presenting a rule change as an
+ * event would be the bug this screen exists to prevent.
+ */
+
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import {

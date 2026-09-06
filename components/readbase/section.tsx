@@ -1,9 +1,10 @@
-import { PeriodLabel } from "@/components/readbase/period-label";
-
 /**
  * This is a section head: a title against the heavier rule, with its period on
  * the right. Used by the canvas register screens.
  */
+
+import { PeriodLabel } from "@/components/readbase/period-label";
+
 export function SectionHead({ title, period }: { title: string; period: string }) {
   return (
     <div className="mb-[14px] flex flex-wrap items-baseline justify-between gap-x-4 border-b border-line-hi pb-[7px]">

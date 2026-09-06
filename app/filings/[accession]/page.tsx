@@ -1,3 +1,10 @@
+/**
+ * This is one annual report: which sections were stored from it, how many
+ * passages each holds, and the link to the original on sec.gov. Opening a
+ * section opens the same passage panel a citation opens, so reading a filing
+ * here and reading it from an answer land on identical text.
+ */
+
 import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { NotusSection } from "@/components/readbase/notus-section";

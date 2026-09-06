@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * This owns which citation is open and how it got opened. The context shape
+ * follows the approach in miurla/morphic, Apache-2.0, where a provider holds the
+ * open state and the panel reads it and renders nothing when there is nothing
+ * open. It is reimplemented rather than copied, because this one addresses
+ * stored passages rather than tool artifacts and it tracks the chip as well as
+ * the source, since one source can be cited twice and only the chip actually
+ * clicked should read as open. Wrap a screen in it and read it with
+ * useInspector.
+ */
+
 import {
   createContext,
   useCallback,
@@ -15,16 +26,6 @@ import type {
   StoredPassage,
 } from "@/lib/readbase/passages";
 
-/**
- * This owns which citation is open and how it got opened. The context shape
- * follows the approach in miurla/morphic, Apache-2.0, where a provider holds the
- * open state and the panel reads it and renders nothing when there is nothing
- * open. It is reimplemented rather than copied, because this one addresses
- * stored passages rather than tool artifacts and it tracks the chip as well as
- * the source, since one source can be cited twice and only the chip actually
- * clicked should read as open. Wrap a screen in it and read it with
- * useInspector.
- */
 export type OpenCitation = {
   chipId: string;
   source: number;

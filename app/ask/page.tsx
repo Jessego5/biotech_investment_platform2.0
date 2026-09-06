@@ -1,11 +1,13 @@
+/**
+ * This is Ask against the live corpus. The fixtures that stood in for it while
+ * the artboards were being built now live at /ask/fixture, in the canvas
+ * register.
+ */
+
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { LiveAsk } from "@/components/readbase/live-ask";
 import { notusPage } from "@/lib/readbase/notus-theme";
 
-/**
- * Ask, against the live corpus. The fixtures that stood in for this while the
- * artboards were built now live at /ask/fixture, in the canvas register.
- */
 export default function AskPage() {
   return (
     <div style={notusPage} className="notus min-h-svh">

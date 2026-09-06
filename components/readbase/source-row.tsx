@@ -1,14 +1,15 @@
 "use client";
 
-import { useInspector } from "@/components/readbase/inspector-provider";
-import type { SourceListing } from "@/lib/readbase/types";
-
 /**
  * This is one source under an answer, with its two actions, which are
  * deliberately not the same control. "Read passage" is filled and opens the
  * stored text the model was allowed to see, while "sec.gov" is outlined and
  * leaves for the whole document.
  */
+
+import { useInspector } from "@/components/readbase/inspector-provider";
+import type { SourceListing } from "@/lib/readbase/types";
+
 export function SourceRow({
   source,
   filingUrl,

@@ -1,11 +1,12 @@
-import { notusCard } from "@/lib/readbase/notus-theme";
-
 /**
  * This is a section rendered as a card, with its period beside the title rather
  * than under it. The period is not optional here for the same reason it is not
  * optional in the canvas: a figure without the span it covers is a figure that
  * cannot be checked. Used across the company page for each block of figures.
  */
+
+import { notusCard } from "@/lib/readbase/notus-theme";
+
 export function NotusSection({
   id,
   title,

@@ -1,3 +1,8 @@
+/**
+ * This returns one approved product: the application, its listed patents
+ * deduplicated, and whatever exclusivity is recorded against it.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 

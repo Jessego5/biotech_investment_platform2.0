@@ -1,8 +1,5 @@
 "use client";
 
-import { original } from "@/lib/readbase/semaglutide";
-import type { OriginalRecord } from "@/lib/readbase/passages";
-
 /**
  * This is the original document, the second of the two checks, and it is
  * deliberately not the same control as the first. It sits on the recessed plane,
@@ -10,6 +7,10 @@ import type { OriginalRecord } from "@/lib/readbase/passages";
  * one, and the sentence at the bottom exists so nobody has to infer the
  * difference from the styling alone. Rendered under the passage panel.
  */
+
+import { original } from "@/lib/readbase/semaglutide";
+import type { OriginalRecord } from "@/lib/readbase/passages";
+
 export function OriginalDocument({ record }: { record?: OriginalRecord }) {
   const source = record
     ? {

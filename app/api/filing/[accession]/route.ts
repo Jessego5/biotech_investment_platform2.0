@@ -1,3 +1,8 @@
+/**
+ * This returns one annual report: what was stored from it, which sections were
+ * found and how to reach the original on sec.gov.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 

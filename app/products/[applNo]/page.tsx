@@ -1,3 +1,10 @@
+/**
+ * This is one approved product: the application, the patents listed against it
+ * and whatever exclusivity is recorded. Patents are deduplicated and the page
+ * says so, because the Orange Book lists one row per dosage form and counting
+ * rows reported several times more protection than exists.
+ */
+
 import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { NotusSection } from "@/components/readbase/notus-section";

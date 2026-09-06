@@ -1,3 +1,14 @@
+/**
+ * This is the landing page: what the corpus holds, counted at request time, with
+ * each tile keyed to the source the figure came from. It used to list the design
+ * demos and the canvas fixtures as well, which was scaffolding from when the
+ * artboards were the deliverable and there was no live app to link to, and it
+ * should not have survived the corpus arriving, since the fixtures carry
+ * invented accession numbers and filing text and a product whose whole claim is
+ * traceability cannot offer those from its front door. They still exist and now
+ * say what they are on the page itself.
+ */
+
 import Link from "next/link";
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { notusPage } from "@/lib/readbase/notus-theme";
@@ -5,16 +16,6 @@ import { StatTiles, type Tile } from "@/components/readbase/stat-tiles";
 import { ChartColumn, FileText, FlaskConical, Pill } from "lucide-react";
 import { API_BASE } from "@/lib/readbase/api";
 
-/**
- * The landing page.
- *
- * It used to list the design demos and the canvas fixtures as well. That was
- * scaffolding from when the artboards were the deliverable and there was no
- * live app to link to, and it should not have survived the corpus arriving:
- * the fixtures carry invented accession numbers and filing text, and a product
- * whose whole claim is traceability cannot offer those from its front door.
- * They still exist, and they now say what they are on the page itself.
- */
 const LIVE: [string, string, string][] = [
   [
     "/browse",

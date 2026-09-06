@@ -1,3 +1,11 @@
+/**
+ * This is the watchlist page. A tickers query parameter is a list someone was
+ * sent, and it is read here rather than in the client so the page knows on its
+ * first paint whether it is showing this browser's list or a visitor's, the two
+ * saying different things and correcting one into the other afterwards showing
+ * the reader a list that was never theirs.
+ */
+
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { Watchlist } from "@/components/readbase/watchlist";
 import { notusPage } from "@/lib/readbase/notus-theme";

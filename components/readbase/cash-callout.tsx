@@ -1,5 +1,3 @@
-import { cashCallout } from "@/lib/readbase/moderna";
-
 /**
  * This is the callout for two figures that come from different periods and
  * different definitions and must not sit on one line as if they agreed. It takes
@@ -7,6 +5,9 @@ import { cashCallout } from "@/lib/readbase/moderna";
  * somewhere else, and it says so in words rather than by being a different shade
  * of the same thing. Rendered on the company page beside the annual series.
  */
+
+import { cashCallout } from "@/lib/readbase/moderna";
+
 export function CashCallout() {
   return (
     <div

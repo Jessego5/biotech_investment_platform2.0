@@ -1,11 +1,13 @@
+/**
+ * This returns a row per watched company. The list itself is not stored here,
+ * because with no accounts a server-side watchlist would be one list shared by
+ * everyone; it lives in the reader's browser and arrives as a query parameter,
+ * which is also what lets a list travel as a link.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 
-/**
- * A row per watched company. The list itself is not stored here — there are no
- * accounts, so a server-side watchlist would be one list shared by everyone.
- * It lives in the reader's browser and arrives as a query parameter.
- */
 export async function GET(request: Request) {
   const tickers = new URL(request.url).searchParams.get("tickers") ?? "";
   if (!tickers.trim()) return NextResponse.json({ companies: [] });

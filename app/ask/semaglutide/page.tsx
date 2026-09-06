@@ -1,3 +1,10 @@
+/**
+ * This is artboard 1 as drawn, on fixtures, and the reference for the source
+ * inspector: the answer on the left with the cited sentence marked, the stored
+ * passage on the right, and the original document below it behind a different
+ * control. The passage text is written in register and is not the filing.
+ */
+
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";

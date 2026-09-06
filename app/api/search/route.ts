@@ -1,7 +1,12 @@
+/**
+ * This is the one index over companies, products, filings and trials, capped at
+ * eight per kind. It asks for every kind on every query, because the counts on
+ * the filter chips would otherwise blank out when a kind is selected.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 
-/** One index over companies, products, filings and trials. */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const params = new URLSearchParams({ limit: "8" });

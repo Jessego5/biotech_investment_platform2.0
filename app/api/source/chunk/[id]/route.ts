@@ -1,7 +1,12 @@
+/**
+ * This returns the exact stored passage behind a citation, which is what the
+ * passage panel shows. It is the whole claim of the product reduced to one
+ * route: the text the model was allowed to read, unedited.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 
-/** The exact stored passage behind a citation. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },

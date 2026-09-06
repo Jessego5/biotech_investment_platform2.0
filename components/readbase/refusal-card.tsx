@@ -1,5 +1,3 @@
-import { refusal } from "@/lib/readbase/vertex";
-
 /**
  * This is a refusal, which is a designed state and not an error state. It gets
  * the same typographic weight as an answer, the same size and face and full
@@ -8,6 +6,9 @@ import { refusal } from "@/lib/readbase/vertex";
  * ran, what each returned and the row counts, then naming what can be done
  * instead. Rendered on the fixture Ask screen from the copy in lib/readbase/vertex.
  */
+
+import { refusal } from "@/lib/readbase/vertex";
+
 export function RefusalCard() {
   return (
     <div className="mt-11 border border-border border-l-[3px] border-l-primary bg-secondary px-7 pb-[26px] pt-6">

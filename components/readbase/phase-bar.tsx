@@ -1,14 +1,15 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
-import type { PhaseLevel } from "@/lib/readbase/moderna";
-
 /**
  * This is the phase bar. The phase ramp is the one legitimate gradient in the
  * product, because the variable under it is ordinal, and the bar length encodes
  * the same variable as the colour so the ramp is never the only channel. Give it
  * the registry's raw phase string; it works out the level itself.
  */
+
+import { motion, useReducedMotion } from "motion/react";
+import type { PhaseLevel } from "@/lib/readbase/moderna";
+
 const RAMP: Record<PhaseLevel, { fill: string; pct: number }> = {
   1: { fill: "bg-phase-1", pct: 25 },
   2: { fill: "bg-phase-2", pct: 50 },

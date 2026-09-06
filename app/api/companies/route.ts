@@ -1,7 +1,12 @@
+/**
+ * This is the universe, searchable by ticker or name, which is what the company
+ * picker reads. It proxies to the Python service so the backend URL and key stay
+ * server-side.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 
-/** The universe, searchable by ticker or name — what the picker reads. */
 export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q") ?? "";
   const params = new URLSearchParams({ limit: "12" });

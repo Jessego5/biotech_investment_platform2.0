@@ -1,16 +1,17 @@
 "use client";
 
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { PassagePanel } from "@/components/readbase/passage-panel";
-import { useInspector } from "@/components/readbase/inspector-provider";
-import { OriginalDocument } from "@/components/readbase/original-document";
-
 /**
  * This is the inspector as a drawer, for screens with no room for a docked
  * panel. It is the same panel and the same two checks, and only the container
  * differs. Splitting panel from drawer this way follows the structure in
  * miurla/morphic, Apache-2.0. Used on narrow screens and on the filing pages.
  */
+
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { PassagePanel } from "@/components/readbase/passage-panel";
+import { useInspector } from "@/components/readbase/inspector-provider";
+import { OriginalDocument } from "@/components/readbase/original-document";
+
 export function PassageSheet({ children }: { children?: React.ReactNode }) {
   const { open, close, sections } = useInspector();
   const original = open ? sections[open.sectionId]?.original : undefined;

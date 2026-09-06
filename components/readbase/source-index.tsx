@@ -1,14 +1,15 @@
 "use client";
 
-import { useInspector } from "@/components/readbase/inspector-provider";
-import { extentFor } from "@/lib/readbase/semaglutide";
-import type { Source } from "@/lib/readbase/types";
-
 /**
  * This lists every source the answer stands on, including the ones not currently
  * open. The count is the point, since four sources means you can see all four
  * without opening anything, and the rows open the same panel the chips do.
  */
+
+import { useInspector } from "@/components/readbase/inspector-provider";
+import { extentFor } from "@/lib/readbase/semaglutide";
+import type { Source } from "@/lib/readbase/types";
+
 export function SourceIndex({ sources }: { sources: Source[] }) {
   const { open, openCitation, hovered, setHovered } = useInspector();
 

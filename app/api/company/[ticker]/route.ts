@@ -1,7 +1,11 @@
+/**
+ * This returns everything the company page shows for one issuer, proxied to the
+ * Python service so the backend URL and key stay server-side.
+ */
+
 import { NextResponse } from "next/server";
 import { API_BASE } from "@/lib/readbase/api";
 
-/** Everything the company page shows, for one issuer. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ ticker: string }> },

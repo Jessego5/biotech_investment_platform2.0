@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * This is choosing a company by typing rather than by already knowing its
+ * ticker. Until it existed the only way into the corpus was editing the URL,
+ * which left 786 of 787 issuers unreachable from the interface. Used by the
+ * watchlist, and it takes an exclude list so a company already on the list is
+ * not offered twice.
+ */
+
 import { useEffect, useState } from "react";
 import {
   CommandDialog,
@@ -12,13 +20,6 @@ import {
 
 export type PickedCompany = { ticker: string; name: string; sector?: string | null };
 
-/**
- * This is choosing a company by typing rather than by already knowing its
- * ticker. Until it existed the only way into the corpus was editing the URL,
- * which left 786 of 787 issuers unreachable from the interface. Used by the
- * watchlist, and it takes an exclude list so a company already on the list is
- * not offered twice.
- */
 export function CompanyPicker({
   open,
   onOpenChange,

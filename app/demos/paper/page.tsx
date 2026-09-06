@@ -1,3 +1,14 @@
+/**
+ * This is the FT Origami register applied to the same answer. A newspaper sets a
+ * financial story on warm paper at a generous measure, with figures pulled out
+ * of the prose rather than tabulated and sources gathered at the foot as a note
+ * on the reporting, which is the opposite trade from the canvas: easier to read
+ * straight through, harder to audit line by line. The colours here are declared
+ * locally and are deliberately not the product palette, since the brief forbids
+ * raw values in a component and this demo exists to show what a different ground
+ * would feel like.
+ */
+
 import { Chrome } from "@/components/readbase/chrome";
 import {
   answer,

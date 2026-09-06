@@ -1,3 +1,9 @@
+/**
+ * This is the Notus register carrying the five-step palette further, with the
+ * ordered steps used for anything ranked. Same content as the other demos, drawn
+ * from the live corpus rather than from fixtures.
+ */
+
 import { API_BASE } from "@/lib/readbase/api";
 import { money, phaseLabel, toSeries, type CompanyResponse } from "@/lib/readbase/company";
 

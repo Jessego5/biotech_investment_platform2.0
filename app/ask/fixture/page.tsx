@@ -1,3 +1,10 @@
+/**
+ * This is artboard 2 as drawn, on fixtures. It is kept alongside the live /ask
+ * because it is the reference for the refusal card, which needs a question the
+ * corpus genuinely cannot answer in order to show at all. The identifiers on
+ * this page are fixtures and the banner says so.
+ */
+
 import { FixtureNotice } from "@/components/readbase/fixture-notice";
 import { Chrome } from "@/components/readbase/chrome";
 import { AnswerProse } from "@/components/readbase/answer-prose";
@@ -18,11 +25,6 @@ import {
   sources,
 } from "@/lib/readbase/vertex";
 
-/**
- * Artboard 2 as drawn, on fixtures. Kept alongside the live /ask because it is
- * the reference for the refusal card, which needs a question the corpus
- * genuinely cannot answer to show at all.
- */
 export default function AskFixturePage() {
   return (
     <InspectorProvider sections={sections} locate={sourceLocation}>

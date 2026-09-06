@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 /**
  * This is the shell: the wordmark and the three links across the top. It used to
  * carry the corpus size on every page, which was three statements of the same
@@ -8,6 +6,9 @@ import Link from "next/link";
  * bought nothing and made every route dynamic, because a header that counts the
  * corpus cannot be rendered ahead of time. Pass current to mark the active link.
  */
+
+import Link from "next/link";
+
 const NAV: [string, string][] = [
   // the index over everything, rather than one company chosen arbitrarily
   ["/browse", "Browse"],

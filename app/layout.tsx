@@ -1,3 +1,9 @@
+/**
+ * This is the root layout: the document shell, the fonts and the metadata. Dark
+ * mode is a CSS media query rather than a script, because React 19 rejects an
+ * inline script in a component and the version that used one hydrated wrong.
+ */
+
 import type { Metadata } from "next";
 import "./globals.css";
 import "./effects.css";

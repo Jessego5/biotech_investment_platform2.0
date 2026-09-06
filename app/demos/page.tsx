@@ -1,3 +1,9 @@
+/**
+ * This is the index of the design demos. They render the same content several
+ * ways so the question is which register suits it, not which is prettier. They
+ * are not the product and some of them break rules the brief sets on purpose.
+ */
+
 import Link from "next/link";
 import { Chrome } from "@/components/readbase/chrome";
 

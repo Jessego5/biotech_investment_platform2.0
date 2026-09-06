@@ -1,14 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { notusCard } from "@/lib/readbase/notus-theme";
-import type { EvidenceBlock } from "@/lib/readbase/api";
-
 /**
  * This shows what ran and what each lookup came back with. The collapsible steps
  * shape is morphic's, where it shows the tool calls behind an answer and folds
@@ -20,6 +11,16 @@ import type { EvidenceBlock } from "@/lib/readbase/api";
  * rows" instead of being dropped. Rendered by live-ask.tsx, open by default when
  * the answer cites nothing.
  */
+
+import { useState } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { notusCard } from "@/lib/readbase/notus-theme";
+import type { EvidenceBlock } from "@/lib/readbase/api";
+
 export function AccessorSteps({
   tools,
   evidence,

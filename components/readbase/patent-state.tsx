@@ -1,10 +1,11 @@
-import { patentStates, type ProtectionState } from "@/lib/readbase/moderna";
-
 /**
  * This renders the three patent states, which differ in kind and not only in
  * colour, being filled, outlined and dashed, so the distinction survives
  * greyscale and colour blindness. Rendered in the company page's right rail.
  */
+
+import { patentStates, type ProtectionState } from "@/lib/readbase/moderna";
+
 const STATE_STYLE: Record<ProtectionState, string> = {
   protected: "bg-accent-deep text-primary-foreground",
   "approved-unlisted": "border border-line-hi text-ink-2",

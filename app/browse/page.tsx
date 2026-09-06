@@ -1,3 +1,10 @@
+/**
+ * This is the Browse page. It reads the corpus size from /stats server-side and
+ * hands it to the search, because this is the page where that figure earns its
+ * place: it tells a reader what the box in front of them is searching over,
+ * counted rather than written into the page.
+ */
+
 import { NotusChrome } from "@/components/readbase/notus-chrome";
 import { Browse } from "@/components/readbase/browse";
 import { notusPage } from "@/lib/readbase/notus-theme";
