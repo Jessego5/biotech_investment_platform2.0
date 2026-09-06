@@ -59,6 +59,10 @@ export type AskResponse = {
   retrieved?: string;
   evidence?: EvidenceBlock[];
   error?: string;
+  /** Set when the answer is a refusal rather than an answer. */
+  unavailable?: boolean;
+  /** Present only when the refusal is about cost: the day's budget, or a burst. */
+  budget?: { used?: number; limit?: number; resets?: string; throttled?: boolean };
 };
 
 export type ChunkResponse = {

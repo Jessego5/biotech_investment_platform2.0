@@ -55,6 +55,10 @@ services:
       # passed through from your shell or root .env. the app runs without the
       # OpenAI key, it just falls back to the fixed template narrative.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # questions /ask will answer per UTC day, for everyone together. Unset is
+      # the default in the code; 0 removes the cap, which is what a local run
+      # without an OpenAI key is doing anyway.
+      ASK_DAILY_BUDGET: ${ASK_DAILY_BUDGET:-}
       # Shared secret for /ask. Unset, the endpoint stays open, which is what
       # a local run wants; set, only a caller holding it can spend the key
       # above. See app/main.py require_key.

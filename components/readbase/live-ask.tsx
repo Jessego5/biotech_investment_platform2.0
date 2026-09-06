@@ -247,7 +247,43 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 </div>
               )}
 
-              {result?.answer && (
+              {/* Refusal is a designed state, not an error state: the same
+                  typographic weight as an answer, a rule in the accent rather
+                  than in warn, because nothing has gone wrong. The system knows
+                  what it spent and says so. */}
+              {result?.budget && (
+                <div
+                  className={`${notusCard} border-l-[3px] px-6 py-6`}
+                  style={{ borderColor: "var(--n-line)", borderLeftColor: "var(--n-accent-deep)" }}
+                >
+                  <h4
+                    className="mb-3 text-[10px] uppercase tracking-[0.14em]"
+                    style={{ color: "var(--n-accent-deep)" }}
+                  >
+                    {result.budget.throttled ? "Too quickly" : "Budget spent"}
+                  </h4>
+                  {(result.answer ?? "").split("\n\n").map((para, i) => (
+                    <p
+                      key={i}
+                      className="mb-3 max-w-[64ch] text-[16px] leading-[1.65] last:mb-0"
+                      style={i > 0 ? { color: "var(--n-ink-2)" } : undefined}
+                    >
+                      {para}
+                    </p>
+                  ))}
+                  {result.budget.limit !== undefined && (
+                    <div
+                      className="mt-4 border-t pt-3 tabular-nums text-[11.5px]"
+                      style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+                    >
+                      {result.budget.used} of {result.budget.limit} questions
+                      answered · resets {result.budget.resets}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {result?.answer && !result.budget && (
                 <div className={`${notusCard} px-6 py-6`} style={{ borderColor: "var(--n-line)" }}>
                   <AnswerProse
                     paragraphs={toAnswerNodes(result.answer, evidence.length)}

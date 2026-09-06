@@ -205,5 +205,10 @@ is what a local run wants and why the test suite needs no configuration.
   53 alias and an ACM certificate are the next step.
 - **No RDS in the templates.** The database is a parameter, deliberately: its
   lifecycle should not be tied to a stack that gets torn down and rebuilt.
-- **No WAF or rate limit.** The `/ask` guard caps who can spend, not how fast.
-  A determined holder of the key can still run up a bill.
+- **No WAF.** `/ask` has a daily budget counted in the database — 500 questions
+  per UTC day for everyone together, set by `AskDailyBudget` — and a per-caller
+  burst limit in the frontend's route handler. The budget is the one that
+  holds; the per-caller limit is fairness, since anyone can change address.
+  Neither stops traffic arriving, they stop it being expensive. **Set a monthly
+  limit in the OpenAI dashboard as well**: it is the only ceiling that survives
+  a bug in this code, and this code is what would have the bug.

@@ -43,6 +43,9 @@ from .retrieval import (trials_from_db, financials_from_db, history_from_db,
                         query_companies, derived_figures, upcoming_readouts)
 from .filings import filing_url
 from .chat import answer_question
+# imported for its side effect as well as its functions: the table has to be on
+# Base.metadata before init_db() runs or it is never created
+from .usage import claim_question, refusal as budget_refusal
 from .changes import (compare, compare_universe, latest_pair,
                       snapshot_provenance)
 from .raw_store import get_store, snapshot_coverage
@@ -519,6 +522,15 @@ def ask(q: Question):
         raise HTTPException(status_code=400, detail="Please ask a question.")
     db = SessionLocal()
     try:
+        # The day's ceiling is checked here rather than inside the chat, so the
+        # refusal is decided before a single token is bought. Only when there is
+        # a key to spend against: without one the chat refuses without reaching
+        # the model, and charging the budget for that would let a service
+        # missing its key burn the whole day on questions nobody was answering.
+        if os.environ.get("OPENAI_API_KEY"):
+            allowed, used, limit = claim_question(db)
+            if not allowed:
+                return budget_refusal(used, limit)
         # run the full grounded chat flow and return its result
         return answer_question(question, db)
     finally:

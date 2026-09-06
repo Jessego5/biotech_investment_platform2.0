@@ -62,6 +62,17 @@ Parameters:
       SQLAlchemy URL for the Postgres holding the corpus. The API reads it; it is
       never handed to the frontend, which only ever talks to the API.
 
+  AskDailyBudget:
+    Type: String
+    Default: "500"
+    Description: >-
+      Questions /ask will answer per UTC day, for everyone together. There are
+      no accounts, so this is the limit that actually caps the OpenAI spend —
+      per-caller limits sit in front of it and are a fairness measure, not a
+      defence. Roughly half a cent a question at the worst, so 500 is a ceiling
+      of a couple of dollars on the worst possible day. Set 0 to remove the cap,
+      which is only sensible somewhere nobody else can reach.
+
   OpenAiSecretArn:
     Type: String
     Description: >-
@@ -255,6 +266,7 @@ Resources:
             - !If
               - HasSecUserAgent
               - {Name: SEC_USER_AGENT, Value: !Ref SecUserAgent}
+              - {Name: ASK_DAILY_BUDGET, Value: !Ref AskDailyBudget}
               - !Ref AWS::NoValue
           Secrets:
             - Name: OPENAI_API_KEY
