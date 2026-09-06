@@ -1,10 +1,10 @@
 /**
- * Novo Nordisk / semaglutide — the fixture behind artboard 1.
- *
- * Carried across from design/readbase-canvas.html intact. The CIK, accession
- * number and Orange Book application number are plausible in format but were
- * written from memory for the canvas, and the 20-F passage text is written
- * in-register — it is NOT the actual filing. Fixtures, not verified data.
+ * This is the Novo Nordisk semaglutide fixture behind artboard 1, carried across
+ * from design/readbase-canvas.html intact. The CIK, accession number and Orange
+ * Book application number are plausible in format but were written from memory
+ * for the canvas, and the 20-F passage text is written in-register rather than
+ * quoted, so it is not the actual filing. These are fixtures and not verified
+ * data. Imported by app/ask/semaglutide, which labels itself as a fixture.
  */
 
 import type { AnswerNode, Source } from "@/lib/readbase/types";

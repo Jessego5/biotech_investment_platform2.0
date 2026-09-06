@@ -1,15 +1,14 @@
 """
-This is the dispatcher, the first half of scheduled ingestion. A schedule fires it,
-and all it does is put one message on the queue per slice of the universe, then
-finish. It never fetches anything itself.
-
-The reason the work is split this way is timeouts. Ingesting the universe takes
-minutes, well past what a Lambda is allowed to run, so this function does only the
-part that takes milliseconds (deciding the slices) and the queue hands the slow
-part to something with no such limit. The queue is also what gives us retries and a
-dead-letter queue for free: a slice that fails comes back rather than vanishing.
-
-Environment: QUEUE_URL, and SHARD_COUNT for how many slices to split into.
+This is the dispatcher, the first half of scheduled ingestion. A schedule fires
+it and all it does is put one message on the queue per slice of the universe,
+then finish; it never fetches anything itself. The work is split this way because
+of timeouts: ingesting the universe takes minutes, well past what a Lambda is
+allowed to run, so this function does only the part that takes milliseconds,
+deciding the slices, and the queue hands the slow part to something with no such
+limit. The queue is also what gives retries and a dead-letter queue for free, so
+a slice that fails comes back rather than vanishing. Deployed flat by
+infra/deploy.sh as dispatch.handler, and it reads QUEUE_URL and SHARD_COUNT from
+the environment.
 """
 
 import json

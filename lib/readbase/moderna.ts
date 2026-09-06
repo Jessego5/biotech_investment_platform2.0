@@ -1,10 +1,10 @@
 /**
- * Moderna, Inc. — the fixture behind artboard 3.
- *
- * Every figure here is carried across from design/readbase-canvas.html intact.
- * Identifiers (CIK, NCT numbers, accession numbers) are plausible in format but
- * were written from memory for the canvas and are NOT verified against the
- * source systems. Treat them as fixtures; do not present them as verified.
+ * This is the Moderna fixture behind artboard 3, every figure carried across
+ * from design/readbase-canvas.html intact. The identifiers, meaning the CIK, the
+ * NCT numbers and the accession numbers, are plausible in format but were
+ * written from memory for the canvas and are not verified against the source
+ * systems, so treat them as fixtures and never present them as verified.
+ * Imported by the fixture company page, which says so on the page itself.
  */
 
 export type PhaseLevel = 1 | 2 | 3 | 4;

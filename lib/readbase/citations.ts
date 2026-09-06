@@ -1,17 +1,15 @@
 /**
- * Citation markers → the evidence block they point at.
- *
- * The service writes `[n]`, one-indexed into the numbered blocks the model was
- * given (see chat.py `_CITATION`). An earlier version of this file parsed
- * `[n](#toolCallId)`, which is morphic's format and not one anything here
- * emits; it is the real format now.
- *
+ * This resolves citation markers to the evidence block they point at. The
+ * service writes [n], one-indexed into the numbered blocks the model was given,
+ * matching _CITATION in chat.py; an earlier version of this file parsed
+ * [n](#toolCallId), which is morphic's format and not one anything here emits.
  * The service already removes markers pointing at blocks that were never
- * returned, and reports how many it removed. This is the second line: if one
- * reaches the page anyway — an older service, a stripping bug — it renders as
- * visibly unresolved rather than as a chip that opens nothing. A number that
- * looks sourced and is not is the failure this product exists to prevent, so
- * it is never rendered as though it were fine.
+ * returned and reports how many it removed, and this is the second line: if one
+ * reaches the page anyway, from an older service or a stripping bug, it renders
+ * as visibly unresolved rather than as a chip that opens nothing, because a
+ * number that looks sourced and is not is the failure this product exists to
+ * prevent. Call parseCitationMarkers on an answer to get the markers, and
+ * toAnswerNodes to get prose with the chips already placed.
  */
 
 /** Matches the service's own pattern, minus the leading-space capture. */

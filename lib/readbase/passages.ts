@@ -1,10 +1,10 @@
 /**
- * Passages belong to a section of a document, not to a citation.
- *
- * Two citations can land in the same section at different passages — sources 1
- * and 3 of the semaglutide answer are both "intellectual property", passages 1
- * and 4 of four. Modelling it this way is what lets the stepper actually step:
- * it moves through the section the citation opened into.
+ * This models passages as belonging to a section of a document rather than to a
+ * citation. Two citations can land in the same section at different passages,
+ * sources 1 and 3 of the semaglutide answer both being "intellectual property"
+ * at passages 1 and 4 of four, and modelling it this way is what lets the
+ * stepper actually step, since it moves through the section the citation opened
+ * into. Imported by the passage panel and the fixture answer screens.
  */
 
 export type StoredPassage = {

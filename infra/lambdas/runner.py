@@ -1,19 +1,11 @@
 """
 This is the runner, the second half of scheduled ingestion. The queue delivers a
-slice to it, and all it does is start a container task to do that slice and then
-finish. It does not wait for the task and it does not do any fetching itself, so it
-returns in milliseconds no matter how long the ingestion actually takes.
-
-The container it starts is the same image the API runs from, with the command
-overridden to run ingest.py and the shard passed in as environment. That is the
-whole reason ingest.py reads SHARD_INDEX and SHARD_COUNT from the environment.
-
-Failures are reported per message rather than per batch. Without that, one bad
-slice would make the whole batch of messages redeliver, and the slices that already
-started their tasks would run a second time.
-
-Environment: CLUSTER, TASK_DEFINITION, CONTAINER_NAME, SUBNETS, SECURITY_GROUPS,
-and optionally ASSIGN_PUBLIC_IP.
+message naming one slice and this starts a container task for it and returns in
+milliseconds, no matter how long the ingestion actually takes. The container is
+the same image the API runs from, with the command overridden to ingest and then
+embed, and the shard passed in as environment, which is why ingest.py and
+embed_trials.py both read SHARD_INDEX and SHARD_COUNT from there. Deployed flat
+by infra/deploy.sh as runner.handler.
 """
 
 import json

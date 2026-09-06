@@ -1,8 +1,9 @@
 /**
- * Moderna FY2024 → FY2025 — the fixture behind artboard 4.
- *
- * Carried across from design/readbase-canvas.html intact. Accession numbers
- * and extractor versions are fixtures, not verified data.
+ * This is the Moderna FY2024 against FY2025 fixture behind artboard 4, carried
+ * across from design/readbase-canvas.html intact. The accession numbers and
+ * extractor versions are fixtures and not verified data, so nothing here should
+ * be presented as though it came from a filing. Imported by the fixture pages
+ * under app/companies/fixture, which label themselves as such.
  */
 
 export type Mark = "plus" | "minus" | "eq";

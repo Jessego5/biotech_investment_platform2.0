@@ -1,9 +1,11 @@
 /**
- * The live BioBase API — the Python service in backend/.
- *
- * The response shapes here mirror what that service actually returns; they are
- * not a hopeful contract. Where the API and these screens disagree, the API is
- * the fact.
+ * This is the client for the live BioBase API, the Python service in backend/.
+ * The response shapes here mirror what that service actually returns and are not
+ * a hopeful contract, so where these screens and the API disagree, the API is
+ * the fact. Every call goes through the Next route handlers under app/api rather
+ * than straight from the browser, which is what keeps the backend URL and the
+ * key server-side. Import the typed helpers, ask() and company() and the rest,
+ * from a client component.
  */
 import type { AnswerNode } from "@/lib/readbase/types";
 import type { PassageSection } from "@/lib/readbase/passages";

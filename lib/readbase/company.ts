@@ -1,9 +1,9 @@
 /**
- * The live company response, and the mappings the company page needs.
- *
- * Two things the canvas draws are not in this data, and are not invented here:
- * a programme has no record of its own (only the trials testing it), and an
- * indication is not carried on an approved product.
+ * This holds the live company response and the mappings the company page needs.
+ * Two things the canvas draws are not in this data and are not invented here: a
+ * programme has no record of its own, only the trials testing it, and an
+ * indication is not carried on an approved product. Imported by live-company.tsx
+ * and by the watchlist for phaseLevel and the money formatting.
  */
 import type { PhaseLevel, Series } from "@/lib/readbase/moderna";
 import type { ProtectionState } from "@/lib/readbase/moderna";

@@ -1,4 +1,8 @@
-/** Shared shapes across the answer screens. */
+/**
+ * This holds the shapes shared across the answer screens, kept here so the
+ * fixture pages and the live ones agree on what an answer, a source and an
+ * evidence block are. Import the types; there is no runtime code in this file.
+ */
 
 export type AnswerNode =
   | { kind: "text"; text: string }

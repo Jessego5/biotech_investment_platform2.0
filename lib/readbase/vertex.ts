@@ -1,9 +1,10 @@
 /**
- * Vertex R&D spend, and the GSK refusal — the fixtures behind artboard 2.
- *
- * Carried across from design/readbase-canvas.html intact. CIK and accession
- * numbers are plausible in format but were written from memory for the canvas.
- * Fixtures, not verified data.
+ * This holds the Vertex R&D spend and the GSK refusal, the fixtures behind
+ * artboard 2, carried across from design/readbase-canvas.html intact. The CIK
+ * and accession numbers are plausible in format but were written from memory for
+ * the canvas, so they are fixtures and not verified data. Imported by
+ * app/ask/fixture and by the refusal card, which is the one place the refusal
+ * copy is rendered.
  */
 import type { AccessorResult, AnswerNode, SourceListing } from "@/lib/readbase/types";
 import { unstoredSection, type PassageSection, type SourceLocation } from "@/lib/readbase/passages";

@@ -1,15 +1,13 @@
 /**
- * The Notus register: white ground, grotesque sans, pill actions, rounded
- * cards with a soft shadow, green as the primary and the five-step palette
- * carrying anything ordered.
- *
- * Held in one place because it is now on more than one screen, and a register
- * copied into each of them drifts apart a shade at a time.
- *
- * These are deliberately not the product palette in globals.css. That one is
- * the canvas: serif, near-sharp, rules rather than shadows, colour that never
- * decorates. This is the alternative being tried against it, and the two
- * should not quietly blend.
+ * This is the Notus register: white ground, grotesque sans, pill actions,
+ * rounded cards with a soft shadow, green as the primary and the five-step
+ * palette carrying anything ordered. It is held in one place because it is on
+ * more than one screen and a register copied into each of them drifts apart a
+ * shade at a time. These are deliberately not the product palette in
+ * globals.css, which is the canvas: serif, near-sharp, rules rather than
+ * shadows, colour that never decorates. Spread notusPage on a page wrapper to
+ * remap the product tokens, add the notus class for the typeface rules in
+ * effects.css, and use notusCard for a card.
  */
 export const NOTUS = {
   // page and cards are both white, so the border does the separating
