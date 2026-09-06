@@ -1,27 +1,18 @@
 """
-Fetches the registry's statement that two intervention names are the same thing.
-
-trials.interventions records what a study tested, but a candidate is filed
-under more than one name: ivacaftor is entered as "IVA", "Ivacaftor" and
-"VX-770" across Vertex's trials, and grouping by the string alone counts one
-drug three times.
-
-ClinicalTrials.gov states the equivalence in `otherNames` on each intervention.
-That field was never stored — not even inside the embedded summary, which took
-only the name — so unlike backfill_interventions.py this one cannot read what
-we already hold and has to ask.
-
-It asks cheaply. Studies are requested by id, a hundred at a time, with only
-the two modules needed rather than whole records, so covering the corpus is a
-few hundred small requests instead of a re-ingest.
-
-The aliases are stored exactly as filed. A sponsor often crams several into one
-string ("VX-770, IVA"), and tidying that here would lose what the registry
-actually said; the splitting belongs where the names are compared.
-
-    python backfill_intervention_aliases.py            # fetch and write
-    python backfill_intervention_aliases.py --dry-run  # report, write nothing
-    python backfill_intervention_aliases.py --limit N  # only N studies
+This fetches the registry's statement that two intervention names are the same
+thing. trials.interventions records what a study tested, but a candidate is
+filed under more than one name, ivacaftor being entered as "IVA", "Ivacaftor"
+and "VX-770" across Vertex's trials, so grouping by the string alone counts one
+drug three times. ClinicalTrials.gov states the equivalence in otherNames on
+each intervention, and that field was never stored, not even inside the embedded
+summary which took only the name, so unlike backfill_interventions.py this one
+cannot read what we already hold and has to ask. It asks cheaply, requesting
+studies by id a hundred at a time with only the two modules needed, so covering
+the corpus is a few hundred small requests instead of a re-ingest. Aliases are
+stored exactly as filed, since a sponsor often crams several into one string
+like "VX-770, IVA" and tidying that here would lose what the registry actually
+said. Run it with python backfill_intervention_aliases.py, with --dry-run to
+report without writing or --limit N for a short run.
 """
 import argparse
 import json

@@ -1,21 +1,16 @@
 """
-Deciding which of our companies holds an FDA-approved product.
-
-The FDA files name the entity that holds the application, which is a subsidiary
-as often as not: Janssen Pharmaceuticals rather than Johnson & Johnson,
-Pharmacyclics rather than AbbVie. Matching those on spelling is not a hard
-problem so much as an impossible one, because the names have nothing in common.
-
-So resolution happens in two passes, and both demand an exact identity:
-
-1. the company's own filing name, which catches the plain cases
-2. the alias table, which is mostly Exhibit 21 to the 10-K — the company's own
-   annual statement of the subsidiaries it owns
-
-A near match is deliberately not accepted anywhere here. Attributing somebody
-else's approved drug is a worse error than leaving one unattributed, and unlike
-a trial the misattribution would be invisible: an extra approved product looks
-exactly like a real one.
+This decides which of our companies holds an FDA-approved product. The FDA files
+name the entity that holds the application, which is a subsidiary as often as
+not, Janssen Pharmaceuticals rather than Johnson & Johnson and Pharmacyclics
+rather than AbbVie, so matching on spelling is not a hard problem but an
+impossible one when the names have nothing in common. Resolution runs in two
+passes and both demand an exact identity: the company's own filing name, which
+catches the plain cases, then the alias table, which is mostly Exhibit 21 to the
+10-K, a company's own annual statement of the subsidiaries it owns. A near match
+is deliberately never accepted, because attributing somebody else's approved
+drug is worse than leaving one unattributed and the mistake would be invisible,
+an extra approved product looking exactly like a real one. Imported by the
+ingest and resolution scripts rather than run on its own.
 """
 
 from app.models import Alias

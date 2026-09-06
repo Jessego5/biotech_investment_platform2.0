@@ -1,20 +1,14 @@
 """
-Adds the trial fields that were being fetched and thrown away, and fills them in
-from the registry table we already hold.
-
-This is a migration rather than a re-ingest on purpose. Ingestion replaces a
-company's trial rows, which drops their embeddings, so widening the table that
-way would cost a re-embed of every trial for fields that mostly need no network
-call at all: 83% of stored trials already appear in registry_trials under the
-same NCT id, and that row carries the conditions, the dates and the enrollment.
-
-What cannot be backfilled is what registry_trials never stored: whether results
-were posted, and whether the trial was randomised or masked. Those stay null
-until a company is next ingested, which is an honest gap rather than a claim
-that the trial lacked them.
-
-    python migrate_trial_fields.py            # add the columns and backfill
-    python migrate_trial_fields.py --dry-run  # say what it would do
+This adds the trial fields that were being fetched and thrown away, and fills
+them in from the registry table we already hold. It is a migration rather than a
+re-ingest on purpose, because ingestion replaces a company's trial rows and would
+cost a re-embed for fields that mostly need no network call at all: 83% of stored
+trials already appear in registry_trials under the same NCT id, and that row
+carries the conditions, the dates and the enrollment. What cannot be backfilled
+is what registry_trials never stored, whether results were posted and whether the
+trial was randomised or masked, and those stay null until a company is next
+ingested, which is an honest gap rather than a claim that the trial lacked them.
+Run it with python migrate_trial_fields.py, or --dry-run to say what it would do.
 """
 
 import argparse

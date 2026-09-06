@@ -1,23 +1,16 @@
 """
-Links the wider registry to the companies we track.
-
-registry_trials holds 112,812 industry-sponsored interventional studies and had
-no company column at all, so the question it was ingested to answer — who else
-is developing for this indication, and when do they report — could not be joined
-to anything we hold figures for.
-
-Most of the registry stays unlinked, and that is the point rather than a
-shortfall. It is run by private companies, foreign parents and firms outside the
-universe, and forcing those into a ticker would invent a relationship. A null
-here means "not a company we track", which is a different statement from "not a
-company".
-
-Resolution uses the same three routes the trial and FDA joins use, and no looser
-ones. Attributing a competitor's Phase 3 to the wrong company is exactly the
-failure the strict rules exist to prevent.
-
-    python link_registry.py             # resolve and write
-    python link_registry.py --dry-run   # report what it would link
+This links the wider registry to the companies we track. registry_trials holds
+112,812 industry-sponsored interventional studies and had no company column at
+all, so the question it was ingested to answer, who else is developing for this
+indication and when do they report, could not be joined to anything we hold
+figures for. Most of the registry stays unlinked and that is the point rather
+than a shortfall, since it is run by private companies, foreign parents and firms
+outside the universe, and forcing those into a ticker would invent a
+relationship; a null here means not a company we track, which is a different
+statement from not a company. Resolution uses the same three routes the trial and
+FDA joins use and no looser ones, because attributing a competitor's Phase 3 to
+the wrong company is exactly the failure the strict rules exist to prevent. Run
+it with python link_registry.py, or --dry-run to report what it would link.
 """
 
 import argparse

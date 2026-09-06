@@ -1,24 +1,19 @@
 """
-This script fills the database with the whole biotech universe. It reads
-companies.json, which build_company_universe.py produces, and for each company it
-fetches the trials and financials from the live APIs, archives what came back, and
-writes the parsed rows into the database. You run it once in a while so the web app
-can serve fast from the database instead of hitting the APIs on every request. It
-is a polite batch job with small delays between companies, meant to run every so
-often and not per user request.
-
-It can also run as one slice of a bigger run. --shard 2 --of 8 processes only the
-companies in slice 2 of 8, which is how it runs as several container tasks at once
-against a rate-limited API, with each task doing a fair share and no company done
-twice. With no shard arguments it does the whole universe, exactly as before.
-
---snapshot-only archives what the APIs returned without writing to the database.
-Writing replaces a company's trial rows, which drops their embeddings, so this is
-how a snapshot gets captured for history without costing a re-embed of everything.
-
-    python ingest.py                    # the whole universe
-    python ingest.py --shard 2 --of 8   # just this slice
-    python ingest.py --snapshot-only    # capture history, touch nothing
+This fills the database with the whole biotech universe. It reads companies.json,
+which build_company_universe.py produces, and for each company it fetches the
+trials and financials from the live APIs, archives what came back and writes the
+parsed rows into the database, so the web app serves fast from the database
+instead of hitting the APIs on every request. It is a polite batch job with small
+delays between companies, meant to run every so often and not per user request.
+It can also run as one slice of a bigger run, --shard 2 --of 8 processing only
+the companies in slice 2 of 8, which is how it runs as several container tasks at
+once against a rate-limited API with each doing a fair share and no company done
+twice. Writing replaces a company's trial rows, so vectors are carried across for
+trials whose summary has not changed and embed_trials.py picks up the rest;
+--snapshot-only archives what the APIs returned without writing at all, which is
+how history gets captured without costing a re-embed. Run it with python
+ingest.py, python ingest.py --shard 2 --of 8 for one slice, or python ingest.py
+--snapshot-only to touch nothing.
 """
 
 import argparse

@@ -1,20 +1,15 @@
 """
-This script builds the company list instead of me typing one by hand.
-
-It used to start from a dozen SIC codes and keep whatever they returned. That
-drew the universe's edge with a list of filing codes, which is not where the
-edge actually is: Alcon files under 3851, "Ophthalmic Goods", and runs 579
-studies, so no length of code list was ever going to reach it without also
-reaching whatever else 3851 contains.
-
-So the candidate pool is now every SEC filer with a ticker, about eight
-thousand, and the two questions asked of each are the ones that actually matter:
-does it lead clinical trials, and does it file real financials. SIC is still
+This builds the company list instead of anyone typing one by hand. It used to
+start from a dozen SIC codes and keep whatever they returned, which drew the
+universe's edge with a list of filing codes and not where the edge actually is:
+Alcon files under 3851, "Ophthalmic Goods", and runs 579 studies, so no length
+of code list was going to reach it without also reaching whatever else 3851
+contains. The candidate pool is now every SEC filer with a ticker, about eight
+thousand, and the two questions asked of each are the ones that matter, whether
+it leads clinical trials and whether it files real financials. SIC is still
 fetched, but it labels the sector and corroborates a doubtful name rather than
-deciding membership.
-
-Run it with python build_company_universe.py, and set SEC_USER_AGENT to your own
-email first.
+deciding membership. Run it with python build_company_universe.py, and set
+SEC_USER_AGENT to your own email first.
 """
 
 import os

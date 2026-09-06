@@ -1,19 +1,14 @@
 """
-This script fills in the financial history for companies that only have their
-latest figure stored. Run it with python backfill_financials.py.
-
-It exists so that adding history does not mean re-running ingest.py. A full
-ingest re-fetches every company's trials as well, which is the expensive half
-and has nothing to do with this change; the figures come from a single
-companyfacts response per company that we were already making and reading only
-the newest value out of.
-
-Replacement happens per company, inside the loop. A company that fails keeps
-the rows it had rather than being emptied and left that way, and an interrupted
-run leaves every company it has reached already complete.
-
-It resumes: by default a company that already has more than one year stored is
-skipped, so re-running costs only what is left.
+This fills in the financial history for companies that have only their latest
+figure stored. It exists so that adding history does not mean re-running
+ingest.py, which re-fetches every company's trials as well, the expensive half
+and nothing to do with this change; the figures come from a single companyfacts
+response per company that we were already making and reading only the newest
+value out of. Replacement happens per company inside the loop, so a company that
+fails keeps the rows it had rather than being emptied and left that way, and an
+interrupted run leaves every company it reached already complete. It resumes: a
+company with more than one year stored is skipped by default, so re-running
+costs only what is left. Run it with python backfill_financials.py.
 """
 
 import argparse

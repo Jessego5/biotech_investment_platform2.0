@@ -1,24 +1,18 @@
 """
-Loads the FDA Orange Book: approved drug products, the patents listed against
-them, and their regulatory exclusivity.
-
-The join is the point. Products, patents and exclusivity all key on the
-application number, so they meet on an exact integer and no name matching is
-involved. Name matching enters once, at the edge: deciding which of our
-companies an applicant belongs to. That is the same judgement the trial sponsor
-matching makes, so it uses the same rule rather than a second one.
-
-What this can and cannot answer, because it decides how the result must be read:
-
-- it covers approved SMALL MOLECULES. Biologics are licensed under a BLA and
-  appear in the Purple Book, not here, so Regeneron and Moderna have no row
-- a company with no approved product has no row either, which is most of a
-  universe of clinical-stage biotech
-- neither absence means the company lacks patents. Reported as a boolean this
-  would read as "no moat" for 85% of the universe, nearly all of it wrong
-
-    python ingest_orange_book.py                 # download and load
-    python ingest_orange_book.py --from-dir DIR  # use files already unzipped
+This loads the FDA Orange Book: approved drug products, the patents listed
+against them, and their regulatory exclusivity. The join is the point, since
+products, patents and exclusivity all key on the application number and meet on
+an exact integer with no name matching involved. Name matching enters once, at
+the edge, deciding which of our companies an applicant belongs to, and that is
+the same judgement the trial sponsor matching makes so it uses the same rule
+rather than a second one. What it covers decides how the result must be read: it
+holds approved small molecules only, biologics being licensed under a BLA and
+appearing in the Purple Book instead, so Regeneron and Moderna have no row here;
+a company with no approved product has no row either, which is most of a universe
+of clinical-stage biotech; and neither absence means the company lacks patents,
+which reported as a boolean would read as no moat for 85% of the universe,
+nearly all of it wrong. Run it with python ingest_orange_book.py, or --from-dir
+DIR to use files already unzipped.
 """
 
 import argparse

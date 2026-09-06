@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * This is the search over everything the corpus holds: companies, approved
+ * products, annual reports and trials. It runs one query per search and filters
+ * by kind in the browser rather than refetching, because asking the API for a
+ * single kind returns a count for that kind alone, which blanked the other
+ * chips out from under the reader. Matching is a plain substring and not the
+ * semantic search the chat uses, since this is for finding a thing you can name
+ * and a fuzzy match would put the wrong company at the top of a list someone is
+ * about to click. Rendered by app/browse/page.tsx, which passes the corpus line
+ * it reads from /stats.
+ */
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, FileText, FlaskConical, Pill, type LucideIcon } from "lucide-react";

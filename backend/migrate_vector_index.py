@@ -1,33 +1,16 @@
 """
-Give the vector search an index. Until now every semantic lookup read the whole
-table.
-
-334,624 passages at 1,536 dimensions is 2.2 GB of vectors, and a question
-scoped to no company had to compute cosine distance against every one of them
-before it could answer. That was survivable on a laptop with the whole table in
-page cache and is the single largest cost of running this anywhere else: it
-sets the instance size, and it sets how long a reader waits.
-
-HNSW rather than IVFFlat. IVFFlat has to be built against data that is already
-representative — build it early, or ingest another year of filings, and recall
-falls away with nothing to show that it has. HNSW costs more to build and more
-on disk, and is the one that keeps working while the corpus grows, which this
-corpus does.
-
-vector_cosine_ops, because search_filings orders by <=>. An index built for a
-different operator is an index the planner ignores, which reads exactly like
-the index not helping — so the two are written down next to each other below.
-
-What this does NOT speed up: a search already narrowed to one company. That
-filter leaves a few hundred passages, the planner scans them, and it is right
-to — the index earns its place on the corpus-wide questions that had nowhere to
-start from.
-
-Safe to re-run: each index is created only if it is missing, and nothing here
-drops or rewrites data.
-
-    python migrate_vector_index.py --dry-run
-    python migrate_vector_index.py
+This builds the HNSW indexes the vector search needs. Without them every semantic
+lookup scans all 334,624 vectors, 2.2 GB of them, which measured 4,763 ms against
+2 ms with the index, and that difference is what decides the database instance
+size. It uses HNSW rather than IVFFlat because IVFFlat has to be built against
+data that is already representative and loses recall silently as the corpus
+grows, and vector_cosine_ops because the query orders by <=>, an index built for
+another operator being one the planner ignores while looking exactly like an
+index that did not help. It does not speed up a search already scoped to one
+company, which leaves a few hundred passages the planner is right to scan. Safe
+to re-run, since an index is built only if it is missing. Run it with python
+migrate_vector_index.py, or --dry-run first for the sizes, and --build-memory on
+a machine with room to spare.
 """
 
 import argparse

@@ -1,30 +1,21 @@
 """
-Add the lexical half of hybrid retrieval: a full-text index over filing passages.
-
-The dense index is good at subject matter and bad at names. Asked what Bionano
-Genomics says about its internal controls, the embedding finds passages about
-internal controls — from whichever filers happen to sit closest in the vector
-space — because "Bionano Genomics" is a handful of tokens in three thousand
-characters of boilerplate and barely moves the vector. The retrieval eval shows
-this directly: naming the company in the question does not reliably get you the
-company's filing back.
-
-A lexical index has the opposite failure. It cannot tell that "loss of
-exclusivity" and "patent cliff" are the same subject, but it matches a company
-name, a drug name, an NCT id or an accession exactly. Fusing the two rankings
-covers both, and this corpus is unusually full of the identifiers that dense
-retrieval blurs.
-
-This is an EXPRESSION index rather than a stored tsvector column on purpose.
-A generated column would rewrite all 3.6 GB of filing_chunks and roughly double
-the table on disk; the expression index adds an index and leaves the table
-alone. The cost is that every query has to spell the expression the same way —
-to_tsvector('english', text) — or the planner will not use it.
-
-Safe to re-run: the index is created only if it is missing, and nothing here
-drops or rewrites data.
-
-    python migrate_lexical_index.py
+This adds the lexical half of hybrid retrieval, a full-text index over filing
+passages. The dense index is good at subject matter and bad at names: asked what
+Bionano Genomics says about its internal controls, the embedding finds passages
+about internal controls from whichever filers happen to sit closest in the vector
+space, because "Bionano Genomics" is a handful of tokens in three thousand
+characters of boilerplate and barely moves the vector, and the retrieval eval
+shows naming the company does not reliably get the company's filing back. A
+lexical index has the opposite failure, unable to tell that "loss of exclusivity"
+and "patent cliff" are the same subject but matching a company name, a drug name,
+an NCT id or an accession exactly, so fusing the two rankings covers both, and
+this corpus is unusually full of the identifiers dense retrieval blurs. It is an
+expression index rather than a stored tsvector column on purpose, since a
+generated column would rewrite all 3.6 GB of filing_chunks and roughly double the
+table on disk, the cost being that every query has to spell the expression the
+same way, to_tsvector('english', text), or the planner will not use it. Safe to
+re-run, since the index is created only if it is missing. Run it with python
+migrate_lexical_index.py.
 """
 
 import os

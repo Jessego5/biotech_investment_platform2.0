@@ -1,17 +1,15 @@
 """
-This script reads the narrative half of each company's annual report and embeds
-it, so the chat can answer "what does this company say are its biggest risks?"
-rather than only counting things. It fetches the latest 10-K or 20-F, pulls out
-the Risk Factors and Management's Discussion sections, splits them into chunks
-and embeds each one. Run it after ingest.py, with python embed_filings.py.
-
-It records what it extracted, not just what it stored. A filing that yields no
-risk factors is a normal outcome, and one that looks identical to a filing that
-was never read, so every attempt writes a Filing row saying which sections were
-found. Without that a gap in the coverage reads as a fact about the company.
-
-It resumes: a company whose filing is already stored is skipped, so an
-interrupted run picks up where it left off and costs nothing to re-run.
+This reads the narrative half of each company's annual report and embeds it, so
+the chat can answer what a company says its biggest risks are rather than only
+counting things. It fetches the latest 10-K or 20-F, pulls out the Risk Factors
+and Management's Discussion sections, splits them into chunks and embeds each
+one. It records what it extracted and not just what it stored, because a filing
+that yields no risk factors is a normal outcome and looks identical to a filing
+that was never read, so every attempt writes a Filing row saying which sections
+were found; without that a gap in the coverage reads as a fact about the
+company. It resumes, skipping a company whose filing is already stored, so an
+interrupted run picks up where it left off and costs nothing to re-run. Run it
+after ingest.py, with python embed_filings.py.
 """
 
 import argparse

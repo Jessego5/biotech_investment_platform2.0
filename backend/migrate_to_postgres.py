@@ -1,26 +1,20 @@
 """
-Copies the tables that are correct and expensive to rebuild from the local
-SQLite database into Postgres.
-
-Not everything should move. companies, trials and financials are deliberately
-NOT copied: the SQLite copy holds a universe of 746 against the 787 now sourced,
-and it still carries the misattributions the sponsor rule used to allow — 65
-Merck KGaA trials filed under Merck & Co, 430 Nova Scotia and university studies
-filed under a semiconductor company. Those are re-fetched rather than carried.
-
-What is copied is the work that would cost hours or money to reproduce:
-
-- registry_trials, 112,812 studies, about 113 API pages
-- filings and filing_chunks, 71,872 chunks that were paid for once as embeddings
-- aliases, 51,400 rows from a multi-hour crawl over ten years of Exhibit 21
-
-Embeddings travel through the ORM rather than as raw bytes on purpose. SQLite
-stores a vector as float32 bytes and Postgres as a real vector column, and the
-Embedding column type converts in both directions, so reading and writing
-through the models is what makes the two representations agree.
-
-    DATABASE_URL=postgresql+psycopg://... python migrate_to_postgres.py
-    ... --dry-run        # report what would move
+This copies the tables that are correct and expensive to rebuild from the local
+SQLite database into Postgres. Not everything should move: companies, trials and
+financials are deliberately not copied, because the SQLite copy holds a universe
+of 746 against the 787 now sourced and still carries the misattributions the
+sponsor rule used to allow, 65 Merck KGaA trials filed under Merck & Co and 430
+Nova Scotia and university studies filed under a semiconductor company, so those
+are re-fetched rather than carried. What is copied is the work that would cost
+hours or money to reproduce: registry_trials at 112,812 studies and about 113 API
+pages, filings and filing_chunks at 71,872 chunks that were paid for once as
+embeddings, and aliases at 51,400 rows from a multi-hour crawl over ten years of
+Exhibit 21. Embeddings travel through the ORM rather than as raw bytes on
+purpose, since SQLite stores a vector as float32 bytes and Postgres as a real
+vector column and the Embedding column type converts in both directions, so
+reading and writing through the models is what makes the two representations
+agree. Run it with DATABASE_URL=postgresql+psycopg://... python
+migrate_to_postgres.py, or --dry-run to report what would move.
 """
 
 import argparse

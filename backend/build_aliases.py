@@ -1,34 +1,23 @@
 """
-Builds the alias table: every other name one of our companies is known by.
-
-Corporate identity is the join that the FDA data needs and cannot supply. An
-approved drug is held by "Janssen Pharmaceuticals" or "Pharmacyclics LLC", not
-by Johnson & Johnson or AbbVie, and no spelling rule reaches across that gap
-because the names have nothing in common. Matching only on exact identity left
-45% of listed patents attached to nobody.
-
-Exhibit 21 to the 10-K is the answer, and it is a source we already use.
-"Subsidiaries of the Registrant" is the company's own statement of what it owns,
-filed annually, and it names exactly the entities the FDA files are written
-against. Johnson & Johnson lists 840 of them including Janssen and Actelion;
-AbbVie lists 33 including Pharmacyclics and Allergan.
-
-Two things were tried first and are worth recording as rejected:
-
-- GLEIF, the global LEI register, publishes real parent/child relationships and
-  resolves "Janssen Pharmaceuticals, Inc." to "Johnson & Johnson" correctly. On
-  the applicants we actually need it recovered 2 of 40, because the FDA writes
-  "TAKEDA PHARMACEUTICALS USA INC" where GLEIF holds "Takeda Pharmaceuticals
-  U.S.A., Inc.", and several entities that do have an LEI report no parent.
-- a looser name rule, which is what admitted Tesla and Nova Scotia Health
-  Authority elsewhere in this project.
-
-The exhibit is found by its EDGAR document TYPE and never by filename. Pfizer
-files it as "pfe-exh21x12312025x10k.htm", so a filename pattern silently reports
-that Pfizer does not file one.
-
-    python build_aliases.py              # every company in the universe
-    python build_aliases.py --limit 20   # a few, to try it out
+This builds the alias table, every other name one of our companies is known by.
+Corporate identity is the join the FDA data needs and cannot supply, because an
+approved drug is held by "Janssen Pharmaceuticals" or "Pharmacyclics LLC" and
+not by Johnson & Johnson or AbbVie, and no spelling rule reaches across that gap
+when the names have nothing in common; matching on exact identity alone left 45%
+of listed patents attached to nobody. Exhibit 21 to the 10-K is the answer and is
+a source we already use, being the company's own annual statement of what it
+owns, named against exactly the entities the FDA files are written for: Johnson
+& Johnson lists 840 including Janssen and Actelion, AbbVie lists 33 including
+Pharmacyclics and Allergan. Two approaches were tried first and rejected. GLEIF,
+the global LEI register, resolves "Janssen Pharmaceuticals, Inc." correctly but
+recovered only 2 of the 40 applicants we actually need, because the FDA writes
+"TAKEDA PHARMACEUTICALS USA INC" where GLEIF holds "Takeda Pharmaceuticals
+U.S.A., Inc.", and several entities with an LEI report no parent at all; a
+looser name rule is what admitted Tesla and Nova Scotia Health Authority
+elsewhere in this project. The exhibit is found by its EDGAR document type and
+never by filename, since Pfizer files it as "pfe-exh21x12312025x10k.htm" and a
+filename pattern silently reports that Pfizer does not file one. Run it with
+python build_aliases.py, or --limit 20 to try it on a few.
 """
 
 import argparse

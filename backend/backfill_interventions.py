@@ -1,32 +1,20 @@
 """
-Recovers what each trial is testing from text we already hold.
-
-The registry states interventions as a structured list, and the ingest has
-always read it — but only to fold into the blob we embed, after which the
-names were gone. That left the candidate a company is developing recorded
-nowhere: a programme has no row, only the trials testing it, and the trials
-did not say what they tested except inside a title.
-
-This is a migration rather than a re-ingest for the same reason
-migrate_trial_fields.py was. Re-ingesting replaces a company's trial rows and
-drops their embeddings, so recovering a field that is already sitting in the
-stored summary would cost a re-embed of every trial to learn what we can read
-locally.
-
-Two things cannot be recovered and are left null rather than guessed:
-
-  - the summary is capped at 2,000 characters, so a trial with a long brief
-    summary may have had its interventions cut off before they were stored.
-  - the names were joined with ", " and a registry name may itself contain a
-    comma, so a split cannot always tell one name from two. Where a recovered
-    name looks split mid-phrase there is no way to know, and the value is kept
-    as read rather than repaired into something that was never stated.
-
-A null here means "we do not know what this trial tested", which is a
-different statement from "it tested nothing".
-
-    python backfill_interventions.py            # recover and write
-    python backfill_interventions.py --dry-run  # report what it would do
+This recovers what each trial is testing from text we already hold. The registry
+states interventions as a structured list and the ingest has always read it, but
+only to fold into the blob we embed, after which the names were gone; that left
+the candidate a company is developing recorded nowhere, since a programme has no
+row of its own and the trials did not say what they tested except inside a
+title. It is a migration rather than a re-ingest for the same reason
+migrate_trial_fields.py was: re-ingesting replaces a company's trial rows and
+drops their embeddings, so recovering a field already sitting in the stored
+summary would cost a re-embed of every trial to learn what we can read locally.
+Two things cannot be recovered and are left null rather than guessed. The
+summary is capped at 2,000 characters, so a long brief summary may have had its
+interventions cut off before they were stored, and the names were joined with
+", " while a registry name may itself contain a comma, so a split cannot always
+tell one name from two. A null here means we do not know what this trial tested,
+which is a different statement from it having tested nothing. Run it with python
+backfill_interventions.py, or --dry-run to report what it would do.
 """
 import argparse
 import re

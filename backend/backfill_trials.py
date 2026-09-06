@@ -1,25 +1,21 @@
 """
-This script finds the trials a company runs under a name the sponsor search
-never asks for. Run it with python backfill_trials.py.
-
-ingest.py searches ClinicalTrials.gov for one name per company — the filing
-name, cleaned up — and keeps the studies whose lead sponsor is that company.
-That misses a whole class: Autolus Therapeutics plc runs its studies as
-"Autolus Limited", and a sponsor search for "Autolus Therapeutics" returns
-nothing at all, so the matching rules never get to see them. The company then
-shows an empty pipeline, which reads as a fact about the company.
-
-We already hold the answer. registry_trials has 112,812 industry-sponsored
-studies with their sponsor names, so the names a company actually files under
-can be looked up locally rather than guessed at. This script asks that table
-which sponsors resolve to a company, then fetches those sponsors from the
-registry so the trials arrive whole — with the title and summary the semantic
-search needs, which registry_trials does not carry.
-
-It uses the same matching rules as everything else, and no looser ones.
-Attributing a competitor's Phase 3 to the wrong company is the failure those
-rules exist to prevent, and a script that exists to find more trials is exactly
-where that discipline is easiest to lose.
+This finds the trials a company runs under a name the sponsor search never asks
+for. ingest.py searches ClinicalTrials.gov for one name per company, the filing
+name cleaned up, and keeps the studies whose lead sponsor is that company, which
+misses a whole class: Autolus Therapeutics plc runs its studies as "Autolus
+Limited", and a sponsor search for "Autolus Therapeutics" returns nothing at
+all, so the matching rules never get to see them and the company shows an empty
+pipeline that reads as a fact about the company. We already hold the answer,
+because registry_trials has 112,812 industry-sponsored studies with their
+sponsor names, so the names a company actually files under can be looked up
+locally rather than guessed at. This asks that table which sponsors resolve to a
+company, then fetches those sponsors from the registry so the trials arrive
+whole, with the title and summary the semantic search needs and registry_trials
+does not carry. It uses the same matching rules as everything else and no looser
+ones, since attributing a competitor's Phase 3 to the wrong company is the
+failure those rules exist to prevent and a script that exists to find more
+trials is where that discipline is easiest to lose. Run it with python
+backfill_trials.py.
 """
 
 import argparse

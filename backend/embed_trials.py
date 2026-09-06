@@ -1,15 +1,14 @@
 """
-This file embeds each trial's text so we can search it by meaning. It reads the
-trial summary, gets an embedding from OpenAI, and stores the vector back on the
-trial. Run it after ingestion, and run it again if the trial text changes. It is
-cheap, just a few cents for the whole universe, and it needs OPENAI_API_KEY from
-backend/.env or the environment.
-
-It takes the same slice arguments ingest.py does, so a scheduled run can embed
-what its own shard just wrote rather than every shard racing for the same rows.
-
-    python embed_trials.py                    # everything still missing a vector
-    python embed_trials.py --shard 2 --of 8   # just this slice
+This embeds each trial's text so the trials can be searched by meaning. It reads
+the trial summary, gets an embedding from OpenAI and stores the vector back on
+the trial, and it is cheap, a few cents for the whole universe. It takes the same
+slice arguments ingest.py does, so a scheduled run embeds what its own shard
+just wrote rather than every shard racing for the same rows, and it only touches
+trials that have text and no vector yet, which is what makes an interrupted run
+safe to repeat. Run it after ingestion, and again if the trial text changes, with
+python embed_trials.py or python embed_trials.py --shard 2 --of 8 for one slice.
+It needs OPENAI_API_KEY from backend/.env or the environment, and exits non-zero
+if there is work to do and no key.
 """
 
 import argparse

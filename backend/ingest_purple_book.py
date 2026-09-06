@@ -1,29 +1,20 @@
 """
-Loads the FDA Purple Book: licensed biologic products and their regulatory
-exclusivity.
-
-This exists because the Orange Book's silence about biologics was being read as
-a finding about a company's protection. Regeneron holds 22 licensed products and
-the Orange Book has a row for none of them, so it came out looking the same as a
-company that has never had anything approved. 27 companies in the universe move
-out of that state on this source alone.
-
-What is here and what is not:
-
-- exclusivity, yes. Orphan exclusivity is populated for 570 of the 2,230
-  products and is seven years of complete market protection, so it is real
-  protection on its own. Reference-product and interchangeability exclusivity
-  are present but sparse.
-- patents, no. Biologic patent disputes run through the confidential BPCIA
-  exchange rather than a public listing, so no equivalent of the Orange Book's
-  patent file exists. A biologic with no exclusivity date is not unprotected;
-  it is unlisted, and the two must not be reported the same way.
-
-The published file is a monthly report in two parts: the changes for that month
-first, then the whole database underneath. It is the second part this reads.
-
-    python ingest_purple_book.py                  # download the current month
-    python ingest_purple_book.py --file FILE.csv  # use a copy already saved
+This loads the FDA Purple Book: licensed biologic products and their regulatory
+exclusivity. It exists because the Orange Book's silence about biologics was
+being read as a finding about a company's protection, Regeneron holding 22
+licensed products with an Orange Book row for none of them and so looking
+identical to a company that has never had anything approved; 27 companies in the
+universe move out of that state on this source alone. Exclusivity is here, with
+orphan exclusivity populated for 570 of the 2,230 products and worth seven years
+of complete market protection, so it is real protection on its own, while
+reference-product and interchangeability exclusivity are present but sparse.
+Patents are not here, because biologic patent disputes run through the
+confidential BPCIA exchange rather than a public listing, so a biologic with no
+exclusivity date is unlisted rather than unprotected and the two must not be
+reported the same way. The published file is a monthly report in two parts, the
+changes for that month first and the whole database underneath, and it is the
+second part this reads. Run it with python ingest_purple_book.py, or --file
+FILE.csv to use a copy already saved.
 """
 
 import argparse

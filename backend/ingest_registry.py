@@ -1,19 +1,15 @@
 """
-This script loads the wider trial registry: every industry-sponsored
-interventional study, not only those run by companies in our universe. It is what
-lets the app answer who else is developing for an indication, and when their
-readouts are due, which the company-by-company view cannot see at all.
-
-It writes to registry_trials and never touches trials. That table holds studies
-led by a tracked company and every pipeline count and grounded signal is computed
-from it, so a competitor's Phase 3 landing there would quietly become part of
-somebody else's pipeline.
-
-    python ingest_registry.py            # the whole filtered registry
-    python ingest_registry.py --limit 5  # a few pages, to try it out
-
-About 113 pages of 1,000 studies. Re-running updates what changed and adds what
-is new, so an interrupted run costs only the pages it had not reached.
+This loads the wider trial registry, every industry-sponsored interventional
+study and not only those run by companies in our universe. It is what lets the
+app answer who else is developing for an indication and when their readouts are
+due, which the company-by-company view cannot see at all. It writes to
+registry_trials and never touches trials, because that table holds studies led by
+a tracked company and every pipeline count and grounded signal is computed from
+it, so a competitor's Phase 3 landing there would quietly become part of somebody
+else's pipeline. It is about 113 pages of 1,000 studies, and re-running updates
+what changed and adds what is new, so an interrupted run costs only the pages it
+had not reached. Run it with python ingest_registry.py, or --limit 5 to try it on
+a few pages.
 """
 
 import argparse
