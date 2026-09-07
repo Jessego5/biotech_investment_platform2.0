@@ -999,14 +999,40 @@ def fetch_company_facts(cik):
 
 def _entries_for(facts, tag):
     """
-    Every reported entry for one tag, across all its units. Tags are us-gaap
-    unless they say otherwise, since share counts live in the dei taxonomy.
+    Every reported entry for one tag, each carrying the unit it was reported in.
+    Tags are us-gaap unless they say otherwise, since share counts live in the
+    dei taxonomy.
+
+    XBRL keys facts by unit, and the unit is part of the fact: Novo Nordisk
+    reports cash in DKK and Takeda in JPY, and flattening the unit key away left
+    26,464,000,000 and 385,113,000,000 sitting in the same column as Amgen's
+    dollars, to be filtered against a dollar threshold and printed with a dollar
+    sign. The number is only true with its unit attached, so it travels with it
+    from here to the column and on to the screen.
+
+    "shares" and "pure" appear here too. This keeps whatever XBRL said rather
+    than assuming currency, so a share count is never mistaken for money.
     """
     taxonomy, _, name = tag.rpartition(":")
     concept = facts.get("facts", {}).get(taxonomy or "us-gaap", {}).get(name)
     if not concept:
         return []
-    return [e for entries in concept.get("units", {}).values() for e in entries]
+    return [dict(e, unit=unit)
+            for unit, entries in concept.get("units", {}).items()
+            for e in entries]
+
+
+def _pick_key(entry, end):
+    """
+    Which of two entries for the same figure wins.
+
+    Newest period first, then the most recently filed version of that period,
+    since a later filing restating an earlier year is the current view of it.
+    Dollars break a remaining tie: a company that reports the same period in two
+    units has one that compares against the rest of this universe and one that
+    does not.
+    """
+    return (end, entry.get("filed") or "", entry.get("unit") == "USD")
 
 
 def _was_public_by(entry, as_of):
@@ -1058,7 +1084,7 @@ def _latest_annual(facts, tags, as_of=None):
                 continue
             # newest period wins, and where the same period was reported more
             # than once the most recently filed version is the current one
-            key = (end, e.get("filed") or "")
+            key = _pick_key(e, end)
             if best is None or key > best["_key"]:
                 best = {"value": e["val"],
                         # taken from the period itself, not from the entry's
@@ -1067,6 +1093,7 @@ def _latest_annual(facts, tags, as_of=None):
                         # all carrying the filing's year
                         "fiscal_year": int(end[:4]),
                         "fiscal_period": "FY", "period_end": end,
+                        "unit": e.get("unit"),
                         "tag": tag, "_key": key}
     if best is not None:
         del best["_key"]
@@ -1100,10 +1127,11 @@ def _latest_balance(facts, tags, as_of=None):
             # newest balance date wins; where the same date was reported more
             # than once (a restatement, or the prior year shown for comparison
             # in a later filing) the most recently filed one is the current view
-            key = (end, e.get("filed") or "")
+            key = _pick_key(e, end)
             if best is None or key > best["_key"]:
                 best = {"value": e["val"], "fiscal_year": e.get("fy"),
                         "fiscal_period": e.get("fp"), "period_end": end,
+                        "unit": e.get("unit"),
                         "tag": tag, "_key": key}
     if best is not None:
         # sorting detail, not something callers should see
@@ -1139,10 +1167,11 @@ def _annual_series(facts, tags, as_of=None, years=HISTORY_YEARS):
             if not _covers_a_year(start, end):
                 continue
             year = int(end[:4])
-            key = (end, e.get("filed") or "")
+            key = _pick_key(e, end)
             if year not in best or key > best[year]["_key"]:
                 best[year] = {"value": e["val"], "fiscal_year": year,
                               "fiscal_period": "FY", "period_end": end,
+                              "unit": e.get("unit"),
                               "tag": tag, "_key": key}
     out = [best[y] for y in sorted(best, reverse=True)[:years]]
     for row in out:
@@ -1175,10 +1204,11 @@ def _balance_series(facts, tags, as_of=None, years=HISTORY_YEARS):
             if not end:
                 continue
             year = int(end[:4])
-            key = (end, e.get("filed") or "")
+            key = _pick_key(e, end)
             if year not in best or key > best[year]["_key"]:
                 best[year] = {"value": e["val"], "fiscal_year": year,
                               "fiscal_period": "FY", "period_end": end,
+                              "unit": e.get("unit"),
                               "tag": tag, "_key": key}
     out = [best[y] for y in sorted(best, reverse=True)[:years]]
     for row in out:

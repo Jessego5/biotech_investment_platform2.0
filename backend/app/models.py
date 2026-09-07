@@ -203,6 +203,13 @@ class Financial(Base):
     # say which it is showing instead of labelling both as a fiscal year.
     fiscal_period = Column(String)   # "FY", "Q1", "Q2", "Q3"
     period_end = Column(String)      # ISO date, e.g. "2026-06-30"
+    # what the value is counted in, exactly as XBRL reported it: "USD", "DKK",
+    # "JPY", or "shares" for a share count. A figure without this is not a
+    # figure, it is a number: Novo reports cash in kroner and Takeda in yen, and
+    # 26,464,000,000 next to Amgen's dollars is wrong by a factor nobody can see.
+    # Null means the row predates this column and its unit is unknown, which is
+    # a different claim from dollars and is filtered as such.
+    unit = Column(String)
     fetched_at = Column(DateTime, default=_now)
 
     company = relationship("Company", back_populates="financials")

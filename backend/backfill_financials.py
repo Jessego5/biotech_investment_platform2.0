@@ -78,6 +78,7 @@ def _rows_for(financials):
                 metric=metric, value=e["value"], fiscal_year=e["fiscal_year"],
                 fiscal_period=e.get("fiscal_period"),
                 period_end=e.get("period_end"),
+                unit=e.get("unit"),
             ))
     return rows
 

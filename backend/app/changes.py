@@ -12,6 +12,7 @@ for the /changes routes.
 
 from .data_sources import parse_trials
 from .raw_store import get_store, raw_key, snapshot_coverage, manifest_key
+from .units import money
 
 # statuses worth calling out when a trial arrives in one, since they are the
 # outcomes a reader is watching for rather than routine progress
@@ -138,13 +139,30 @@ def financial_changes(before, after):
         old_value, new_value = was.get("value"), now.get("value")
         if old_value in (None, 0) or new_value is None:
             continue
+        # a company that changed reporting currency between two snapshots has
+        # not changed by the percentage between the two numbers, and calling
+        # that an event would present a relabelling as news. Both null is the
+        # ordinary case for snapshots taken before the unit was recorded.
+        if was.get("unit") != now.get("unit"):
+            changes.append({
+                "kind": "unit_changed", "metric": metric,
+                "detail": (f"reported in {was.get('unit') or 'an unrecorded unit'} "
+                           f"({was.get('period_end')}) and in "
+                           f"{now.get('unit') or 'an unrecorded unit'} "
+                           f"({now.get('period_end')}), so the two figures are "
+                           f"not comparable and no change is computed"),
+                "change": None,
+            })
+            continue
         delta = (new_value - old_value) / abs(old_value)
         if abs(delta) < MATERIAL_CHANGE:
             continue
         changes.append({
             "kind": "figure_changed", "metric": metric,
-            "detail": (f"{old_value:,.0f} ({was.get('period_end')}) -> "
-                       f"{new_value:,.0f} ({now.get('period_end')})"),
+            "detail": (f"{money(old_value, was.get('unit'))} "
+                       f"({was.get('period_end')}) -> "
+                       f"{money(new_value, now.get('unit'))} "
+                       f"({now.get('period_end')})"),
             "change": delta,
         })
     return changes

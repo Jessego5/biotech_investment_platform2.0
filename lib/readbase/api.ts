@@ -30,7 +30,10 @@ export function apiHeaders(): Record<string, string> {
 
 /** One document behind a retrieval, as the service names it. */
 export type CitedDoc = {
-  kind: "filing" | "trial";
+  /** "dataset" is a file rather than a record: a lookup that read across every
+   *  row of one names the edition it read, because there is no single page to
+   *  point at. */
+  kind: "filing" | "trial" | "dataset";
   ticker?: string | null;
   label?: string | null;
   detail?: string | null;
@@ -188,6 +191,103 @@ export function sectionFromChunk(chunk: ChunkResponse): {
       })),
     },
   };
+}
+
+/**
+ * A computed block as a section the panel can open.
+ *
+ * A lookup that ranked or filtered rows has no document behind it: no stored
+ * chunk to step through and no filing to leave for. What it does have is the
+ * exact rows the model was handed, and those were in the response and nowhere
+ * on the screen, which left the computed figure as the one claim a reader could
+ * not check. They open as a table, so there is no stepper, no outbound record,
+ * and a footer saying the rows were computed rather than cut from a document.
+ */
+export function sectionFromRows(block: EvidenceBlock): {
+  section: PassageSection;
+  index: number;
+} {
+  const datasets = (block.documents ?? []).filter((d) => d.kind === "dataset");
+  const dataset = datasets[0];
+  // a lookup can rest on two files, the figures from one and the pipeline from
+  // the other, and naming one of them would present half the provenance as all
+  // of it
+  const also = datasets.slice(1);
+  return {
+    index: 1,
+    section: {
+      id: `rows-block-${block.n}`,
+      // A dataset is a second check of a different kind. The filing block sends
+      // a reader to the document the passage was cut from; this one sends them
+      // to the file the rows were read out of, which is the furthest back this
+      // claim goes, and says so rather than implying a record that never
+      // existed.
+      original: dataset?.url
+        ? {
+            url: dataset.url,
+            displayUrl: dataset.url.replace(/^https?:\/\/(www\.)?/, ""),
+            fields: [
+              ["Source", dataset.label ?? "FDA Orange Book"],
+              ["File", dataset.detail ?? "data file"],
+              ...also.map(
+                (d) =>
+                  ["Also", [d.label, d.detail].filter(Boolean).join(" · ")] as [
+                    string,
+                    string,
+                  ],
+              ),
+              ["Lookup", block.label],
+            ] as [string, string][],
+            caption:
+              also.length > 0
+                ? "The files these rows came from"
+                : "The file these rows came from",
+            action: `Open ${hostOf(dataset.url)} \u2197`,
+            distinction:
+              "These are not the same thing. The rows above are what the " +
+              "lookup returned and all the model could see. " +
+              (also.length > 0 ? "The files are " : "The file is ") +
+              "the whole published dataset they were read out of, " +
+              "republished on its own schedule. Go there to check the rows " +
+              "against it.",
+          }
+        : undefined,
+      header: [block.source, block.label],
+      total: 1,
+      tabular: true,
+      passages: [
+        {
+          index: 1,
+          characters: `${block.text.length.toLocaleString()} characters`,
+          // "no source document" would contradict the block underneath when
+          // there is a file to name, and naming one where there is none would
+          // be worse
+          provenance: dataset
+            ? `returned by the lookup · read from the ${
+                also.length > 0 ? "files" : "file"
+              } below`
+            : "returned by the lookup · no source document",
+          paragraphs: splitPassage(block.text),
+        },
+      ],
+    },
+  };
+}
+
+/**
+ * The site an outbound link actually opens.
+ *
+ * Every outbound control used to be labelled sec.gov, which was true of a
+ * filing and false of the trial records and data files that also carry one. A
+ * control that names the wrong destination is the one failure this product
+ * cannot afford, so the label is read off the URL rather than assumed.
+ */
+export function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "the source";
+  }
 }
 
 /** Stored text is one blob; paragraph breaks are the only thing added. */

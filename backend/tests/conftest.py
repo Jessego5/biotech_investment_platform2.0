@@ -41,7 +41,7 @@ def db():
 
 def add_company(db, ticker, name, sector=None, trials=(), rd=None, cash=None,
                 fiscal_year=2024, cash_as_of=None, trial_count_total=None,
-                trials_truncated=False):
+                trials_truncated=False, unit="USD"):
     """
     Seed one company. trials is a list of (phase, status) pairs, rd and cash are
     plain numbers, and either can be left off to model a company whose financials
@@ -50,6 +50,11 @@ def add_company(db, ticker, name, sector=None, trials=(), rd=None, cash=None,
     The two metrics are stored with different periods, the way ingestion writes
     them: R&D covers a full year, cash is a balance on a date and usually comes
     from a more recent quarterly filing.
+
+    Figures are dollars unless a unit says otherwise, which is what most of this
+    universe reports in. Pass unit="DKK" or None to model a company that reports
+    in another currency, or one stored before the unit was recorded: neither can
+    be compared against a dollar threshold.
     """
     company = Company(ticker=ticker, name=name, sector=sector,
                       trial_count_total=trial_count_total,
@@ -71,7 +76,7 @@ def add_company(db, ticker, name, sector=None, trials=(), rd=None, cash=None,
             fiscal_period, period_end = periods[metric]
             company.financials.append(Financial(
                 metric=metric, value=value, fiscal_year=fiscal_year,
-                fiscal_period=fiscal_period, period_end=period_end))
+                fiscal_period=fiscal_period, period_end=period_end, unit=unit))
     db.add(company)
     db.commit()
     return company

@@ -9,7 +9,9 @@ wrappers over these functions.
 
 from .models import Company, FINANCIAL_METRICS
 from .data_sources import summarize_pipeline
-from .analysis import build_assessment, annual_burn, available_liquidity
+from .analysis import (build_assessment, annual_burn, available_liquidity,
+                       burn_figure)
+from .units import is_dollars, same_unit
 
 
 def trials_from_db(company):
@@ -43,7 +45,9 @@ def metrics_from_db(company):
     # row the iteration happened to end on, which is a different year for
     # different companies and no error anywhere to say so.
     return {f.metric: {"value": int(f.value), "fiscal_year": f.fiscal_year,
-                       "fiscal_period": f.fiscal_period, "period_end": f.period_end}
+                       "fiscal_period": f.fiscal_period, "period_end": f.period_end,
+                       # the currency travels with the number everywhere it goes
+                       "unit": f.unit}
             for f in sorted(company.financials, key=_period_key)}
 
 
@@ -69,7 +73,8 @@ def history_from_db(company):
             continue
         out.setdefault(f.metric, []).append(
             {"value": int(f.value), "fiscal_year": f.fiscal_year,
-             "fiscal_period": f.fiscal_period, "period_end": f.period_end})
+             "fiscal_period": f.fiscal_period, "period_end": f.period_end,
+             "unit": f.unit})
     return out
 
 
@@ -106,8 +111,9 @@ def derived_figures(fin):
         "liquidity_note": liquidity_note,
         "burn": burn,
         "burn_source": burn_source,
+        # a ratio of one currency to another is not a number of years
         "runway": round(liquidity["value"] / burn, 2)
-        if burn and liquidity else None,
+        if burn and liquidity and same_unit(liquidity, burn_figure(fin)) else None,
         # a company funding itself has no runway to report, which is different
         # from one whose runway we simply couldn't work out
         "cash_generative": bool(burn is None and ocf and ocf["value"] >= 0),
@@ -166,18 +172,38 @@ def _financials_by_ticker(db):
     for f in sorted(db.query(Financial).all(), key=_period_key):
         out.setdefault(f.company_ticker, {})[f.metric] = {
             "value": int(f.value), "fiscal_year": f.fiscal_year,
-            "fiscal_period": f.fiscal_period, "period_end": f.period_end}
+            "fiscal_period": f.fiscal_period, "period_end": f.period_end,
+            "unit": f.unit}
     return out
+
+
+def _money_rank(figure):
+    """
+    Where a figure sorts in a ranking by money.
+
+    Dollars rank against dollars, by value. Anything else, another currency or a
+    unit never recorded, sorts below every dollar figure rather than being
+    interleaved on a number that means something different. Returned as a pair
+    so the comparison never reaches the value of a figure it should not rank.
+    """
+    if figure and is_dollars(figure.get("unit")):
+        return (1, figure["value"])
+    return (0, 0)
 
 
 def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
                     min_active_trials=None, sector=None, min_runway=None,
-                    sort_by=None, limit=None):
+                    sort_by=None, limit=None, not_in_dollars=None):
     """
     The one filter both /companies and the chat use. Reads every company, applies
     the (all optional, AND-ed) filters, returns compact summary dicts.
     sort_by ("rd"/"cash"/"active_trials"/"total_trials"/"runway") sorts descending
     (for "most"/"highest" questions); limit caps the count.
+
+    Pass a list as not_in_dollars to be told which companies a money threshold
+    could not judge because they report in another currency. A caller that shows
+    the result to a reader owes them that number: "four companies match" reads
+    as the whole answer, and silently dropping the kroner filers makes it one.
     """
     # Two aggregate queries rather than two per company.
     #
@@ -208,16 +234,31 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
         # liquidity (cash plus marketable securities, when their dates agree)
         liquidity, _ = available_liquidity(fins)
         runway = runway_exact = None
-        if burn and liquidity:
+        if burn and liquidity and same_unit(liquidity, burn_figure(fins)):
             runway_exact = liquidity["value"] / burn
             runway = round(runway_exact, 2)
 
         # apply each optional filter, skipping this company if it fails one:
-        # skip if its R&D expense is below the minimum
-        if min_rd is not None and (not rd or rd["value"] < min_rd):
-            continue
-        # skip if its cash is below the minimum
-        if min_cash is not None and (not cash or cash["value"] < min_cash):
+        # A threshold is an amount of money, so it can only be applied to a
+        # figure in the same money. Novo reports cash in kroner and Takeda in
+        # yen, and comparing those numbers to a dollar figure admitted them on
+        # the exchange rate rather than on what they hold. A company whose
+        # figure is in another currency, or whose unit was never recorded, is
+        # not filtered in and not filtered out on a guess: it is left out of a
+        # dollar comparison, and the caller is told how many that was.
+        fails = False
+        for threshold, figure in ((min_rd, rd), (min_cash, cash)):
+            if threshold is None:
+                continue
+            if figure and not is_dollars(figure.get("unit")):
+                if not_in_dollars is not None:
+                    not_in_dollars.append(c.ticker)
+                fails = True
+                break
+            if not figure or figure["value"] < threshold:
+                fails = True
+                break
+        if fails:
             continue
         # has_phase3 works both ways: True keeps only late-stage companies,
         # False keeps only those without a Phase 3+ program.
@@ -258,14 +299,27 @@ def query_companies(db, min_rd=None, min_cash=None, has_phase3=None,
 
     # sort by a requested metric (descending) if asked, otherwise by ticker
     keymap = {
-        "rd": lambda r: (r["rd_expense"] or {}).get("value", -1),
-        "cash": lambda r: (r["cash"] or {}).get("value", -1),
+        "rd": lambda r: _money_rank(r["rd_expense"]),
+        "cash": lambda r: _money_rank(r["cash"]),
         "active_trials": lambda r: r["active_trials"],
         "total_trials": lambda r: r["total_trials"],
         "runway": lambda r: r["runway"] if r["runway"] is not None else -1,
     }
     # sort descending by the requested metric, otherwise fall back to ticker order
     if sort_by in keymap:
+        # A ranking by money ranks dollars. Sorting on the raw value put Takeda
+        # at the top of "most cash" on 385,113,000,000 yen, which is about two
+        # and a half billion dollars and roughly a fifth of Amgen's: the number
+        # is bigger and the holding is smaller. Figures in another currency are
+        # not ranked against dollars and not dropped either; they sort to the
+        # end, and the caller is told which they were.
+        if sort_by in ("rd", "cash"):
+            field = "rd_expense" if sort_by == "rd" else "cash"
+            for r in results:
+                figure = r[field]
+                if figure and not is_dollars(figure.get("unit")):
+                    if not_in_dollars is not None:
+                        not_in_dollars.append(r["ticker"])
         results.sort(key=keymap[sort_by], reverse=True)
     else:
         results.sort(key=lambda r: r["ticker"])

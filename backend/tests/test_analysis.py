@@ -84,12 +84,15 @@ def test_termination_threshold_is_strictly_above_forty_percent():
 
 def financials(rd=None, cash=None, fiscal_year=2024, cash_as_of=None,
                operating_cash_flow=None, revenue=None, securities=None,
-               securities_as_of=None, debt=None, debt_as_of=None):
+               securities_as_of=None, debt=None, debt_as_of=None, unit="USD"):
     """
     Build the financials dict that assess_financials expects. The period totals
     (R&D, cash flow, revenue) cover a full year; cash is a balance on a date,
     usually a more recent one. operating_cash_flow is negative while a company is
     spending more than it takes in, which is how SEC reports it.
+
+    Figures are dollars unless told otherwise, since most of this universe files
+    in them. Pass a unit to model a company that reports in another currency.
     """
     out = {"available": True}
     for metric, value in (("rd_expense", rd),
@@ -97,7 +100,7 @@ def financials(rd=None, cash=None, fiscal_year=2024, cash_as_of=None,
                           ("revenue", revenue)):
         if value is not None:
             out[metric] = {"value": value, "fiscal_year": fiscal_year,
-                           "fiscal_period": "FY",
+                           "fiscal_period": "FY", "unit": unit,
                            "period_end": f"{fiscal_year}-12-31"}
     for metric, value, as_of in (("cash", cash, cash_as_of),
                                  ("marketable_securities", securities,
@@ -105,7 +108,7 @@ def financials(rd=None, cash=None, fiscal_year=2024, cash_as_of=None,
                                  ("debt", debt, debt_as_of)):
         if value is not None:
             out[metric] = {"value": value, "fiscal_year": fiscal_year,
-                           "fiscal_period": "Q2",
+                           "fiscal_period": "Q2", "unit": unit,
                            "period_end": as_of or f"{fiscal_year}-12-31"}
     return out
 
@@ -196,11 +199,13 @@ def test_cash_is_not_labelled_as_a_fiscal_year():
 
 
 def test_cash_with_no_recorded_date_falls_back_to_the_fiscal_year():
-    # a row stored before the date was recorded should still read honestly
+    # a row stored before the date was recorded should still read honestly, and
+    # one stored before the currency was recorded says that rather than taking
+    # a dollar sign it was never given
     signal = assess_financials(
         {"available": True, "cash": {"value": 500, "fiscal_year": 2024}})
 
-    assert "Cash: $500 (FY2024)." in " ".join(signal["evidence"])
+    assert "Cash: 500 (unit not recorded) (FY2024)." in " ".join(signal["evidence"])
 
 
 def test_the_runway_note_says_which_two_numbers_it_divided():

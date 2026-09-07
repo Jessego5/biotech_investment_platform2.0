@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { API_BASE } from "@/lib/readbase/api";
 import {
+  currencyName,
   money,
   phaseLabel,
   phaseLevel,
@@ -119,9 +120,16 @@ export async function LiveCompany({ ticker }: { ticker: string }) {
     },
     {
       icon: ChartColumn,
-      n: rd ? money(rd.values[rd.values.length - 1] * 1e9) : "–",
+      n: rd ? rd.last.replace(/^FY\d+\s/, "") : "–",
       label: "Research and development",
-      note: rd ? `FY${rd.years![rd.years!.length - 1]}` : "–",
+      // the currency named, not left as three letters: this tile is the first
+      // figure on the page and often the only one a reader looks at
+      note: rd
+        ? [`FY${rd.years![rd.years!.length - 1]}`,
+           rd.currency && rd.currency !== "USD"
+             ? currencyName(rd.currency)
+             : null].filter(Boolean).join(" · ")
+        : "–",
       source: "SEC XBRL company facts",
       chip: "var(--p3)",
       glyph: "#020887",

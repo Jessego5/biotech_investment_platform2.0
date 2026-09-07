@@ -14,12 +14,12 @@ import type { OriginalRecord } from "@/lib/readbase/passages";
 export function OriginalDocument({ record }: { record?: OriginalRecord }) {
   const source = record
     ? {
-        caption: original.caption,
+        caption: record.caption ?? original.caption,
         url: record.displayUrl,
         href: record.url ?? undefined,
         fields: record.fields,
-        action: original.action,
-        distinction: original.distinction,
+        action: record.action ?? original.action,
+        distinction: record.distinction ?? original.distinction,
       }
     : original;
   return (

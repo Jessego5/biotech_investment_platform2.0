@@ -133,7 +133,13 @@ export function PassagePanel() {
             </span>
           ))}
         </div>
-        {!section.tabular && (
+        {section.tabular ? (
+          // no sequence to step through, and the absence needs a reason: a
+          // lookup that computed its rows produced one table, not passage 1 of n
+          <div className="mt-[11px] font-mono text-[10px] tracking-[0.06em] text-muted-foreground">
+            {passageNote(section)}
+          </div>
+        ) : (
           <Stepper section={section} index={open.index} onSelect={showPassage} />
         )}
       </div>
@@ -152,14 +158,25 @@ export function PassagePanel() {
       <ScrollArea className="min-h-0 flex-1 bg-card">
         <div className="px-[26px] pb-[26px] pt-[22px]">
           {stored ? (
-            current.paragraphs!.map((text, i) => (
-              <p
-                key={i}
-                className="mb-[13px] max-w-[58ch] text-justify text-[14.5px] leading-[1.66] hyphens-auto last:mb-0"
-              >
-                {text}
-              </p>
-            ))
+            current.paragraphs!.map((text, i) =>
+              // rows keep their own line breaks and their own face. Justifying
+              // a table and hyphenating a ticker would be setting data as prose
+              section.tabular ? (
+                <p
+                  key={i}
+                  className="mb-[13px] whitespace-pre-wrap font-mono text-[11.5px] leading-[1.7] last:mb-0"
+                >
+                  {text}
+                </p>
+              ) : (
+                <p
+                  key={i}
+                  className="mb-[13px] max-w-[58ch] text-justify text-[14.5px] leading-[1.66] hyphens-auto last:mb-0"
+                >
+                  {text}
+                </p>
+              ),
+            )
           ) : (
             <p className="max-w-[58ch] text-[14.5px] leading-[1.66]">
               {fetching ? "Reading the passage from the store…" : NOT_STORED}

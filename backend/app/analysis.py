@@ -4,7 +4,12 @@ is worked out from the real numbers and says why it says what it says, so any of
 them can be checked, and a plain language summary can sit on top of the same
 facts later. Imported by main.py, which calls build_assessment for a company's
 page.
+
+Every figure it writes down goes through units.money, because a number here is
+only true with the currency it was reported in attached.
 """
+
+from .units import money, same_unit
 
 
 def assess_pipeline(pipeline):
@@ -75,6 +80,15 @@ def _as_of(entry):
 RUNWAY_NOT_MEANINGFUL = 10
 
 
+def burn_figure(fin):
+    """
+    The figure annual_burn divided by, so a caller can check its unit against
+    the cash it is about to be divided into. A ratio of kroner to dollars is
+    not a number of years.
+    """
+    return fin.get("operating_cash_flow") or fin.get("rd_expense")
+
+
 def available_liquidity(fin):
     """
     What a company actually has to spend. Returns (liquidity, note), the note
@@ -94,18 +108,28 @@ def available_liquidity(fin):
     if not securities:
         return cash, None
 
+    # and only the same currency. A company reporting cash in one unit and
+    # securities in another is not a company with a bigger balance, it is two
+    # numbers that cannot be added
+    if not same_unit(cash, securities):
+        return cash, (
+            f"Marketable securities of {money(securities['value'], securities.get('unit'))} "
+            f"are reported in a different unit from the cash figure, so they "
+            f"are left out rather than added to it.")
+
     # only the same balance date can be added together
     if securities.get("period_end") != cash.get("period_end"):
         return cash, (
-            f"Marketable securities of ${securities['value']:,} were last "
+            f"Marketable securities of {money(securities['value'], securities.get('unit'))} were last "
             f"reported as of {securities['period_end']}, which is a different "
             f"date from the cash figure, so they are left out rather than added "
             f"to a balance from another period.")
 
     total = cash["value"] + securities["value"]
     return ({**cash, "value": total},
-            f"Liquidity: ${total:,} (cash plus marketable securities of "
-            f"${securities['value']:,}, both as of {cash['period_end']}).")
+            f"Liquidity: {money(total, cash.get('unit'))} (cash plus marketable "
+            f"securities of {money(securities['value'], securities.get('unit'))}, "
+            f"both as of {cash['period_end']}).")
 
 
 def annual_burn(fin):
@@ -152,15 +176,15 @@ def assess_financials(fin):
     # balance on a date, usually a more recent one from a quarterly filing.
     # calling them all a fiscal year would hide that.
     if rd:
-        notes.append(f"R&D expense: ${rd['value']:,} (FY{rd['fiscal_year']}, "
+        notes.append(f"R&D expense: {money(rd['value'], rd.get('unit'))} (FY{rd['fiscal_year']}, "
                      "full year).")
     if ocf:
         # sign it the way a reader expects: cash consumed, or cash generated
         direction = "used in" if ocf["value"] < 0 else "from"
-        notes.append(f"Cash {direction} operations: ${abs(ocf['value']):,} "
+        notes.append(f"Cash {direction} operations: {money(abs(ocf['value']), ocf.get('unit'))} "
                      f"(FY{ocf['fiscal_year']}, full year).")
     if cash:
-        notes.append(f"Cash: ${cash['value']:,} ({_as_of(cash)}).")
+        notes.append(f"Cash: {money(cash['value'], cash.get('unit'))} ({_as_of(cash)}).")
 
     # cash alone is not what a company has to spend, so show the combination and
     # how it was reached
@@ -173,7 +197,7 @@ def assess_financials(fin):
     # keeps both questions answerable.
     debt = fin.get("debt")
     if debt and debt["value"] > 0:
-        note = (f"Debt: ${debt['value']:,} ({_as_of(debt)}), which the "
+        note = (f"Debt: {money(debt['value'], debt.get('unit'))} ({_as_of(debt)}), which the "
                 "runway below does not account for.")
         # a company that repaid its borrowing stops reporting the tag, leaving
         # the last figure in the record indefinitely. so a debt date older than
@@ -189,7 +213,7 @@ def assess_financials(fin):
     # revenue splits the universe into two kinds of company that aren't really
     # comparable: one selling a product, one spending toward a readout
     if revenue and revenue["value"] > 0:
-        notes.append(f"Revenue: ${revenue['value']:,} (FY{revenue['fiscal_year']}, "
+        notes.append(f"Revenue: {money(revenue['value'], revenue.get('unit'))} (FY{revenue['fiscal_year']}, "
                      "full year), so this is a commercial-stage company.")
     elif revenue is not None:
         notes.append("No product revenue reported, so this is a pre-revenue "

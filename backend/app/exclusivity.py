@@ -46,6 +46,64 @@ def _biologics(db, ticker):
               .filter(BiologicProduct.company_ticker == ticker).all())
 
 
+# Where the patent and exclusivity rows came from. Not the download itself,
+# which is a zip and would land in the reader's downloads rather than in front
+# of their eyes, but the page that publishes it and says which month it is.
+ORANGE_BOOK_PAGE = (
+    "https://www.fda.gov/drugs/drug-approvals-and-databases/orange-book-data-files"
+)
+# the biologics half. Same shape of source: a file published on a schedule,
+# with no address for the row inside it.
+PURPLE_BOOK_PAGE = "https://purplebooksearch.fda.gov/downloads"
+
+
+def orange_book_edition(db):
+    """
+    The day the Orange Book rows in here were fetched, or None if there are
+    none.
+
+    A patent expiry is only true as of an edition: the file is republished
+    monthly, patents are delisted and added between one and the next, and a
+    citation that names the source without naming when we took it cannot be
+    checked against anything. This is the fetch date rather than the file's own
+    month, because the fetch date is what we actually recorded.
+    """
+    fetched = db.query(func.max(ProductPatent.fetched_at)).scalar()
+    return fetched.date().isoformat() if fetched else None
+
+
+def orange_book_citation(db):
+    """The dataset behind a patent answer, in the shape a citation takes."""
+    edition = orange_book_edition(db)
+    return {
+        "kind": "dataset",
+        "label": "FDA Orange Book",
+        "detail": f"data file · fetched {edition}" if edition else "data file",
+        "url": ORANGE_BOOK_PAGE,
+    }
+
+
+def purple_book_citation(db):
+    """
+    The other book, cited alongside the first wherever a protection answer
+    depends on both.
+
+    A company's protection state rests on the Orange Book and the Purple Book
+    together: small molecules are listed in one, biologics licensed under a BLA
+    in the other, and "no listed protection" is a claim about both being silent.
+    Citing only the Orange Book would name half of what was checked and leave a
+    reader unable to see that the biologics were looked at at all.
+    """
+    fetched = db.query(func.max(BiologicProduct.fetched_at)).scalar()
+    edition = fetched.date().isoformat() if fetched else None
+    return {
+        "kind": "dataset",
+        "label": "FDA Purple Book",
+        "detail": f"data file · fetched {edition}" if edition else "data file",
+        "url": PURPLE_BOOK_PAGE,
+    }
+
+
 def protection_for(db, ticker, as_of):
     """
     What protects this company's approved products, and until when.

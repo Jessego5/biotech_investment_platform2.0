@@ -24,6 +24,11 @@ export type OriginalRecord = {
   url: string | null;
   displayUrl: string;
   fields: [string, string][];
+  /** A filing and a data file are both "the original", and neither sentence
+   *  about them is true of the other. Absent means the filing wording. */
+  caption?: string;
+  action?: string;
+  distinction?: string;
 };
 
 export type PassageSection = {
@@ -33,7 +38,8 @@ export type PassageSection = {
   /** Document identity. The passage locator is derived, not stored. */
   header: string[];
   total: number;
-  /** A table rather than prose: no passage sequence to step through. */
+  /** Rows a lookup returned rather than prose cut from a document: no passage
+   *  sequence to step through, and no original to leave for. */
   tabular?: boolean;
   /** The section's length is known but its members are not addressable, so
    *  only the cited passage can be produced. */
@@ -66,7 +72,10 @@ function plural(n: number, word: string): string {
 }
 
 export function passageNote(section: PassageSection): string {
-  if (section.tabular) return "a table, not a passage of prose";
+  // A computed block: ranked rows, a filtered list, or a lookup reporting that
+  // it matched nothing. None of them is a passage, and none of them is always
+  // a table either, so this says what is true of all of them.
+  if (section.tabular) return "what this lookup returned, not a passage of prose";
   const held = section.passages.filter(isHeld).length;
   if (section.indexUnavailable) {
     // we know how long the section is and can only produce the cited passage.

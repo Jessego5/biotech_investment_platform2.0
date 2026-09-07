@@ -14,9 +14,12 @@ import datetime
 import json
 import os
 import re
+from urllib.parse import quote_plus
 
 from .models import Company
-from .exclusivity import protection_for, soonest_cliffs
+from .exclusivity import (orange_book_citation, protection_for,
+                          purple_book_citation, soonest_cliffs)
+from .units import millions, money, name_of
 from .retrieval import (query_companies, company_facts, upcoming_readouts,
                         history_from_db)
 from .semantic import semantic_search, search_filings
@@ -30,6 +33,13 @@ ANSWER_SYSTEM = (
     "RULES: use only that data, never add outside knowledge, never invent numbers, "
     "never give buy/sell advice or predictions. If the rows do not answer the "
     "question, say you don't have data on that. Be concise and factual.\n\n"
+    "Every figure carries the currency it was reported in. Quote it with that "
+    "currency and never with a dollar sign it was not given, and never compare "
+    "or rank figures in different currencies: DKK 26,464M is not larger than "
+    "$13,989M, it is a different unit. Where a question asks which company has "
+    "the most of something and the rows are in different currencies, rank the "
+    "ones that are comparable and say plainly that the others report in another "
+    "currency and were not ranked.\n\n"
     "The rows are given in numbered blocks. Cite the block a fact came from with "
     "a bracketed number directly after it, like [1] or [2]. Cite only block "
     "numbers that exist. A sentence that rests on two blocks carries both."
@@ -92,7 +102,12 @@ TOOLS = [
             "has_phase3": {"type": "boolean"},
             "sector": {"type": "string", "description": "must be one of the labels listed in the system prompt"},
             "min_runway": {"type": "number", "description": "minimum years of runway"},
-            "sort_by": {"type": "string", "enum": ["rd", "cash", "active_trials", "total_trials", "runway"]},
+            "sort_by": {"type": "string",
+                        "enum": ["rd", "cash", "active_trials", "total_trials",
+                                 "runway"],
+                        "description": "rd and cash rank dollar figures only; "
+                                       "a company reporting in another currency "
+                                       "is listed after them and not ranked"},
             "limit": {"type": "integer"}}}}},
     {"type": "function", "function": {
         "name": "company_report",
@@ -222,12 +237,42 @@ def _client():
     return _openai
 
 
+def company_facts_citation(db, company):
+    """
+    The file a company's reported figures were read out of.
+
+    Every figure in the financials table came from one XBRL companyfacts
+    document per company, which the SEC serves at a stable URL and a browser
+    renders as it is, so a reader can find the same number in the same place we
+    did. It is the file and not the filing: the accession that reported each
+    fact is in the companyfacts response and is not kept here, so pointing at
+    "the 10-K that said $60,000,000" is not something this can honestly do yet.
+    """
+    from sqlalchemy import func
+    from .models import Financial
+
+    cik = (company.cik or "").strip()
+    if not cik:
+        return None
+    fetched = (db.query(func.max(Financial.fetched_at))
+                 .filter(Financial.company_ticker == company.ticker).scalar())
+    return {
+        "kind": "dataset",
+        "label": "SEC XBRL company facts",
+        "detail": (f"CIK {cik}"
+                   + (f" · fetched {fetched.date().isoformat()}" if fetched else "")),
+        "url": f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json",
+    }
+
+
 def _money(entry):
     # missing figures read as "n/a" rather than a fake zero
     if not entry:
         return "n/a"
-    # show the value in millions with its fiscal year
-    return f"${round(entry['value'] / 1e6)}M (FY{entry['fiscal_year']})"
+    # the value in millions, in the currency it was reported in and never in a
+    # currency it was not: this line is what the model reads before writing a
+    # figure into an answer
+    return f"{millions(entry['value'], entry.get('unit'))} (FY{entry['fiscal_year']})"
 
 
 def _sector_labels(db):
@@ -309,7 +354,48 @@ def _company_block(db, named):
     lines += [f"  - {e}" for e in a["pipeline_signal"]["evidence"]]
     lines.append(f"Financial signal: {a['financial_signal']['label']}")
     lines += [f"  - {e}" for e in a["financial_signal"]["evidence"]]
-    return "\n".join(lines), [facts["ticker"]]
+    # This block reads two sources and used to cite neither, on the grounds
+    # that it is not one document. It is two, and naming both is closer to the
+    # truth than naming none: the figures come from the company's XBRL facts and
+    # the pipeline from the registry.
+    company = db.get(Company, facts["ticker"])
+    cites = [company_facts_citation(db, company) if company else None,
+             registry_citation(facts.get("name"), facts["ticker"])]
+    return "\n".join(lines), [facts["ticker"]], [c for c in cites if c]
+
+
+def universe_citation(label, detail, url):
+    """
+    A source read across the whole universe rather than one record.
+
+    The weakest citation this system offers, and it says so by naming a search
+    rather than a document: a filter over 787 companies has no single record
+    behind it. It is still worth more than "SEC EDGAR" on its own, which names
+    a kind of source and leaves a reader nowhere to go.
+    """
+    return {"kind": "dataset", "label": label, "detail": detail, "url": url}
+
+
+def registry_citation(name, ticker=None):
+    """
+    A company's trials as the registry publishes them.
+
+    The rows here were read from the ClinicalTrials.gov API by sponsor name, so
+    the record behind them is not one study but that sponsor's set, and this
+    points at the search a reader can run themselves to see the same set. Where
+    a claim rests on one study, _trial_citation names that study instead; this
+    is for the blocks that counted or summarised many.
+    """
+    if not name:
+        return None
+    return {
+        "kind": "dataset",
+        "ticker": ticker,
+        "label": "ClinicalTrials.gov",
+        "detail": f"studies sponsored by {name}",
+        "url": "https://clinicaltrials.gov/search?spons="
+               + quote_plus(name),
+    }
 
 
 def _filing_citation(passage):
@@ -356,12 +442,17 @@ def _run_tool(name, args, db, as_of):
     empty string reads to the model as though it had not asked.
     """
     if name == "filter_companies":
+        # companies a money threshold could not judge, because they report in
+        # another currency. Named in the rows rather than dropped in silence:
+        # "24 companies match" is a different claim if three were never compared
+        set_aside = []
         rows = query_companies(
             db, min_rd=args.get("min_rd"), min_cash=args.get("min_cash"),
             has_phase3=args.get("has_phase3"),
             min_active_trials=args.get("min_active_trials"),
             sector=args.get("sector"), min_runway=args.get("min_runway"),
-            sort_by=args.get("sort_by"), limit=None)
+            sort_by=args.get("sort_by"), limit=None,
+            not_in_dollars=set_aside)
         total = len(rows)
         shown = rows[:(args.get("limit") or 25)]
         if not shown:
@@ -370,6 +461,14 @@ def _run_tool(name, args, db, as_of):
         if total > len(shown):
             header += f" (showing the first {len(shown)})"
         lines = [header, ""]
+        if set_aside:
+            aside = sorted(set(set_aside))
+            lines += [f"Not compared in dollars: {len(aside)} compan"
+                      f"{'y' if len(aside) == 1 else 'ies'} report in another "
+                      f"currency, so a dollar threshold cannot judge them and a "
+                      f"ranking by money cannot place them. They are neither "
+                      f"included nor excluded on the figures, and they are not "
+                      f"ranked: {', '.join(aside)}.", ""]
         for r in shown:
             lines.append(
                 f"{r['ticker']}: {r['name']} | sector={r['sector']} | "
@@ -377,7 +476,18 @@ def _run_tool(name, args, db, as_of):
                 f"phase3={'yes' if r['has_phase3'] else 'no'} | "
                 f"R&D={_money(r['rd_expense'])} cash={_money(r['cash'])} "
                 f"runway={r['runway'] if r['runway'] is not None else 'n/a'}")
-        return "\n".join(lines), [r["ticker"] for r in shown]
+        # A filter reads the whole universe, so there is no one document behind
+        # it. There are two sources, and naming them beats naming nothing: the
+        # figures are SEC XBRL facts, the trial counts are the registry. Every
+        # company named in the rows has its own page, where each figure is cited
+        # again against the filing it came from.
+        return ("\n".join(lines), [r["ticker"] for r in shown],
+                [universe_citation("SEC XBRL company facts",
+                                   "every company's reported figures",
+                                   "https://www.sec.gov/search-filings"),
+                 universe_citation("ClinicalTrials.gov",
+                                   "every sponsor's registered studies",
+                                   "https://clinicaltrials.gov/search")])
 
     if name == "company_report":
         return _company_block(db, args.get("company"))
@@ -422,13 +532,27 @@ def _run_tool(name, args, db, as_of):
                 # one year is not a trend, and saying so stops it being read as
                 # one. A company that listed last year has one year and that is
                 # a fact about the company, not a gap in the data.
-                lines.append(f"{metric}: only {rows[0]['fiscal_year']} reported "
-                             f"({int(rows[0]['value']):,})")
+                lines.append(
+                    f"{metric}: only {rows[0]['fiscal_year']} reported "
+                    f"({money(rows[0]['value'], rows[0].get('unit'), name=True)})")
                 continue
-            figures = ", ".join(f"{r['fiscal_year']}: {int(r['value']):,}"
-                                for r in rows)
-            lines.append(f"{metric}: {figures}")
-        return "\n".join(lines), [ticker]
+            # the currency once for the whole series where it never changed,
+            # and against every figure where it did, because a company that
+            # switched reporting currency has a series with a step in it that
+            # is not a change in the business
+            units = {r.get("unit") for r in rows}
+            if len(units) == 1:
+                unit = next(iter(units))
+                figures = ", ".join(f"{r['fiscal_year']}: {int(r['value']):,}"
+                                    for r in rows)
+                lines.append(f"{metric} (in {name_of(unit)}): {figures}")
+            else:
+                figures = ", ".join(
+                    f"{r['fiscal_year']}: {money(r['value'], r.get('unit'))}"
+                    for r in rows)
+                lines.append(f"{metric}: {figures}")
+        cite = company_facts_citation(db, company)
+        return "\n".join(lines), [ticker], [cite] if cite else []
 
     if name == "search_filings":
         query = (args.get("query") or "").strip()
@@ -461,7 +585,12 @@ def _run_tool(name, args, db, as_of):
         if r.get("next_expiry"):
             lines.append(f"  - nearest expiry {r['next_expiry']}, "
                          f"furthest {r['last_expiry']}")
-        return "\n".join(lines), [ticker]
+        # both books, because the answer rests on both: a company with no
+        # small molecule listed and no biologic licensed is only "no listed
+        # protection" if both were checked, and the datasets rather than
+        # records because this reads across every product the company has
+        return ("\n".join(lines), [ticker],
+                [orange_book_citation(db), purple_book_citation(db)])
 
     if name == "soonest_patent_cliffs":
         rows = soonest_cliffs(db, as_of, limit=args.get("limit") or 10)
@@ -475,7 +604,10 @@ def _run_tool(name, args, db, as_of):
             lines.append(f"{r['ticker']}: {r['name']} | nearest expiry "
                          f"{r['next_expiry']} | protection runs to "
                          f"{r['last_expiry']} | {r['patents']} patents in force")
-        return "\n".join(lines), [r["ticker"] for r in rows]
+        # one file, many companies: the ranking spans every approved product in
+        # here, so what it can point at is the edition it was read from
+        return ("\n".join(lines), [r["ticker"] for r in rows],
+                [orange_book_citation(db)])
 
     if name == "upcoming_readouts":
         ticker = _resolve_company(args.get("company"), db) if args.get("company") else None
@@ -488,8 +620,11 @@ def _run_tool(name, args, db, as_of):
             lines.append(f"{r['ticker']} {r['nct_id']} | {r['phase']} | "
                          f"expected {r['completion_date']} | n={r['enrollment']} | "
                          f"{(r['conditions'] or '')[:70]}")
-        return "\n".join(lines), list(dict.fromkeys(
-            r["ticker"] for r in rows if r["ticker"]))
+        # every row here is one study, and a reader checking a readout date
+        # wants the registry record that states it
+        return ("\n".join(lines),
+                list(dict.fromkeys(r["ticker"] for r in rows if r["ticker"])),
+                [_trial_citation(r) for r in rows])
 
     return "", []
 

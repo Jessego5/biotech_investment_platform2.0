@@ -26,6 +26,7 @@ import {
   ask,
   fetchChunk,
   sectionFromChunk,
+  sectionFromRows,
   splitPassage,
   toAnswerNodes,
   type AskResponse,
@@ -36,15 +37,31 @@ import { parseCitationMarkers } from "@/lib/readbase/citations";
 
 function listingFor(block: EvidenceBlock): SourceListing & {
   chunkId?: number;
-  url?: string;
+  /** Everywhere this block's rows can be checked, in the order given. */
+  links: { url: string }[];
+  /** The rows the lookup returned, when it computed rather than read. */
+  hasRows: boolean;
 } {
   const doc = block.documents?.[0];
+  // A dataset is not the document this row is about, it is where the rows came
+  // from, so it lends its link and its edition without taking the title: what
+  // produced these numbers is the lookup, and that has to stay legible.
+  const dataset = doc?.kind === "dataset";
+  // Every source, not the first one. A lookup that read a company's figures and
+  // its trials rests on two, and showing one of them would name half the
+  // provenance and imply it was all of it.
+  const links = (block.documents ?? [])
+    .filter((d) => d.url)
+    .map((d) => ({ url: d.url! }));
   return {
     n: block.n,
-    document: doc?.label ?? block.label,
-    locator: doc?.detail ?? block.source,
+    document: dataset ? block.label : doc?.label ?? block.label,
+    locator: dataset
+      ? [block.source, doc?.detail].filter(Boolean).join(" · ")
+      : doc?.detail ?? block.source,
     chunkId: doc?.chunk_id ?? undefined,
-    url: doc?.url ?? undefined,
+    links,
+    hasRows: Boolean(block.text?.trim()),
   };
 }
 
@@ -153,6 +170,16 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
     : [];
   const listings = evidence.map(listingFor);
   const dropped = result?.dropped_citations ?? 0;
+  // Which blocks the answer actually rests on. A lookup can run, return rows
+  // and go unused: the model reads six companies and writes about four, and the
+  // two it dropped are a fact about the run rather than sources of the answer.
+  // Numbering them alongside the rest sends a reader hunting the prose for a
+  // [3] that was never written.
+  const citedBlocks = new Set(
+    parseCitationMarkers(result?.answer ?? "").map((m) => m.n),
+  );
+  const restedOn = listings.filter((l) => citedBlocks.has(l.n));
+  const alsoRead = listings.filter((l) => !citedBlocks.has(l.n));
   // A refusal is an answer resting on nothing: the model looked, found nothing
   // it could stand behind and said so, which is why it cites nothing. It is a
   // designed state and gets the refusal card rather than the answer card. The
@@ -168,20 +195,19 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
     !tools.includes("greeting");
   // Declined before anything was read, rather than read and found wanting.
   const declined = tools.includes("decline");
-  // The refusal card lists what ran, so the rows under it are only worth their
-  // space when one of them can be opened. Under an answer they always are: they
-  // are what the citations point at.
-  const showListings = refused
-    ? listings.some((l) => l.chunkId || l.url)
-    : listings.length > 0;
 
   return (
     <InspectorProvider
       resolveSource={async (source) => {
         const chunkId = listings.find((l) => l.n === source)?.chunkId;
-        if (!chunkId) return null;
-        const chunk = await fetchChunk(chunkId);
-        return chunk?.chunk_id ? sectionFromChunk(chunk) : null;
+        if (chunkId) {
+          const chunk = await fetchChunk(chunkId);
+          return chunk?.chunk_id ? sectionFromChunk(chunk) : null;
+        }
+        // Nothing was read, so nothing has to be fetched: a computed block
+        // arrives with the rows it was given already in it.
+        const block = evidence.find((e) => e.n === source);
+        return block?.text?.trim() ? sectionFromRows(block) : null;
       }}
       loadPassage={async (chunkId) => {
         const chunk = await fetchChunk(chunkId);
@@ -375,16 +401,45 @@ export function LiveAsk({ corpusNote }: { corpusNote: string }) {
                 </div>
               )}
 
-              {showListings && (
+              {/* Under a refusal too: the card above names the accessors that
+                  ran, and these open what each of them came back with, which is
+                  the part a reader has to see to agree the refusal was right. */}
+              {listings.length > 0 && (
                 <div className={`${notusCard} mt-5 px-6 py-2`} style={{ borderColor: "var(--n-line)" }}>
-                  {listings.map((l) => (
+                  {restedOn.map((l) => (
                     <SourceRow
                       key={l.n}
                       source={l}
-                      filingUrl={l.url}
-                      readable={Boolean(l.chunkId)}
+                      links={l.links}
+                      reads={l.chunkId ? "passage" : l.hasRows ? "rows" : null}
                     />
                   ))}
+
+                  {alsoRead.length > 0 && (
+                    <>
+                      {/* Not hidden: a lookup that ran and was not used is part
+                          of how the answer was reached, and dropping it would
+                          leave the working incomplete. Named instead, so the
+                          numbers above stay findable in the prose. */}
+                      <div
+                        className="border-t pt-3 text-[12px]"
+                        style={{ borderColor: "var(--n-line)", color: "var(--n-ink-2)" }}
+                      >
+                        {restedOn.length > 0
+                          ? "Also read, and not cited in the answer"
+                          : "Read, and not cited in the answer"}
+                      </div>
+                      {alsoRead.map((l) => (
+                        <SourceRow
+                          key={l.n}
+                          source={l}
+                          links={l.links}
+                          reads={l.chunkId ? "passage" : l.hasRows ? "rows" : null}
+                          cited={false}
+                        />
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
             </>
