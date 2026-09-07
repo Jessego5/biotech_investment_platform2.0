@@ -150,9 +150,12 @@ cp snapshot.plist ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
 launchctl load ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
 ```
 
-The AWS path already exists and is not deployed: `infra/cloudformation/
-pipeline.yaml` carries an EventBridge schedule, `rate(7 days)` DISABLED for dev
-and `cron(0 6 * * ? *)` ENABLED for prod.
+The AWS path is deployed and the schedule is off. `infra/cloudformation/
+pipeline.yaml` carries an EventBridge rule, `rate(7 days)` for dev and
+`cron(0 6 * * ? *)` for prod, and both ship `DISABLED`: the task it starts reads
+an ingest image from ECR that `serve.sh` does not push, so an enabled schedule
+would fire daily into a tag nothing had put there. Push the image, set
+`ScheduleState: ENABLED` for prod, update the stack.
 
 ### What the script refuses to do quietly
 

@@ -48,8 +48,8 @@ changes exist in the archive and nowhere a reader can see them.
 
 ## Phase 3: monitoring (scheduling and detection done, alerting to go)
 
-Written but not deployed: the two functions that turn a schedule into ingestion
-work (`infra/lambdas/`). A schedule fires the dispatcher, which puts one message
+Deployed, with the schedule off: the two functions that turn a schedule into
+ingestion work (`infra/lambdas/`). A schedule fires the dispatcher, which puts one message
 per slice of the universe on a queue; the runner turns each message into a
 container task running that slice. This is what keeps the long job out of a
 Lambda's time limit. `ingest.py` takes `--shard N --of M` for exactly this.
@@ -145,27 +145,36 @@ which is exactly the shape the queue and the container tasks were built for. Unt
 then the honest description of `infra/` is that it is written, tested, and not yet
 needed.
 
-## Phase 6: deployment (written end to end, never deployed)
+## Phase 6: deployment (done, on plain HTTP)
 
-Done in code: the app reads `DATABASE_URL` and falls back to local SQLite when it
-isn't set, so Postgres needs no code change. The API and the ingestion batch are
-one image (`backend/Dockerfile`) that differ only in the command they start with,
-and `docker-compose.yml` brings that up against a local Postgres. The whole
-ingestion pipeline is described in CloudFormation (`infra/cloudformation/`), split
-into a durable stack (archive, queue, dead-letter queue) and a disposable one
-(schedule, functions, cluster, task), parameterized so dev and prod are the same
-template with a different row in one mappings table. `infra/deploy.sh` packages
-and deploys it.
+Deployed to us-east-2 on 2026-09-07. Three stacks: `storage` holds what cannot be
+rebuilt, `pipeline` holds the disposable ingestion machinery, and `serving` holds
+the frontend behind a public load balancer with the API beside it on a private
+Cloud Map name that resolves nowhere outside the VPC. Both run on Fargate, one
+task each.
 
-To do: the database itself is not in the templates. They take a `DATABASE_URL`
-and store it in Secrets Manager, which works with RDS, Aurora Serverless, or
-anything else, but something has to create it. Then deploying the API and the
-frontend, which is still not described anywhere.
+The database is deliberately not in the templates. It is an RDS Postgres 16
+instance created by hand, restored from a 4.8 GB dump, and its life is not tied
+to a stack that gets torn down and rebuilt. The HNSW index came across with the
+dump, so the vector search answers in milliseconds rather than the five seconds a
+sequential scan over 334,624 vectors takes.
 
-The honest status: this is all written and unit tested and none of it has ever
-run. No image has been built, nothing has talked to a real Postgres, and no AWS
-call has been made. The tests check the data these pieces produce, not that AWS
-accepts it.
+/ask is the only endpoint that spends money, and it has a daily budget counted in
+the database rather than in the process, because a counter in memory resets on
+every deploy and two tasks each keep their own.
+
+What the first deploy cost, all four of them the same shape, valid until
+CloudFormation saw them: a quoted shell expansion that passed an empty argument,
+an Fn::If with four arms, a security group rule the runbook put after the step
+that needed it, and a column added to models.py after the dump was taken. All
+four now have tests or a startup check.
+
+To do: it is on the load balancer's own hostname over plain HTTP, and no
+certificate is possible for a name AWS owns, so a domain is the next step and
+should come before the URL is given to anyone. `DesiredCount` is 1 per service
+with no autoscaling. The ingestion schedule ships `DISABLED` and needs an ingest
+image in ECR before it is worth enabling. There is no WAF: the budget caps what a
+day can cost, not how fast someone can ask.
 
 ## Other ideas
 

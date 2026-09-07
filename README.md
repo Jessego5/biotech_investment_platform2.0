@@ -14,7 +14,7 @@ A full-stack web app for browsing public biotech companies by pipeline stage and
 financials, where every figure traces back to a primary source. It holds 787
 companies, 30,823 trials, 112,812 industry-sponsored interventional studies from
 the wider registry, and 3,614 annual reports — five years each — split into
-334,624 embedded passages, behind 436 tests. The data comes from five places:
+334,624 embedded passages, behind 554 tests. The data comes from five places:
 
 - Clinical trials from the [ClinicalTrials.gov v2 API](https://clinicaltrials.gov/data-api/api)
 - Financials from [SEC EDGAR](https://www.sec.gov/edgar/sec-api-documentation):
@@ -295,8 +295,8 @@ the environment, which is what a container task override can set.
 
 ## Scheduled ingestion
 
-This is the part that is written but not deployed. Two small functions in
-`infra/lambdas/` turn a schedule into container tasks:
+The stacks that run this are deployed; the schedule itself is off. Two small
+functions in `infra/lambdas/` turn a schedule into container tasks:
 
 ```
 EventBridge schedule
@@ -319,12 +319,22 @@ credentials or a deployment.
 
 ## Deploying
 
-Two CloudFormation stacks per environment, split by lifetime rather than by
+Three CloudFormation stacks per environment, split by lifetime rather than by
 service. `storage.yaml` holds the things that cannot be rebuilt: re-running
 ingestion gets you today's data, never last month's, so the snapshot archive is
 `DeletionPolicy: Retain` and lives apart from anything that gets redeployed.
 `pipeline.yaml` holds everything disposable and imports what it needs from the
 first, so replacing the pipeline can never take the history with it.
+`serving.yaml` holds what answers a request: the frontend behind a public load
+balancer, and the API beside it on a private name that resolves nowhere outside
+the VPC, because every call the browser makes goes through the frontend's own
+route handlers.
+
+The database is in none of them, deliberately. They take a `DATABASE_URL` and
+store it in Secrets Manager, so the thing holding five years of filings does not
+share a lifetime with a stack that gets torn down and rebuilt.
+
+[DEPLOY.md](DEPLOY.md) is the runbook.
 
 Nothing in either template branches on the environment. Everything that differs
 (shard count, schedule, task size, log retention) is a row in one `Mappings`
@@ -334,11 +344,14 @@ table, so dev and prod really are the same template:
 | ---------- | ---------- | ----------------- |
 | shards     | 2          | 8                 |
 | schedule   | weekly     | daily 06:00 UTC   |
-| schedule   | `DISABLED` | `ENABLED`         |
+| schedule   | `DISABLED` | `DISABLED`        |
 | task size  | 0.5 vCPU   | 1 vCPU            |
 
-Dev's schedule is off by default on purpose: a dev stack should not quietly fetch
-the whole universe from SEC on a timer.
+Both schedules ship off, for different reasons. A dev stack should not quietly
+fetch the whole universe from SEC on a timer. Prod's is off because the task it
+starts reads an ingest image from a tag `serve.sh` does not push, so an enabled
+schedule would fire daily into a tag nothing had put there and fail with no
+ingestion behind it.
 
 ```bash
 ./infra/deploy.sh dev s3://my-deploy-artifacts 'postgresql+psycopg://...'
@@ -529,9 +542,12 @@ The methodology and the results, including where it does poorly, are in
 ## Limitations and future work
 
 See [ROADMAP.md](ROADMAP.md). Short version: public companies only by design, and
-the database schema is history-friendly (timestamps on everything) so later phases
-like change history, monitoring, backtesting, and deployment are possible without
-a redesign. None of those are built yet.
+the database schema is history-friendly (timestamps on everything) so the later
+phases needed no redesign. Change history, the snapshot archive, semantic search
+over trials and filings, the wider registry and deployment are built. Backtesting
+is not, and it is the one that depends on most of the rest. What is deployed runs
+on plain HTTP on a load balancer hostname, with one task per service and no
+autoscaling.
 
 ## Disclaimer
 
