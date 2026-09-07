@@ -66,7 +66,7 @@ it.
 ## Retrieval quality (the text side)
 
 Everything above measures the structured half: questions whose true answer can be
-computed from the raw rows. The text half — ranking 334,624 filing passages — had
+computed from the raw rows. The text half, ranking 334,624 filing passages, had
 no number attached to it at all, which meant the hardest component was also the
 only unmeasured one. `eval_retrieval.py` fixes that.
 
@@ -117,8 +117,8 @@ every run.
 ### What that says
 
 **One line of metadata beat every retrieval technique tried.** Embedding each
-passage with a line naming its filing — company, ticker, form, fiscal year,
-section, all of it already sitting in the filings table — takes named MRR from
+passage with a line naming its filing, company, ticker, form, fiscal year,
+section, all of it already sitting in the filings table, takes named MRR from
 0.182 to 0.422 and the right document from 55.0% to 96.7%. No LLM per chunk, no
 second index, no extra query. It is also the fastest configuration measured, at
 2.57s against the baseline's 3.35s, because it needs neither a lexical query nor
@@ -133,7 +133,7 @@ embedding time. Putting it back where it was lost costs less and works better.
 
 **Two stages were made redundant by it, and the numbers say so plainly.** The
 lexical filter existed to work out which company filed a document. Contextual
-embedding does that better on its own — 96.7% against the filter's 65.0% — so
+embedding does that better on its own, 96.7% against the filter's 65.0%, so
 adding the filter back *lowers* the result to 93.3%. The elaborate pipeline
 loses to the simple one.
 
@@ -161,12 +161,12 @@ much (0.104 against 0.085).
 - **The reranker, conditionally.** It earns its place on topical questions and
   costs accuracy on named ones, which is a decision the system can already make:
   `chat.py` knows whether it resolved a company. Reranking when it did not, and
-  skipping it when it did, is the configuration the table supports — and is
+  skipping it when it did, is the configuration the table supports, and is
   itself the next thing to measure rather than assume.
 
 Two caveats stay attached to all of the above. The labels are synthetic, and a
 question written *from* a passage may reward document identity more than a real
-user's question would — the topical column is the closer proxy for hard cases,
+user's question would, the topical column is the closer proxy for hard cases,
 and it is the column contextual embedding hurts. And the production path often
 passes a ticker already, which supplies the same identity by a different route;
 the ticker-scoped case has not been measured, and it is the one that decides how
@@ -179,7 +179,7 @@ rather than guessed. ORing the words of a real question matches 294,793 of the
 334,624 passages and takes 48 seconds to rank. ANDing them matches nothing, since
 no passage contains every word of a sentence. Requiring only the query's *rarest*
 words is the version that is both fast and selective, and rarity had to be
-measured against this corpus rather than against English — `build_fts_stats.py`
+measured against this corpus rather than against English, `build_fts_stats.py`
 finds "may" in 95.9% of passages and "product" in 80.3%. The resulting lexical
 query runs in 0.02s against the dense side's 3.4s.
 
@@ -195,7 +195,7 @@ query runs in 0.02s against the dense side's 3.4s.
 - The question set is small and fixed on purpose. Adding more is easy.
 - The retrieval labels are synthetic. A model wrote each question from the passage
   it is then asked to find, so the set measures whether a passage is findable from
-  a question derived from it — not whether real questions find it. It is a
+  a question derived from it, not whether real questions find it. It is a
   relative instrument: good for comparing two retrievers on identical input, not
   for claiming an absolute quality of search.
 - 120 passages is few. At a recall of about 30% the sampling error is roughly

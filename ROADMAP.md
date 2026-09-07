@@ -1,7 +1,9 @@
 # Roadmap
 
-Where this could go next. Nothing here is built yet except where noted. I keep it
-out of the README so the README stays about what actually exists today.
+Where this has gone and where it could go next. Most of it is built now, so the
+headings carry the status and the sections say what was actually measured. It is
+kept out of the README so the README stays about what exists rather than what is
+planned.
 
 ## Phase 1 (done)
 
@@ -93,7 +95,7 @@ the same indication), because it needs no source beyond the two already used.
 Stock moves are the most intuitive outcome and the noisiest; they are not the
 place to start.
 
-## Phase 5: semantic search (trial text done, filings to go)
+## Phase 5: semantic search (done)
 
 Done: semantic search over trial descriptions (summary, conditions, interventions,
 eligibility), embedded with OpenAI, so questions like "which trials involve CAR-T?"
@@ -101,19 +103,24 @@ get real answers. Storage and search follow whichever database is behind it: a
 pgvector column that Postgres searches directly, or raw float32 bytes and an
 in-memory FAISS index on SQLite, which is what runs locally today.
 
-To do (heavier): chunk and embed the SEC 10-K narrative (Risk Factors, MD&A) for
-questions like "what does this company say are its biggest risks?". The filings
-are long and need fetching and chunking, so it is more work and more fragile.
-Worth doing on the 480 companies already stored first, since that is the same
-technique at a size still small enough to check by hand.
+Also done, and it was the heavier half: the SEC 10-K narrative is chunked and
+embedded, so "what does this company say are its biggest risks?" is answerable.
+3,614 filings across 787 companies, five years each, split into 334,624 passages
+over Risk Factors, MD&A and the intellectual property section. Whether those
+passages come back in the right order is a separate question, and it has its own
+phase below.
 
-## Phase 7: the whole trial registry
+## Phase 7: the whole trial registry (done for the industry subset)
 
-Right now the universe is trials sponsored by 480 biotech companies, which is
-12,943 studies, or 2.2% of the 597,691 registered on ClinicalTrials.gov. Ingesting
-all of them turns the app from "these companies' pipelines" into "search every
-clinical trial", which is a considerably more useful thing and is the direction
-this should go.
+Done: 112,812 industry-sponsored interventional studies are ingested into
+`registry_trials`, against the 30,823 led by the 787 companies in the universe.
+That is what turns the app from "these companies' pipelines" into "who else is
+developing for this indication, and when do they report". The two tables are kept
+apart on purpose, because every pipeline count is computed from `trials` and a
+competitor's Phase 3 landing there would quietly become somebody else's pipeline.
+
+Not done: the other 485,000 studies, which are academic and government sponsored.
+The industry subset is the one a question about a competitor is asking about.
 
 Measured, so the size is not a guess:
 
@@ -136,14 +143,16 @@ container platform is routine.
 Note what this does NOT need: sharded parallel ingestion. 598 requests is under
 half an hour on one machine, so `infra/` stays unnecessary for this phase.
 
-## Phase 8: SEC filing text at scale
+## Phase 8: SEC filing text at scale (done)
 
-The phase that makes the ingestion pipeline in `infra/` justified rather than
-decorative. Chunking and embedding filing narrative across a wide set of filers,
-re-processed as new filings arrive, is continuous work of unpredictable size,
-which is exactly the shape the queue and the container tasks were built for. Until
-then the honest description of `infra/` is that it is written, tested, and not yet
-needed.
+This is the phase that made the ingestion pipeline in `infra/` justified rather
+than decorative. Chunking and embedding filing narrative across a wide set of
+filers, re-processed as new filings arrive, is continuous work of unpredictable
+size, which is exactly the shape the queue and the container tasks were built for.
+
+334,624 passages are stored and embedded, and the vector search is an HNSW index
+rather than a scan: 4,763 ms against 2 ms, measured, which is the difference that
+decides how large a database instance has to be.
 
 ## Phase 6: deployment (done, on plain HTTP)
 
@@ -175,6 +184,39 @@ should come before the URL is given to anyone. `DesiredCount` is 1 per service
 with no autoscaling. The ingestion schedule ships `DISABLED` and needs an ingest
 image in ECR before it is worth enabling. There is no WAF: the budget caps what a
 day can cost, not how fast someone can ask.
+
+## Phase 9: retrieval quality (measured, not shipped)
+
+The one component with no number attached to it was the one hardest to get right:
+ranking 334,624 filing passages. `eval_retrieval.py` gives it one, using a
+known-item test where a model writes the question a passage answers and the
+passage is the answer by construction, so no human has to judge relevance.
+
+What it found, on 120 passages at k=10: one line of metadata beat every retrieval
+technique tried. Embedding each passage under a line naming its filing, all of it
+already sitting in the filings table, takes named MRR from 0.182 to 0.422 and
+"returned the right document" from 55.0% to 96.7%, while being the fastest
+configuration measured. Hybrid retrieval, a lexical filter and a cross-encoder
+reranker were three increasingly elaborate ways to recover an identity that had
+been thrown away at embedding time; putting it back where it was lost costs less
+and works better. Adding the lexical filter on top of it makes the result worse.
+
+The cost falls where the mechanism predicts. Topical questions name no company, so
+the context line adds an identity the question cannot use and dilutes the subject
+matter that is all it has: recall@10 falls from 20.8% to 12.5%, the worst of any
+configuration.
+
+To do: ship it. `embedding_ctx` is populated for all 334,624 passages and the
+shipping search still reads `embedding`, so both spaces exist side by side and the
+switch is a flag rather than a migration. Two things should be measured first. The
+reranker earns its 2s on topical questions and costs accuracy on named ones, and
+`chat.py` already knows which it has, so choosing per question is the
+configuration the table supports and nobody has measured. And the production path
+usually passes a ticker, which supplies the same identity by another route; the
+ticker-scoped case is unmeasured and it is the one that decides how much of the
+gain survives contact with a real caller.
+
+EVALUATION.md has the table and the caveats.
 
 ## Other ideas
 

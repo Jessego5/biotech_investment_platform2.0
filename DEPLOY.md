@@ -5,7 +5,7 @@ Three stacks. `storage` and `pipeline` already existed and run the ingestion;
 
 Only the frontend is reachable from the internet. The API sits on a private
 Cloud Map name that resolves nowhere outside the VPC, because every call the
-browser makes goes through the frontend's own route handlers — so no browser
+browser makes goes through the frontend's own route handlers, so no browser
 ever needs the API. The shared secret on `/ask` sits behind that as a second
 line rather than the only one.
 
@@ -16,7 +16,7 @@ line rather than the only one.
 `deploy.sh` and `serve.sh` both take `DATABASE_URL` as an argument. The corpus
 lives outside these stacks and nothing serves without it.
 
-A dump is ready at `dumps/biobase-corpus.dump` — 4.8 GB compressed, from a
+A dump is ready at `dumps/biobase-corpus.dump`, 4.8 GB compressed, from a
 7.1 GB database, taken 2026-09-05. Eleven tables, the `vector` extension, both
 vector spaces (`embedding` and `embedding_ctx`), the full-text index and both
 HNSW indexes.
@@ -24,7 +24,7 @@ HNSW indexes.
 It replaces `readbase-corpus.dump`, which was a schema behind: no
 `embedding_ctx` column and no indexes beyond the original btrees. Restoring
 that one gives a database the current code cannot use the contextual space on,
-and `create_all` will not add the column — it creates missing tables, not
+and `create_all` will not add the column, it creates missing tables, not
 missing columns. Delete the old dump once this one has landed somewhere.
 
 It is gitignored and excluded from both Docker build contexts. Leave it that
@@ -50,7 +50,7 @@ pg_restore \
   dumps/biobase-corpus.dump
 ```
 
-Expect this to take a while and to want disk headroom on the instance — the
+Expect this to take a while and to want disk headroom on the instance, the
 restored database is 7.1 GB, of which 2.8 GB is the HNSW indexes. Run it from
 something with bandwidth to spare: 4.8 GB over a domestic uplink is the slowest
 part of the whole deploy by a wide margin, and copying the dump to an EC2 box
@@ -71,12 +71,12 @@ shows up on the page rather than staying hidden.
 ### The vector index comes with the dump
 
 `pg_restore` rebuilds it on the way in, which is most of why the restore takes
-as long as it does — and worth it, because `--jobs` builds indexes in parallel
+as long as it does, and worth it, because `--jobs` builds indexes in parallel
 where running the migration afterwards is one at a time. Without an index every
 semantic lookup reads all 334,624 vectors: 4,763 ms against 2 ms, measured.
 
-For a database that predates it — the old dump, or one restored before
-2026-09-05 — build it explicitly. Safe to re-run either way: each index is
+For a database that predates it, the old dump, or one restored before
+2026-09-05, build it explicitly. Safe to re-run either way: each index is
 created only if it is missing.
 
 ```bash
@@ -109,7 +109,7 @@ aws secretsmanager create-secret \
 Keep the ARN. `serve.sh` takes it and passes it to ECS by reference, so the key
 never appears in a template, a parameter file or a stack event.
 
-The `/ask` secret is not supplied — `serving.yaml` generates it, both services
+The `/ask` secret is not supplied, `serving.yaml` generates it, both services
 read the same one, and rotating it is a stack update.
 
 ---
@@ -129,7 +129,7 @@ and repository out of the pipeline stack, and deploys `serving.yaml` on top.
 
 Before either script runs, `infra/cloudformation/params/prod.json` needs real
 values: `VpcId`, `SubnetIds`, `LambdaCodeS3Bucket` and `SecUserAgent` all ship
-as `REPLACE_ME`. Two subnets in **different availability zones** — the load
+as `REPLACE_ME`. Two subnets in **different availability zones**, the load
 balancer requires two, and `serve.sh` hands the same list to the tasks. They
 have to be public, because `AssignPublicIp` is `ENABLED` and the tasks pull
 from ECR, read Secrets Manager and call OpenAI; private subnets with no NAT
@@ -143,12 +143,12 @@ path to it. Take `ApiSecurityGroupId` from the serving stack's outputs and
 allow it on 5432 in the RDS instance's own security group.
 
 Skip this and the failure is quiet: the tasks start, pass their health check on
-`/` — which does not touch the database on purpose — and fail every query.
+`/`, which does not touch the database on purpose, and fail every query.
 
 ### Updating the corpus after it is up
 
 Nothing here is write-once. The pipeline stack exists to refresh it, and every
-row is derived — from SEC, ClinicalTrials.gov and the FDA — so there is no
+row is derived, from SEC, ClinicalTrials.gov and the FDA, so there is no
 state on the server that cannot be rebuilt. To start a run by hand:
 
 ```bash
@@ -176,7 +176,7 @@ deployment answered every question with "in an unrecorded unit" until the column
 was added and the values shipped separately. Re-dump before a deploy, or expect
 to run `migrate_schema.py` and a backfill after one.
 
-Deploys are rolling — `MinimumHealthyPercent: 100`, `MaximumPercent: 200` — so
+Deploys are rolling, `MinimumHealthyPercent: 100`, `MaximumPercent: 200`, so
 both versions of the code run against the same database for the length of one
 deploy. A schema change has to be safe for both: add the column, deploy the
 code that uses it, remove the old one in a later deploy.
@@ -185,7 +185,7 @@ code that uses it, remove the old one in a later deploy.
 
 `pipeline.yaml` ships with the prod schedule `DISABLED`. The task it starts
 reads an ingest image from ECR, and `serve.sh` pushes only `api-<timestamp>`
-and `web-<timestamp>` — so with it enabled, a first deploy fires at 06:00 UTC
+and `web-<timestamp>`, so with it enabled, a first deploy fires at 06:00 UTC
 into a tag nothing has pushed, once a day, with no ingestion behind it.
 
 Push an ingest image, set `ScheduleState: ENABLED` for prod, update the stack.
@@ -194,7 +194,7 @@ Give it the OpenAI key when you do. Ingesting a company replaces its trial rows
 and drops their vectors; `ingest.py` carries across the ones whose text has not
 changed, and the task then runs `embed_trials.py` for what is genuinely new.
 Without a key that second half exits non-zero rather than leaving the task green
-and the vectors missing — but a failing daily task is still a failing daily task.
+and the vectors missing, but a failing daily task is still a failing daily task.
 
 ```bash
 OPENAI_SECRET_ARN=arn:aws:secretsmanager:…:biobase/prod/openai \
@@ -252,8 +252,8 @@ is what a local run wants and why the test suite needs no configuration.
   53 alias and an ACM certificate are the next step.
 - **No RDS in the templates.** The database is a parameter, deliberately: its
   lifecycle should not be tied to a stack that gets torn down and rebuilt.
-- **No WAF.** `/ask` has a daily budget counted in the database — 500 questions
-  per UTC day for everyone together, set by `AskDailyBudget` — and a per-caller
+- **No WAF.** `/ask` has a daily budget counted in the database, 500 questions
+  per UTC day for everyone together, set by `AskDailyBudget`, and a per-caller
   burst limit in the frontend's route handler. The budget is the one that
   holds; the per-caller limit is fairness, since anyone can change address.
   Neither stops traffic arriving, they stop it being expensive. **Set a monthly

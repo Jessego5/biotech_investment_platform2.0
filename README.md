@@ -7,19 +7,19 @@ settles an argument; the base is the 787 companies, 30,823 trials and 3,614
 annual reports it is settled against. It is not an agent: the model picks among nine typed
 accessors in a bounded loop and narrates what they return, and it cannot add a
 figure of its own. What makes it worth using is that every number traces to a
-filing, an NCT id or an FDA record — and that it says so when it does not have
+filing, an NCT id or an FDA record, and that it says so when it does not have
 one.
 
 A full-stack web app for browsing public biotech companies by pipeline stage and
 financials, where every figure traces back to a primary source. It holds 787
 companies, 30,823 trials, 112,812 industry-sponsored interventional studies from
-the wider registry, and 3,614 annual reports — five years each — split into
+the wider registry, and 3,614 annual reports, five years each, split into
 334,624 embedded passages, behind 554 tests. The data comes from five places:
 
 - Clinical trials from the [ClinicalTrials.gov v2 API](https://clinicaltrials.gov/data-api/api)
 - Financials from [SEC EDGAR](https://www.sec.gov/edgar/sec-api-documentation):
   R&D expense, cash, marketable securities, debt, operating cash flow, net
-  income, revenue, and shares outstanding — ten years of each, not just the last
+  income, revenue, and shares outstanding, ten years of each, not just the last
 - Annual report narrative from EDGAR: risk factors, management's discussion, and
   the intellectual property section, five years per company
 - Corporate structure from Exhibit 21, which is how a company's trials are found
@@ -246,7 +246,7 @@ and to a blob everywhere else, and only the blob half runs day to day.
 
 Running the stack is what settles it. All six tables create, the `vector` extension
 loads, `trials.embedding` and `filing_chunks.embedding` come back as `vector` rather
-than `bytea`, and `<=>` returns 0.2857 for `[1,2,3]` against `[3,2,1]` — the cosine
+than `bytea`, and `<=>` returns 0.2857 for `[1,2,3]` against `[3,2,1]`, the cosine
 distance the retrieval code assumes it is getting. Building it also turned up a real
 bug: `WORKDIR` creates `/app` as root and `COPY --chown` only owns the files it
 copies, so the image could read its own code but not create the SQLite file beside
