@@ -186,9 +186,7 @@ export function Watchlist({ shared = null }: { shared?: string[] | null }) {
           <h1 className="text-[30px] font-medium tracking-[-0.02em]">Watchlist</h1>
           <p className="mt-2 max-w-[64ch] text-[15px] leading-[1.6]" style={{ color: "var(--n-ink-2)" }}>
             What a watcher is watching for: the next readout, the nearest loss of
-            protection, and how long the money lasts. No price and no position:
-            those would be the first figures here neither computed from a filing
-            nor traceable to one.
+            protection, and how long the money lasts.
           </p>
         </div>
         {visiting ? (
