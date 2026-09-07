@@ -58,22 +58,27 @@ were never returned; they are stripped before the answer is shown, because a
 number that looks sourced and is not is the failure this project exists to
 prevent.
 
-The deployed interface, rendered from the same corpus:
+![Asking a question, and opening the passage behind a citation](docs/demo.gif)
 
-![The company page: Vertex, with trials by phase, patent protection and upcoming readouts](docs/company.png)
+Typed once against the deployed site: a question, the accessor that ran, the
+answer with numbered citations, and a citation opened into the passage the model
+was allowed to read.
 
-Every tile names the source the figure came from, and the colour means the same
-thing on every screen. Patent protection is three-state rather than a boolean,
-because the Orange Book covers small molecules and a biologic's absence from it
-is a gap in the source rather than an absence of protection.
+That last step is the product. Opening a chip gives you the document it came
+from, the passage inside it, and how much of the section that passage is:
 
-![Ask, before a question: five worked examples, one of which is refused](docs/ask.png)
+![The passage panel: the stored text, the stepper, and the original document below it](docs/passage.png)
 
-The landing state shows five real questions, including one the corpus cannot
-answer. A refusal is a designed state here, not an error state, and it gets the
-same weight as an answer.
+`VRTX · 10-K · FY2025 · filed 2026-02-13 · risk factors · passage 14 of 27`, and
+2,991 characters of it, stored verbatim. Below that sits the original document
+with its CIK and accession, on a recessed plane behind an outlined control,
+because *what we read* and *the whole filing* are not the same thing and the
+interface refuses to let them look like the same button.
 
-![The front page: what the corpus holds, counted at request time](docs/home.png)
+The company page, with pipeline by phase, three-state patent protection and
+upcoming readouts ([the whole page](docs/company-full.png)):
+
+![The company page for Vertex](docs/company.png)
 
 ---
 
