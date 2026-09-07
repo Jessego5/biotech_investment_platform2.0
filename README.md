@@ -58,7 +58,22 @@ were never returned; they are stripped before the answer is shown, because a
 number that looks sourced and is not is the failure this project exists to
 prevent.
 
-<!-- Screenshots of the deployed interface go in docs/ and are referenced here. -->
+The deployed interface, rendered from the same corpus:
+
+![The company page: Vertex, with trials by phase, patent protection and upcoming readouts](docs/company.png)
+
+Every tile names the source the figure came from, and the colour means the same
+thing on every screen. Patent protection is three-state rather than a boolean,
+because the Orange Book covers small molecules and a biologic's absence from it
+is a gap in the source rather than an absence of protection.
+
+![Ask, before a question: five worked examples, one of which is refused](docs/ask.png)
+
+The landing state shows five real questions, including one the corpus cannot
+answer. A refusal is a designed state here, not an error state, and it gets the
+same weight as an answer.
+
+![The front page: what the corpus holds, counted at request time](docs/home.png)
 
 ---
 
