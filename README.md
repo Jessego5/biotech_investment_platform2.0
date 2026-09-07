@@ -58,27 +58,58 @@ were never returned; they are stripped before the answer is shown, because a
 number that looks sourced and is not is the failure this project exists to
 prevent.
 
-![Asking a question, and opening the passage behind a citation](docs/demo.gif)
+![A question typed, answered, and a citation opened into its passage](docs/demo.gif)
 
-Typed once against the deployed site: a question, the accessor that ran, the
-answer with numbered citations, and a citation opened into the passage the model
-was allowed to read.
+Recorded against the deployed site in one pass. A question, the lookup that ran,
+the answer with numbered citations, then a citation opened.
 
-That last step is the product. Opening a chip gives you the document it came
-from, the passage inside it, and how much of the section that passage is:
+### An answer, and what it rests on
+
+![An answer with numbered citations and the accessor trace above it](docs/answer.png)
+
+Above the answer is what actually ran and what it returned. Every claim carries a
+chip, and the header reports how many citation markers were stripped because they
+pointed at blocks the model was never given.
+
+Opening a chip is the part that matters:
 
 ![The passage panel: the stored text, the stepper, and the original document below it](docs/passage.png)
 
 `VRTX · 10-K · FY2025 · filed 2026-02-13 · risk factors · passage 14 of 27`, and
-2,991 characters of it, stored verbatim. Below that sits the original document
+2,991 characters of it, stored verbatim. Beneath it sits the original document
 with its CIK and accession, on a recessed plane behind an outlined control,
 because *what we read* and *the whole filing* are not the same thing and the
-interface refuses to let them look like the same button.
+interface refuses to let them look like the same button. The passage being cut
+off at the fold is deliberate: it stops anyone reading an excerpt as the section.
 
-The company page, with pipeline by phase, three-state patent protection and
-upcoming readouts ([the whole page](docs/company-full.png)):
+### One company, in full
 
 ![The company page for Vertex](docs/company.png)
+
+Pipeline by phase, ten years of financials with every value printed beneath the
+line, patent protection in three states rather than a boolean, and the readouts
+that are coming. [The whole page](docs/company-full.png), 5,238 pixels of it.
+
+### The rest of it
+
+<table>
+<tr>
+<td width="50%"><a href="docs/home.png"><img src="docs/home.png" alt="The front page"></a></td>
+<td width="50%"><a href="docs/browse.png"><img src="docs/browse.png" alt="Browse, searching for ivacaftor"></a></td>
+</tr>
+<tr>
+<td><b>Front page.</b> What the corpus holds, counted at request time rather than written into the page, each tile naming the source its figure came from.</td>
+<td><b>Browse.</b> One index over companies, products, filings and trials, capped at eight of each kind. A result opens the thing it actually is, so a product goes to its application and a filing to its stored sections.</td>
+</tr>
+<tr>
+<td><a href="docs/ask.png"><img src="docs/ask.png" alt="Ask, before a question"></a></td>
+<td><a href="docs/watchlist.png"><img src="docs/watchlist.png" alt="The watchlist"></a></td>
+</tr>
+<tr>
+<td><b>Ask, at rest.</b> Five worked questions, one of which the corpus cannot answer and says so. Refusal is a designed state here, not an error.</td>
+<td><b>Watchlist.</b> The three things that change on their own: next readout, nearest loss of protection, how long the money lasts. No price, no position.</td>
+</tr>
+</table>
 
 ---
 
