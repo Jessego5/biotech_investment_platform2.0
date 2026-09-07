@@ -210,6 +210,17 @@ def test_no_schedule_fetches_from_sec_without_someone_turning_it_on():
     assert mappings["prod"]["ScheduleState"] == "DISABLED"
 
 
+@pytest.mark.parametrize("template", ["storage.yaml", "pipeline.yaml", "serving.yaml"])
+def test_every_condition_has_exactly_three_arms(template):
+    # Fn::If is [condition, if-true, if-false] and nothing else. A fourth arm is
+    # what you get by inserting a list item one line too high, which reads fine
+    # and parses fine and is rejected by CloudFormation at deploy time, after
+    # both images have been built and pushed.
+    for args in find_intrinsic(load_template(template), "Fn::If"):
+        assert isinstance(args, list) and len(args) == 3, \
+            f"{template}: Fn::If with {len(args)} arms: {args}"
+
+
 def test_every_findinmap_reads_a_map_that_exists():
     template = load_template("pipeline.yaml")
     mappings = template["Mappings"]

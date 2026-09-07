@@ -266,8 +266,8 @@ Resources:
             - !If
               - HasSecUserAgent
               - {Name: SEC_USER_AGENT, Value: !Ref SecUserAgent}
-              - {Name: ASK_DAILY_BUDGET, Value: !Ref AskDailyBudget}
               - !Ref AWS::NoValue
+            - {Name: ASK_DAILY_BUDGET, Value: !Ref AskDailyBudget}
           Secrets:
             - Name: OPENAI_API_KEY
               ValueFrom: !Ref OpenAiSecretArn
