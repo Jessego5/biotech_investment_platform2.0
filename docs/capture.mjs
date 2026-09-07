@@ -58,7 +58,6 @@ await shot("watchlist.png", `${SITE}/watchlist`, {
 });
 // scale 1 for the company page: at 2x a 14,000px page exceeds Chrome's limit
 await shot("company-full.png", `${SITE}/companies/VRTX`, { full: true, scale: 1 });
-await shot("company.png", `${SITE}/companies/VRTX`);
 
 // browse, with something typed, since an empty search box shows nothing
 {
@@ -81,8 +80,6 @@ let n = 0;
 const frame = async () => page.screenshot({ path: `${FRAMES}/f${String(n++).padStart(3, "0")}.png` });
 
 await page.goto(`${SITE}/ask`, { waitUntil: "networkidle2", timeout: 60000 });
-await page.screenshot({ path: `${OUT}/ask.png` });
-console.log("ask.png");
 await frame(); await frame();
 
 const q = "What does Vertex say about its intellectual property risks?";
@@ -92,8 +89,6 @@ await frame();
 
 await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => b.type === "submit").click());
 for (let i = 0; i < 14; i++) { await wait(900); await frame(); }
-await page.screenshot({ path: `${OUT}/answer.png` });
-console.log("answer.png");
 
 const chip = await page.$(".cite-chip, [data-cite-chip]");
 if (chip) {
