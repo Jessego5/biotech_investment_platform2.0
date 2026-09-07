@@ -51,6 +51,26 @@ engine = create_engine(URL, connect_args=connect_args_for(URL))
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 
+def missing_columns():
+    """
+    Columns the models declare that the database does not have, as
+    ["table.column (TYPE)", ...].
+
+    create_all creates missing TABLES and never missing COLUMNS, so a column
+    added to models.py after a database was built is simply absent, and stays
+    absent. Nothing complains until a query names it, and then it surfaces as a
+    ProgrammingError inside a 500 on whichever page queried it first.
+    """
+    from sqlalchemy import inspect
+
+    inspector = inspect(engine)
+    have = {t: {c["name"] for c in inspector.get_columns(t)}
+            for t in inspector.get_table_names()}
+    return [f"{t.name}.{c.name} ({c.type})"
+            for t in Base.metadata.sorted_tables if t.name in have
+            for c in t.columns if c.name not in have[t.name]]
+
+
 def init_db():
     """
     Create the tables if they don't exist yet, and on Postgres make sure the
@@ -60,8 +80,21 @@ def init_db():
     embedding column's type comes from it. Doing it here rather than in a
     database image's startup script means it also happens on a managed Postgres,
     where there is no startup script to hook into.
+
+    It also says, once, what the database is missing. A restored dump is a point
+    in time, and a column added to models.py after it was taken is not created
+    by anything here: financials.unit went missing that way and read as a broken
+    site for an hour, because the health check does not touch the database and
+    the service looked fine throughout. This does not repair it, since guessing
+    at a migration on startup is worse than saying what is wrong.
     """
     if engine.dialect.name == "postgresql":
         with engine.begin() as conn:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.create_all(engine)
+
+    absent = missing_columns()
+    if absent:
+        print("SCHEMA DRIFT: the database is missing columns the code queries: "
+              + ", ".join(absent)
+              + ". Run migrate_schema.py against it.", flush=True)

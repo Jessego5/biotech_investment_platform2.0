@@ -156,11 +156,25 @@ aws lambda invoke --function-name biotech-agent-dispatch-prod /dev/stdout
 ```
 
 Schema changes are hand-written scripts, not a migration framework. `init_db()`
-is `create_all`, which creates missing **tables** and not missing **columns** —
-so a new column in `models.py` does nothing to a live database, silently. That
-is what left `embedding_ctx` out of the old dump. The pattern to follow is
-`migrate_vector_index.py` and the `backfill_*.py` scripts: idempotent, with a
-`--dry-run`.
+is `create_all`, which creates missing **tables** and not missing **columns**, so
+a new column in `models.py` does nothing to a live database.
+
+It no longer does it silently. `init_db()` prints `SCHEMA DRIFT:` with the
+missing columns named, and `migrate_schema.py` adds them:
+
+```bash
+DATABASE_URL='postgresql+psycopg://…' python backend/migrate_schema.py --dry-run
+```
+
+It adds nullable columns only. A `NOT NULL` column needs a value for every row
+that already exists, which is a decision about data rather than schema, so those
+are reported and left for a backfill script.
+
+**A dump is a point in time.** `financials.unit` was committed 26 hours after the
+dump was taken, so the restored database did not have it, and the first
+deployment answered every question with "in an unrecorded unit" until the column
+was added and the values shipped separately. Re-dump before a deploy, or expect
+to run `migrate_schema.py` and a backfill after one.
 
 Deploys are rolling — `MinimumHealthyPercent: 100`, `MaximumPercent: 200` — so
 both versions of the code run against the same database for the length of one
