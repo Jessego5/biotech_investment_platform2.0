@@ -3,8 +3,12 @@
 // and it captures the recording in the same run as the stills, so the two can
 // never drift into showing different versions.
 //
-//   SITE=https://... OUT=$PWD/docs FRAMES=/tmp/frames node docs/capture.mjs
-//   python3 docs/make_gif.py /tmp/frames docs/demo.gif
+//   SITE=https://... OUT=$PWD/docs FRAMES=/tmp/a FRAMES2=/tmp/c node docs/capture.mjs
+//   python3 docs/make_gif.py /tmp/a docs/demo.gif --thin 42:3
+//   python3 docs/make_gif.py /tmp/c docs/company.gif
+//
+// Run it from the repository root. puppeteer-core resolves from the working
+// directory, so running it from anywhere else fails to find the module.
 //
 // Needs puppeteer-core, which is not a dependency of the app:
 //   npm install --no-save puppeteer-core
@@ -12,7 +16,7 @@
 import puppeteer from "puppeteer-core";
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const { SITE, OUT, FRAMES } = process.env;
+const { SITE, OUT, FRAMES, FRAMES2 } = process.env;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await puppeteer.launch({
@@ -57,7 +61,6 @@ await shot("watchlist.png", `${SITE}/watchlist`, {
     JSON.stringify(["VRTX", "MRNA", "SRPT", "ALNY"])),
 });
 // scale 1 for the company page: at 2x a 14,000px page exceeds Chrome's limit
-await shot("company-full.png", `${SITE}/companies/VRTX`, { full: true, scale: 1 });
 
 // browse, with something typed, since an empty search box shows nothing
 {
@@ -97,5 +100,46 @@ if (chip) {
   await page.screenshot({ path: `${OUT}/passage.png` });
   console.log("passage.png");
 }
-console.log(`${n} frames`);
+console.log(`${n} frames (ask)`);
+await page.close();
+
+// The company page is 5,238 pixels, which is a poor screenshot and a decent
+// recording: find a company the way a reader would, then read down it.
+{
+  const p2 = await browser.newPage();
+  await p2.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
+  let m = 0;
+  const f2 = () => p2.screenshot({ path: `${FRAMES2}/f${String(m++).padStart(3, "0")}.png` });
+
+  await p2.goto(`${SITE}/browse`, { waitUntil: "networkidle2", timeout: 60000 });
+  await f2(); await f2();
+  const search = await p2.$('input[aria-label="Search the corpus"]');
+  for (const ch of "vertex") { await search.type(ch, { delay: 0 }); await f2(); }
+  await wait(2200);
+  await f2(); await f2(); await f2();
+
+  await Promise.all([
+    p2.waitForNavigation({ waitUntil: "networkidle2", timeout: 60000 }),
+    p2.evaluate(() => document.querySelector('a[href^="/companies/"]').click()),
+  ]);
+  await settle(p2);
+  await p2.evaluate(() => window.scrollTo(0, 0));
+  await wait(700);
+  for (let i = 0; i < 5; i++) await f2();
+
+  // re-read the height every step rather than once: the tables render as they
+  // are approached, so a height measured at the top is an underestimate and the
+  // recording stops halfway down a page it thought it had finished
+  for (let y = 0, guard = 0; guard < 60; y += 260, guard++) {
+    const bottom = await p2.evaluate(() => document.body.scrollHeight - window.innerHeight);
+    if (y > bottom) break;
+    await p2.evaluate((y) => window.scrollTo(0, y), y);
+    await wait(70);
+    await f2();
+  }
+  for (let i = 0; i < 6; i++) await f2();
+  console.log(`${m} frames (company)`);
+  await p2.close();
+}
+
 await browser.close();

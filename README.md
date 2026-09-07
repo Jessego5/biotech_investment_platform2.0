@@ -76,10 +76,11 @@ off at the fold is deliberate: it stops anyone reading an excerpt as the section
 
 ### One company
 
-![The company page for Vertex](docs/company-full.png)
+![Searching for Vertex, opening it, and reading down the page](docs/company.gif)
 
-Pipeline by phase, what is approved and what protects it, the trials it leads,
-and ten years of financials with every value printed beneath the line.
+Found the way a reader would find it, then read top to bottom: pipeline by phase,
+what is approved and what protects it, the 244 trials it leads, and ten years of
+financials with every value printed beneath the line.
 
 ### The rest of it
 
