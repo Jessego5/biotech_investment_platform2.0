@@ -1,0 +1,45 @@
+# Runs the same checks a change has to pass locally. Both suites run offline: the
+# Python tests build an in-memory SQLite from the real schema and a fixture blocks
+# every outbound request, and the frontend tests are pure functions over fixtures.
+# So this needs no database, no API key and no network, which is what makes it
+# cheap enough to run on every push.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: backend (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+        working-directory: backend
+      - run: python -m pytest -q
+        working-directory: backend
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx eslint app components lib
+      - run: npm test
+      # every route is server-rendered on demand, so the build reaches no API
+      - run: npm run build
