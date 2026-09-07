@@ -117,7 +117,7 @@ aws cloudformation deploy \
         "CpuArchitecture=$ARCH" \
         "DatabaseUrl=$DATABASE_URL" \
         "OpenAiSecretArn=$OPENAI_SECRET_ARN" \
-        "${CERTIFICATE_ARN:+CertificateArn=$CERTIFICATE_ARN}"
+        ${CERTIFICATE_ARN:+"CertificateArn=$CERTIFICATE_ARN"}
 
 echo
 echo "==> done."
