@@ -39,6 +39,11 @@ backend/raw/
 *.log
 logs/
 
+# runtime state written by run-local.sh while the dev server is up. It names a
+# process on one machine, so it is meaningless anywhere else and changes on
+# every run.
+.frontend.pid
+
 # Node / Next.js (BioBase frontend)
 node_modules/
 .next/
