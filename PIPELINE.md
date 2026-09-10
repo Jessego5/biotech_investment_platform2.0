@@ -279,7 +279,11 @@ SELECT count(*) FROM filing_chunks WHERE embedding IS NULL;
 
 ## Repair
 
-`repair_ingest.py` re-runs companies a full ingest lost to a dropped connection.
 `migrate_trial_fields.py` fills trial fields that were being fetched and thrown
 away, from the registry table already held, worth reading before adding a
 field, because it is the pattern for backfilling one without a full re-ingest.
+
+Recovering a run that dropped its connection partway is a local concern rather
+than a stage of the pipeline: re-run `ingest.py --tickers` with the companies
+that failed. Every company row is an upsert, so re-running one that already
+landed rewrites it rather than duplicating it.
