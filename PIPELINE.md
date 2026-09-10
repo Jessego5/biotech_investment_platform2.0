@@ -146,9 +146,13 @@ to capture almost nothing and fills the archive with dates that differ from each
 other by rounding. `snapshot.plist` is a launchd job for Mondays at 07:00:
 
 ```bash
-cp snapshot.plist ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
+sed "s|/path/to/repo|$PWD|g" snapshot.plist \
+  > ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
 launchctl load ~/Library/LaunchAgents/com.biotechagent.snapshot.plist
 ```
+
+The plist ships with `/path/to/repo` rather than a real location, because
+launchd needs absolute paths and the right one is wherever you cloned this.
 
 The AWS path is deployed and the schedule is off. `infra/cloudformation/
 pipeline.yaml` carries an EventBridge rule, `rate(7 days)` for dev and
