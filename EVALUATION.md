@@ -31,22 +31,19 @@ prints its own summary, including the questions it got wrong.
 What is worth recording is the shape of the failures, since those are stable even
 when the scores are not.
 
-### Where it fails: numeric thresholds
+### The stable failure: threshold extraction
 
-The weakest of the three dimensions is retrieval, and within it, turning a
-question into the right query. The planner is inconsistent at pulling a number out
-of a question. Asked for companies with more than a year of runway it sets the
-filter correctly and matches the independent truth set exactly; asked the same
-question with a different threshold it has returned every company in the universe,
-having set no filter at all.
+The one failure that recurs across runs is narrow and worth naming. The planner is
+inconsistent at pulling a *number* out of a question: asked for companies with more
+than a year of runway it sets the filter correctly and matches the independent
+truth set exactly; asked the same question with a different threshold it has
+returned the whole universe, having set no filter at all. It is capable of the
+query and unreliable at it, so the weakness is threshold extraction rather than
+the filter behind it.
 
-So it is capable of that query and unreliable at it, rather than unable, and the
-weakness is threshold extraction rather than the filter behind it.
-
-That failure is also a good argument for not reading recall alone. Returning the
-whole universe scores a perfect recall while being useless, because a set that
-contains everything cannot miss anything. Precision and exact match are what catch
-it.
+That is also why recall is never read on its own. Returning the whole universe
+scores perfect recall while being useless, because a set containing everything
+cannot miss anything. Precision and exact match are what catch it.
 
 ## Defects it caught
 
@@ -137,19 +134,19 @@ embedding does that better on its own, 96.7% against the filter's 65.0%, so
 adding the filter back *lowers* the result to 93.3%. The elaborate pipeline
 loses to the simple one.
 
-**A reranker helps a weak retriever and hurts a strong one.** On the dense
-baseline it was the largest single gain available (0.192 to 0.278). On top of
+**A reranker helps a weak retriever and hurts a strong one.** On the filtered
+retriever it was the largest single gain available, 0.192 to 0.278. On top of
 contextual embeddings it makes named questions worse, 0.422 to 0.394: recall@5
-rises to 62.5% while recall@1 falls from 30.8% to 25.8%, which is a reranker
-demoting correct top answers it was asked to re-judge. It is worth its 2s only
-where retrieval is not already finding the answer.
+rises to 62.5% while contextual's own recall@1 falls from 30.8% to 25.8%, which
+is a reranker demoting correct top answers it was asked to re-judge. It is worth
+its 2s only where retrieval is not already finding the answer.
 
 **The cost falls exactly where the mechanism predicts.** Topical questions name
 no company, so the context line adds an identity the question cannot use, and
 dilutes the subject matter that is all it has to go on: recall@10 falls from
-20.8% to 12.5%, the worst of any configuration. Every configuration that helps
-topical questions contains the reranker, and none of them beats plain dense by
-much (0.104 against 0.085).
+20.8% to 12.5%, the worst of any configuration. The reranker is the only stage
+that recovers any of it, lifting topical MRR from 0.085 to 0.104, though on
+topical recall@10 nothing beats plain dense at 20.8%.
 
 ### What should ship, on this evidence
 
@@ -158,19 +155,16 @@ much (0.104 against 0.085).
 - **Not hybrid, and not the lexical filter.** Both were measured and both are
   subsumed. Keeping them would be keeping machinery for the story it tells
   rather than the work it does.
-- **The reranker, conditionally.** It earns its place on topical questions and
-  costs accuracy on named ones, which is a decision the system can already make:
-  `chat.py` knows whether it resolved a company. Reranking when it did not, and
-  skipping it when it did, is the configuration the table supports, and is
-  itself the next thing to measure rather than assume.
+- **The reranker, conditionally.** It costs accuracy on named questions and is the
+  only stage that lifts topical MRR, which is a decision the system can already
+  make: `chat.py` knows whether it resolved a company. Reranking when it did not
+  and skipping it when it did is what the MRR column supports; the recall@10
+  column does not, so it is the next thing to measure rather than assume.
 
-Two caveats stay attached to all of the above. The labels are synthetic, and a
-question written *from* a passage may reward document identity more than a real
-user's question would, the topical column is the closer proxy for hard cases,
-and it is the column contextual embedding hurts. And the production path often
-passes a ticker already, which supplies the same identity by a different route;
-the ticker-scoped case has not been measured, and it is the one that decides how
-much of this gain survives contact with the real caller.
+One caveat belongs with the recommendation rather than the limitations below. The
+production path often passes a ticker already, which supplies the same identity by
+a different route. The ticker-scoped case has not been measured, and it is the one
+that decides how much of this gain survives contact with a real caller.
 
 ### Where the lexical query had to be measured too
 
@@ -185,25 +179,18 @@ query runs in 0.02s against the dense side's 3.4s.
 
 ## Limitations
 
-- Retrieval correctness is not deterministic, since an LLM translates the question.
-  Exact match moves between runs when the model phrases a query slightly
-  differently, which is why the scores are not recorded here.
-- Recall alone can flatter a bad answer, as the threshold failure above shows, so
-  it is never read on its own.
-- Groundedness only checks the cleanly verifiable claim types (money, counts, NCT ids, statuses); free prose is not scored.
-- Retrieval correctness only applies to structured questions, where independent groundtruth exists. Semantic search has no exact ground-truth set, so it is checked only through groundedness.
-- The question set is small and fixed on purpose. Adding more is easy.
-- The retrieval labels are synthetic. A model wrote each question from the passage
-  it is then asked to find, so the set measures whether a passage is findable from
-  a question derived from it, not whether real questions find it. It is a
-  relative instrument: good for comparing two retrievers on identical input, not
-  for claiming an absolute quality of search.
-- 120 passages is few. At a recall of about 30% the sampling error is roughly
-  ±8 points, so differences smaller than that are noise. The gap between dense and
-  hybrid on *right document* (7.5 points) sits right at that edge and should be
-  read as suggestive, not settled; the MRR difference is larger relative to its
-  own scale.
-- "Exact" is strict by construction. Chunks overlap by 300 characters, so the
-  passage next door often contains the same sentence, and the adjacent and
-  document columns exist because scoring those as plain misses would understate
-  every retriever equally but misleadingly.
+- **Scored claim types are the verifiable ones**: money, counts, NCT ids and
+  statuses. Free prose is not scored, and retrieval correctness applies only to
+  structured questions, where independent ground truth exists.
+- **The retrieval labels are synthetic.** A model wrote each question from the
+  passage it is then asked to find, so the suite is a relative instrument: sound
+  for comparing two retrievers on identical input, not for claiming an absolute
+  quality of search.
+- **120 passages is few.** At a recall of about 30% the sampling error is roughly
+  ±8 points, so differences smaller than that are noise. The dense-to-hybrid gap on
+  *right document* (7.5 points) sits at that edge and should be read as suggestive;
+  the contextual gaps are several times larger.
+- **"Exact" is strict by construction.** Chunks overlap by 300 characters, so the
+  passage next door often contains the same sentence. The adjacent and document
+  columns exist because scoring those as plain misses would understate every
+  retriever equally but misleadingly.

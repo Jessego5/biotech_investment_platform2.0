@@ -10,7 +10,8 @@
 787 companies, 30,823 trials they lead and 112,812 more from the wider registry,
 3,614 annual reports at five years each, split into 334,624 embedded passages.
 It is not an agent: the model chooses among ten typed accessors in a bounded
-loop and narrates what they return, and it cannot introduce a figure of its own.
+loop and narrates what they return, and the only figures available to it are the
+rows those accessors returned.
 When the data does not support an answer it says so, and the refusal is as
 traceable as an answer.
 
@@ -259,7 +260,8 @@ to judge relevance. 120 passages, two questions each, at k=10.
 | hybrid, RRF over both rankings | 29.2% | 0.145 | 62.5% | 19.2% | 3.46 s |
 | lexical filter, then vectors | 36.7% | 0.192 | 65.0% | 17.5% | 3.25 s |
 | filtered plus reranker | 45.0% | 0.278 | 66.7% | 20.0% | 5.63 s |
-| **contextual embeddings** | **70.0%** | **0.422** | **96.7%** | 12.5% | **2.57 s** |
+| **contextual embeddings** | **70.0%** | **0.422** | 96.7% | 12.5% | **2.57 s** |
+| contextual plus reranker | 69.2% | 0.394 | **98.3%** | 15.0% | 4.53 s |
 | contextual plus lexical filter plus reranker | 67.5% | 0.396 | 93.3% | 16.7% | 5.01 s |
 
 **One line of metadata beat every technique tried.** Embedding each passage under
@@ -267,7 +269,9 @@ a line naming its filing, all of which was already sitting in the filings table,
 takes the right document from 55.0% to 96.7% while being the fastest
 configuration measured. Hybrid retrieval, the lexical filter and the reranker
 were three increasingly elaborate ways to recover an identity discarded at
-embedding time. Adding the filter back on top of it makes the result worse.
+embedding time. Adding the filter back on top of it makes the result worse. A
+reranker on top buys 1.6 more points of right-document for two seconds and a loss
+on named questions, which is why it is a conditional stage rather than a default.
 
 The cost falls where the mechanism predicts: topical questions name no company,
 so the context line adds an identity the question cannot use, and recall falls to
@@ -309,9 +313,12 @@ Defects it caught, each of which had reached the interface:
 **Ten typed accessors, not tool-use over a database.** The model chooses which
 lookup to run and phrases the rows; it never writes a query and never computes.
 That makes every figure attributable to a named function with its own tests, and
-makes "the model invented a number" structurally impossible rather than merely
-unlikely. The cost is that a question needing a lookup nobody wrote is refused
-rather than improvised.
+narrows "the model invented a number" to one remaining failure mode: misphrasing
+a row it was handed. That mode is measured rather than prevented. `evaluate.py`
+checks every claim in an answer against the retrieved text, and the request-time
+check is narrower than that, stripping citation markers that point at blocks
+never returned. The cost of the design is that a question needing a lookup nobody
+wrote is refused rather than improvised.
 
 **pgvector rather than a vector database.** The corpus is 334,624 vectors and the
 app already needs Postgres for everything else, so a second service would buy
@@ -383,8 +390,9 @@ make test      # 530 backend, 24 frontend
 - **The deployment is plain HTTP** on a load balancer hostname, with one task per
   service and no autoscaling. A domain and certificate are the next step.
 - **Contextual embeddings are measured but not shipped.** Both vector spaces are
-  populated, so switching is a flag rather than a migration, and two things want
-  measuring first.
+  populated, so switching is a flag rather than a migration. Two things want
+  measuring first: whether to rerank per question, and the ticker-scoped case the
+  production path actually hits.
 - **`gpt-4o-mini` is a floating alias**, not a pinned snapshot, so model behaviour
   can change underneath the eval.
 - **No rate limit per caller that means anything.** There are no accounts, so the
