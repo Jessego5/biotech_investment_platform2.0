@@ -2,7 +2,7 @@
 
 **Grounded question answering over every public biotech company that files with the SEC, where each figure carries the document it came from.**
 
-[Pipeline](PIPELINE.md) · [Evaluation](EVALUATION.md) · [Deployment](DEPLOY.md) · [Roadmap](ROADMAP.md)
+**[Live demo](https://biobase127.com)** · [Pipeline](PIPELINE.md) · [Evaluation](EVALUATION.md) · [Deployment](DEPLOY.md) · [Roadmap](ROADMAP.md)
 
 ![CI](https://github.com/Jessego5/biotech_investment_platform2.0/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
