@@ -64,6 +64,18 @@ aws cloudformation deploy \
     --parameter-overrides "Environment=$ENVIRONMENT" \
     --no-fail-on-empty-changeset
 
+# Real values live in params/<env>.local.json, which is gitignored, because the
+# tracked file would otherwise carry an account's VPC, subnets and bucket. Prefer
+# it when it exists and fall back to the tracked one, so a clone still runs and a
+# configured machine does not have to remember which file to edit.
+PARAMS="$CFN_DIR/params/$ENVIRONMENT.local.json"
+[[ -f "$PARAMS" ]] || PARAMS="$CFN_DIR/params/$ENVIRONMENT.json"
+if grep -q REPLACE_ME "$PARAMS"; then
+    echo "$PARAMS still contains REPLACE_ME. Fill it in, or create" >&2
+    echo "$CFN_DIR/params/$ENVIRONMENT.local.json with the real values." >&2
+    exit 2
+fi
+
 echo "==> deploying pipeline (schedule, queue consumer, tasks)"
 # read the committed parameters and turn them into the Key=Value form deploy wants.
 # a read loop rather than mapfile, because macOS still ships bash 3.2 and mapfile
@@ -74,7 +86,7 @@ while IFS= read -r line; do
 done < <(
     python3 -c "
 import json
-with open('$CFN_DIR/params/$ENVIRONMENT.json') as f:
+with open('$PARAMS') as f:
     for p in json.load(f):
         print(f\"{p['ParameterKey']}={p['ParameterValue']}\")
 "
